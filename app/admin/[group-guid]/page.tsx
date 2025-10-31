@@ -395,10 +395,10 @@ export default function AdminPage() {
 
   if (loading) {
     return (
-      <div className="bg-gray-50 flex items-center justify-center h-full">
+      <div className="bg-surface flex items-center justify-center h-full">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading group details...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-error mx-auto mb-4"></div>
+          <p className="text-secondary">Loading group details...</p>
         </div>
       </div>
     );
@@ -406,13 +406,13 @@ export default function AdminPage() {
 
   if (error) {
     return (
-      <div className="bg-gray-50 flex items-center justify-center px-4 h-full">
+      <div className="bg-surface flex items-center justify-center px-4 h-full">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-red-600 mb-4">Error</h1>
-          <p className="text-gray-600 mb-4">{error}</p>
+          <h1 className="text-2xl font-bold text-error mb-4">Error</h1>
+          <p className="text-secondary mb-4">{error}</p>
           <Link
             href="/"
-            className="inline-block bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors"
+            className="inline-block btn-primary px-4 py-2 rounded-md transition-colors"
           >
             Go Home
           </Link>
@@ -423,13 +423,13 @@ export default function AdminPage() {
 
   if (!groupDetails) {
     return (
-      <div className="bg-gray-50 flex items-center justify-center px-4 h-full">
+      <div className="bg-surface flex items-center justify-center px-4 h-full">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Group Not Found</h1>
-          <p className="text-gray-600 mb-4">The requested group could not be found.</p>
+          <h1 className="text-2xl font-bold text-error mb-4">Group Not Found</h1>
+          <p className="text-secondary mb-4">This group does not exist or the provided group code is invalid.</p>
           <Link
             href="/"
-            className="inline-block bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors"
+            className="inline-block btn-primary px-4 py-2 rounded-md transition-colors"
           >
             Go Home
           </Link>
@@ -439,27 +439,30 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="bg-gray-50 h-full relative">
+    <div className="bg-surface h-full relative">
       {/* Live indicator in upper right margin */}
       {isRealtimeConnected && (
-        <div className="absolute top-4 right-4 flex items-center bg-white rounded-full px-3 py-1 shadow-md border border-green-200">
-          <div className="h-2 w-2 bg-green-400 rounded-full animate-pulse"></div>
-          <span className="ml-2 text-xs text-green-600 font-medium">Live</span>
+        <div className="absolute top-4 right-4 flex items-center bg-white rounded-full px-3 py-1 shadow-md border border-success">
+          <div className="h-2 w-2 bg-success-solid rounded-full animate-pulse"></div>
+          <span className="ml-2 text-xs text-success font-medium">Live</span>
         </div>
       )}
 
       <div className="py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md mx-auto">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              🎅 Manage Group
+            <h1 className="text-3xl font-bold text-primary mb-2">
+              <span className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3">
+                <span className="text-4xl sm:text-3xl">🎅</span>
+                <span>Manage Group</span>
+              </span>
             </h1>
-            <p className="text-sm text-gray-600 mb-4">
+            <p className="text-sm text-secondary mb-4">
               Update your Secret Santa group settings
             </p>
             <button
               onClick={handleCopyGroupLink}
-            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200 cursor-pointer"
+            className="btn-primary inline-flex items-center px-4 py-2 text-sm font-medium rounded-md focus-btn-primary transition-colors duration-200 cursor-pointer"
           >
             <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
@@ -472,46 +475,46 @@ export default function AdminPage() {
         {statusMessage && (
           <div className={`mb-4 px-4 py-2 rounded-md text-sm animate-pulse ${
             statusType === 'error'
-              ? 'bg-red-100 border border-red-300 text-red-700'
-              : 'bg-green-100 border border-green-300 text-green-700'
+              ? 'bg-error border border-error text-error'
+              : 'bg-success border border-success text-success'
           }`}>
             {statusMessage}
           </div>
         )}
 
-        <div className="bg-white rounded-lg shadow-md">
+        <div className="bg-card rounded-lg shadow-md">
           {/* Group Details Section - Collapsible */}
-          <div className="border-b border-gray-200">
+          <div className="border-b border-accent">
             <button
               type="button"
               onClick={() => setIsGroupDetailsExpanded(!isGroupDetailsExpanded)}
-              className="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-gray-50 focus:outline-none focus:bg-gray-50 cursor-pointer"
+              className="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none focus:bg-gray-100 dark:focus:bg-gray-800 cursor-pointer"
             >
               <div className="flex items-center">
-                <h2 className="text-lg font-medium text-gray-900">
+                <h2 className="text-lg font-medium text-primary">
                   Group Details & Settings
                 </h2>
                 <div className="flex items-center space-x-2 ml-3">
                   {!groupDetails.is_frozen && (
                     groupDetails.is_open ? (
-                      <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
-                        🟢 Open
+                      <span className="text-xs bg-success text-success px-2 py-1 rounded-full">
+                        🟢<span className="hidden sm:inline ml-1">Open</span>
                       </span>
                     ) : (
-                      <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full">
-                        🔴 Closed
+                      <span className="text-xs bg-error text-error px-2 py-1 rounded-full">
+                        🔴<span className="hidden sm:inline ml-1">Closed</span>
                       </span>
                     )
                   )}
                   {groupDetails.is_frozen && (
-                    <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">
-                      🔒 Locked
+                    <span className="text-xs bg-warning text-warning px-2 py-1 rounded-full">
+                      🔒<span className="hidden sm:inline ml-1">Locked</span>
                     </span>
                   )}
                 </div>
               </div>
               <svg
-                className={`h-5 w-5 text-gray-500 transform transition-transform ${
+                className={`h-5 w-5 text-icon transform transition-transform ${
                   isGroupDetailsExpanded ? 'rotate-180' : ''
                 }`}
                 fill="none"
@@ -523,10 +526,10 @@ export default function AdminPage() {
             </button>
 
             {isGroupDetailsExpanded && (
-              <div className="px-6 pb-6">
+              <div className="px-6 pt-4 pb-6">
                 {groupDetails.is_frozen && (
-                  <div className="mb-4 bg-yellow-100 border border-yellow-300 rounded-md p-3">
-                    <p className="text-yellow-700 text-sm">
+                  <div className="mb-4 bg-warning border border-warning rounded-md p-3">
+                    <p className="text-warning text-sm">
                       🔒 <strong>Group Locked:</strong> Settings cannot be modified after Secret Santa assignments are made.
                     </p>
                   </div>
@@ -534,41 +537,41 @@ export default function AdminPage() {
                 <form action={handleSubmit} className="space-y-6">
                   <fieldset disabled={groupDetails.is_frozen}>
                   {/* Group Info */}
-                  <div className="border-b border-gray-200 pb-6">
-                    <h3 className="text-md font-medium text-gray-900 mb-4">Group Information</h3>
+                  <div className="border-b border-accent pb-6">
+                    <h3 className="text-md font-medium text-primary mb-4">Group Details</h3>
 
                     <div className="space-y-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="block text-sm font-medium text-label mb-1">
                           Group Code
                         </label>
                         <input
                           type="text"
                           value={groupDetails.group_guid}
                           disabled
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-500"
+                          className="input-primary w-full px-3 py-2 rounded-md text-primary"
                         />
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="block text-sm font-medium text-label mb-1">
                           Creator Name
                         </label>
                         <input
                           type="text"
                           value={groupDetails.creator_name}
                           disabled
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-500"
+                          className="input-primary w-full px-3 py-2 rounded-md text-primary"
                         />
                       </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-3">
+                      <label className="block text-sm font-medium text-label mb-3">
                         Code Name Settings
                       </label>
                       <div className="space-y-3">
-                        <div className="flex items-center justify-between p-3 border border-gray-200 rounded-lg opacity-60">
-                          <label className="block text-sm font-medium text-gray-600">
+                        <div className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg opacity-60">
+                          <label className="block text-sm font-medium text-secondary">
                             Use code names instead of real names
                           </label>
                           <div className="relative">
@@ -580,7 +583,7 @@ export default function AdminPage() {
                             />
                             <div
                               className={`w-12 h-6 rounded-full cursor-not-allowed transition-colors duration-200 flex items-center ${
-                                groupDetails.use_code_names ? 'bg-red-300' : 'bg-gray-200'
+                                groupDetails.use_code_names ? 'bg-toggle-active' : 'bg-toggle-inactive'
                               }`}
                             >
                               <div
@@ -592,8 +595,8 @@ export default function AdminPage() {
                           </div>
                         </div>
 
-                        <div className="flex items-center justify-between p-3 border border-gray-200 rounded-lg opacity-60">
-                          <label className="block text-sm font-medium text-gray-600">
+                        <div className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg opacity-60">
+                          <label className="block text-sm font-medium text-secondary">
                             Automatically assign code names (e.g., &quot;FuzzyPanda&quot;, &quot;MagicDragon&quot;)
                           </label>
                           <div className="relative">
@@ -605,7 +608,7 @@ export default function AdminPage() {
                             />
                             <div
                               className={`w-12 h-6 rounded-full cursor-not-allowed transition-colors duration-200 flex items-center ${
-                                groupDetails.auto_assign_code_names ? 'bg-red-300' : 'bg-gray-200'
+                                groupDetails.auto_assign_code_names ? 'bg-toggle-active' : 'bg-toggle-inactive'
                               }`}
                             >
                               <div
@@ -622,12 +625,12 @@ export default function AdminPage() {
                   </div>
 
                   {/* Editable Settings */}
-                  <div className="border-b border-gray-200 pb-6">
-                    <h3 className="text-md font-medium text-gray-900 mb-4">Group Settings</h3>
+                  <div className="border-b border-accent pb-6 pt-6">
+                    <h3 className="text-md font-medium text-primary mb-4">Group Settings</h3>
 
                     <div className="space-y-4">
                       <div>
-                        <label htmlFor="capacity" className="block text-sm font-medium text-gray-700 mb-1">
+                        <label htmlFor="capacity" className="block text-sm font-medium text-label mb-1">
                           Maximum Members *
                         </label>
                         <input
@@ -638,15 +641,15 @@ export default function AdminPage() {
                           min="2"
                           max="100"
                           defaultValue={groupDetails.capacity}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                          className="input-primary w-full px-3 py-2 rounded-md text-primary placeholder:text-muted"
                         />
-                        <p className="text-xs text-gray-500 mt-1">
+                        <p className="text-xs text-muted mt-1">
                           Minimum 2 members, maximum 100 members
                         </p>
                       </div>
 
                       <div>
-                        <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+                        <label htmlFor="password" className="block text-sm font-medium text-label mb-1">
                           Group Password
                         </label>
                         <input
@@ -654,29 +657,29 @@ export default function AdminPage() {
                           id="password"
                           name="password"
                           defaultValue={groupDetails.password || ''}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                          className="input-primary w-full px-3 py-2 rounded-md text-primary placeholder:text-muted"
                           placeholder="Leave blank for no password"
                         />
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label htmlFor="description" className="block text-sm font-medium text-label mb-1">
                           Description
                         </label>
                         <textarea
                           value={groupDetails.description || ''}
                           disabled
                           rows={3}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-500"
+                          className="input-primary w-full px-3 py-2 rounded-md text-primary"
                           placeholder="Description cannot be updated"
                         />
-                        <p className="text-xs text-gray-500 mt-1">
+                        <p className="text-xs text-muted mt-1">
                           Description can only be set when creating the group
                         </p>
                       </div>
 
                       <div>
-                        <label htmlFor="expiryDate" className="block text-sm font-medium text-gray-700 mb-1">
+                        <label htmlFor="expiryDate" className="block text-sm font-medium text-label mb-1">
                           Expiry Date
                         </label>
                         <input
@@ -684,12 +687,12 @@ export default function AdminPage() {
                           id="expiryDate"
                           name="expiryDate"
                           defaultValue={groupDetails.expiry_date ? new Date(groupDetails.expiry_date).toISOString().split('T')[0] : ''}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                          className="input-primary w-full px-3 py-2 rounded-md text-primary"
                         />
                       </div>
 
                       <div className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
-                        <label htmlFor="isOpen" className="block text-sm font-medium text-gray-700">
+                        <label htmlFor="isOpen" className="block text-sm font-medium text-label">
                           Group is open for new members
                         </label>
                         <div className="relative">
@@ -704,7 +707,7 @@ export default function AdminPage() {
                           <div
                             onClick={() => setIsGroupOpen(!isGroupOpen)}
                             className={`w-12 h-6 rounded-full cursor-pointer transition-colors duration-200 flex items-center ${
-                              isGroupOpen ? 'bg-red-600' : 'bg-gray-300'
+                              isGroupOpen ? 'bg-toggle-active' : 'bg-toggle-inactive'
                             }`}
                           >
                             <div
@@ -723,7 +726,7 @@ export default function AdminPage() {
                     <button
                       type="submit"
                       disabled={saving || groupDetails.is_frozen}
-                      className="w-full py-3 px-6 bg-red-600 text-white text-sm font-medium rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors duration-200 border border-transparent shadow-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full py-3 px-6 btn-primary text-sm font-medium rounded-md transition-colors duration-200 shadow-sm cursor-pointer"
                     >
                       {saving ? 'Saving...' : 'Save Changes'}
                     </button>
@@ -739,15 +742,15 @@ export default function AdminPage() {
             <button
               type="button"
               onClick={() => setIsMemberListExpanded(!isMemberListExpanded)}
-              className="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-gray-50 focus:outline-none focus:bg-gray-50 cursor-pointer"
+              className="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none focus:bg-gray-100 dark:focus:bg-gray-800 cursor-pointer"
             >
               <div className="flex items-center">
-                <h2 className="text-lg font-medium text-gray-900">
+                <h2 className="text-lg font-medium text-primary">
                   Group Members ({groupMembers.length} / {groupDetails.capacity})
                 </h2>
               </div>
               <svg
-                className={`h-5 w-5 text-gray-500 transform transition-transform ${
+                className={`h-5 w-5 text-icon transform transition-transform ${
                   isMemberListExpanded ? 'rotate-180' : ''
                 }`}
                 fill="none"
@@ -759,32 +762,32 @@ export default function AdminPage() {
             </button>
 
             {isMemberListExpanded && (
-              <div className="px-6 pb-6">
+              <div className="px-6 pt-4 pb-6">
                 {loadingMembers ? (
                   <div className="flex items-center justify-center py-8">
                     <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-red-600"></div>
-                    <span className="ml-2 text-gray-600">Loading members...</span>
+                    <span className="ml-2 text-secondary">Loading members...</span>
                   </div>
                 ) : groupMembers.length === 0 ? (
                   <div className="text-center py-8">
-                    <p className="text-gray-500">No members have joined this group yet.</p>
+                    <p className="text-muted">No members have joined this group yet.</p>
                   </div>
                 ) : (
                   <div className="space-y-2">
                     {groupMembers.map((memberName) => (
                       <div
                         key={memberName}
-                        className="flex items-center justify-between px-4 py-3 bg-gray-50 rounded-md transition-all duration-200 hover:bg-gray-100"
+                        className="flex items-center justify-between px-4 py-3 bg-gray-50 dark:bg-gray-800 rounded-md transition-all duration-200 hover:bg-gray-100 dark:hover:bg-gray-700"
                       >
                         <div className="flex items-center">
-                          <div className="h-8 w-8 bg-red-100 rounded-full flex items-center justify-center">
-                            <span className="text-red-600 text-sm font-medium">
+                          <div className="h-8 w-8 bg-info rounded-full flex items-center justify-center">
+                            <span className="text-info text-sm font-medium">
                               {memberName.charAt(0).toUpperCase()}
                             </span>
                           </div>
-                          <span className="ml-3 text-gray-900">{memberName}</span>
+                          <span className="ml-3 text-primary">{memberName}</span>
                           {memberName === groupDetails?.creator_name && (
-                            <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
+                            <span className="ml-2 text-xs bg-success text-success px-2 py-1 rounded-full">
                               Creator
                             </span>
                           )}
@@ -798,7 +801,7 @@ export default function AdminPage() {
                                 {/* Confirm kick button */}
                                 <button
                                   onClick={() => handleKickMember(memberName)}
-                                  className="text-green-600 hover:text-green-800 hover:bg-green-50 p-1 rounded-md transition-colors duration-200 cursor-pointer"
+                                  className="text-success hover:text-success hover:bg-success/10 p-1 rounded-md transition-colors duration-200 cursor-pointer"
                                   title={`Confirm remove ${memberName}`}
                                 >
                                   <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -808,7 +811,7 @@ export default function AdminPage() {
                                 {/* Cancel kick button */}
                                 <button
                                   onClick={handleCancelKick}
-                                  className="text-gray-600 hover:text-gray-800 hover:bg-gray-50 p-1 rounded-md transition-colors duration-200 cursor-pointer"
+                                  className="text-secondary hover:text-primary hover:bg-gray-100 dark:hover:bg-gray-700 p-1 rounded-md transition-colors duration-200 cursor-pointer"
                                   title="Cancel"
                                 >
                                   <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -820,7 +823,7 @@ export default function AdminPage() {
                               /* Delete button */
                               <button
                                 onClick={() => handleConfirmKick(memberName)}
-                                className="text-red-600 hover:text-red-800 hover:bg-red-50 p-1 rounded-md transition-colors duration-200 cursor-pointer"
+                                className="action-destructive p-1 rounded-md transition-colors duration-200 cursor-pointer"
                                 title={`Remove ${memberName} from group`}
                               >
                                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -848,10 +851,10 @@ export default function AdminPage() {
             <div>
               {!isCreatorMember ? (
                 <>
-                  <h2 className="text-lg font-medium text-gray-900 mb-2">
+                  <h2 className="text-lg font-medium text-primary mb-2">
                     Join Group as Member
                   </h2>
-                  <p className="text-sm text-gray-600 mb-6">
+                  <p className="text-sm text-secondary mb-6">
                     Join your own group as a member to participate in the Secret Santa exchange.
                   </p>
 
@@ -859,7 +862,7 @@ export default function AdminPage() {
                     {/* Show code name input if group uses code names and auto-assign is disabled */}
                     {groupDetails.use_code_names && !groupDetails.auto_assign_code_names && (
                       <div>
-                        <label htmlFor="creatorCodeName" className="block text-sm font-medium text-gray-700 mb-1">
+                        <label htmlFor="creatorCodeName" className="block text-sm font-medium text-label mb-1">
                           Your Code Name *
                         </label>
                         <input
@@ -867,10 +870,10 @@ export default function AdminPage() {
                           id="creatorCodeName"
                           name="creatorCodeName"
                           required
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                          className="input-primary w-full px-3 py-2 rounded-md text-primary placeholder:text-muted"
                           placeholder="Enter your code name (e.g., MysteriousElf)"
                         />
-                        <p className="text-xs text-gray-500 mt-1">
+                        <p className="text-xs text-muted mt-1">
                           Code name is required for this group
                         </p>
                       </div>
@@ -879,7 +882,7 @@ export default function AdminPage() {
                     <button
                       type="submit"
                       disabled={joining}
-                      className="w-full py-3 px-6 bg-red-600 text-white text-sm font-medium rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors duration-200 border border-transparent shadow-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full py-3 px-6 btn-primary text-sm font-medium rounded-md transition-colors duration-200 shadow-sm cursor-pointer"
                     >
                       {joining ? 'Joining...' : 'Join Group'}
                     </button>
@@ -887,16 +890,16 @@ export default function AdminPage() {
                 </>
               ) : (
                 <>
-                  <h2 className="text-lg font-medium text-gray-900 mb-2">
+                  <h2 className="text-lg font-medium text-primary mb-2">
                     View Group Details
                   </h2>
-                  <p className="text-sm text-gray-600 mb-6">
+                  <p className="text-sm text-secondary mb-6">
                     You are a member of this group. View the group page to see member details and your Secret Santa assignment{groupDetails.is_frozen ? '' : ' (when available)'}.
                   </p>
 
                   <Link
                     href={`/group/${groupGuid}`}
-                    className="inline-block w-full py-3 px-6 bg-red-600 text-white text-sm font-medium rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors duration-200 border border-transparent shadow-sm text-center"
+                    className="inline-block w-full py-3 px-6 btn-primary text-sm font-medium rounded-md transition-colors duration-200 shadow-sm text-center"
                   >
                     View Group
                   </Link>
@@ -909,38 +912,38 @@ export default function AdminPage() {
         {/* Assign Santa Section - Non-collapsible */}
         <div className="bg-white rounded-lg shadow-md mt-6 p-6">
           <div>
-            <h2 className="text-lg font-medium text-gray-900 mb-2">
+            <h2 className="text-lg font-medium text-primary mb-2">
               Assign Secret Santa
             </h2>
-            <p className="text-sm text-gray-600 mb-6">
+            <p className="text-sm text-secondary mb-6">
               Ready to create the Secret Santa assignments? This will randomly pair all members and freeze the group.
             </p>
 
             {groupDetails.is_frozen ? (
               <div>
-                <div className="bg-gray-100 border border-gray-300 rounded-md p-4 mb-4">
-                  <p className="text-gray-600">
+                <div className="bg-warning border border-warning rounded-md p-4 mb-4">
+                  <p className="text-warning">
                     🔒 Group Locked: Secret Santa assignments have already been made.
                   </p>
                 </div>
                 <button
                   onClick={handleUnlockGroup}
                   disabled={unlocking}
-                  className="w-full py-3 px-6 bg-red-600 text-white text-sm font-medium rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors duration-200 border border-transparent shadow-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full py-3 px-6 btn-primary text-sm font-medium rounded-md transition-colors duration-200 shadow-sm cursor-pointer"
                 >
                   {unlocking ? 'Resetting...' : 'Reset Secret Santa'}
                 </button>
               </div>
             ) : groupMembers.length < 2 ? (
-              <div className="bg-yellow-100 border border-yellow-300 rounded-md p-4">
-                <p className="text-yellow-700">
+              <div className="bg-warning border border-warning rounded-md p-4">
+                <p className="text-warning">
                   ⚠️ You need at least 2 members to assign Secret Santa pairs.
                 </p>
               </div>
             ) : (
               <div>
-                <div className="bg-blue-50 border border-blue-200 rounded-md p-4 mb-4">
-                  <p className="text-blue-700 text-sm">
+                <div className="bg-info border border-info rounded-md p-4 mb-4">
+                  <p className="text-info text-sm">
                     <strong>Ready to assign!</strong> You have {groupMembers.length} members.
                     Once assigned, the group will be frozen and no more changes can be made.
                   </p>
@@ -948,7 +951,7 @@ export default function AdminPage() {
                 <button
                   onClick={handleAssignSanta}
                   disabled={assigning}
-                  className="w-full py-3 px-6 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors duration-200 border border-transparent shadow-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="btn-success w-full py-3 px-6 text-sm font-medium rounded-md focus-btn-success transition-colors duration-200 cursor-pointer"
                 >
                   {assigning ? 'Assigning...' : '🎁 Assign Secret Santa'}
                 </button>
@@ -959,7 +962,7 @@ export default function AdminPage() {
 
         {/* Back to Home Link */}
         <div className="mt-6 text-center">
-          <Link href="/" className="text-sm text-red-600 hover:text-red-500">
+          <Link href="/" className="text-sm link-primary">
             ← Back to Home
           </Link>
         </div>

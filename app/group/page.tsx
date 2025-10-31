@@ -16,7 +16,7 @@ export default function GroupRedirectPage() {
     <div className="bg-gray-50 flex items-center justify-center h-full">
       <div className="text-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500 mx-auto"></div>
-        <p className="mt-4 text-gray-600">Redirecting to your groups...</p>
+        <p className="mt-4 text-secondary">Redirecting to your groups...</p>
       </div>
     </div>
   );

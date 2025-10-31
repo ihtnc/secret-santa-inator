@@ -168,10 +168,10 @@ export default function JoinGroupPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="bg-surface flex items-center justify-center py-24">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading group information...</p>
+          <p className="mt-4 text-secondary">Loading group information...</p>
         </div>
       </div>
     );
@@ -179,13 +179,13 @@ export default function JoinGroupPage() {
 
   if (error) {
     return (
-      <div className="bg-gray-50 flex items-center justify-center px-4 h-full">
+      <div className="bg-surface flex items-center justify-center px-4 py-24">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-red-600 mb-4">Error</h1>
-          <p className="text-gray-600 mb-4">{error}</p>
+          <h1 className="text-2xl font-bold text-error mb-4">Error</h1>
+          <p className="text-secondary mb-4">{error}</p>
           <Link
             href="/"
-            className="inline-block bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors"
+            className="inline-block btn-primary px-4 py-2 rounded-md transition-colors"
           >
             Go Home
           </Link>
@@ -196,13 +196,13 @@ export default function JoinGroupPage() {
 
   if (!groupInfo) {
     return (
-      <div className="bg-gray-50 flex items-center justify-center px-4 h-full">
+      <div className="bg-surface flex items-center justify-center px-4 py-24">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Group Not Found</h1>
-          <p className="text-gray-600 mb-4">This group does not exist or the group code is invalid.</p>
+          <h1 className="text-2xl font-bold text-primary mb-4">Group Not Found</h1>
+          <p className="text-secondary mb-4">This group does not exist or the group code is invalid.</p>
           <Link
             href="/"
-            className="inline-block bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors"
+            className="inline-block btn-primary px-4 py-2 rounded-md transition-colors"
           >
             Go Home
           </Link>
@@ -212,22 +212,25 @@ export default function JoinGroupPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 relative">
+    <div className="bg-surface relative min-h-full">
       {/* Live indicator in upper right margin */}
       {groupInfo && isRealtimeConnected && (
-        <div className="absolute top-4 right-4 flex items-center bg-white rounded-full px-3 py-1 shadow-md border border-green-200">
-          <div className="h-2 w-2 bg-green-400 rounded-full animate-pulse"></div>
-          <span className="ml-2 text-xs text-green-600 font-medium">Live</span>
+        <div className="absolute top-4 right-4 flex items-center bg-white dark:bg-gray-800 rounded-full px-3 py-1 shadow-md border border-success">
+          <div className="h-2 w-2 bg-success-solid rounded-full animate-pulse"></div>
+          <span className="ml-2 text-xs text-success font-medium">Live</span>
         </div>
       )}
 
       <div className="py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md mx-auto">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              🎅 Join Secret Santa Group
+            <h1 className="text-3xl font-bold text-primary mb-2">
+              <span className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3">
+                <span className="text-4xl sm:text-3xl">🎅</span>
+                <span>Join Secret Santa Group</span>
+              </span>
             </h1>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-secondary">
               Enter your details to join this Secret Santa group!
             </p>
           </div>
@@ -236,24 +239,24 @@ export default function JoinGroupPage() {
         {statusMessage && (
           <div className={`mb-4 px-4 py-2 rounded-md text-sm animate-pulse ${
             statusType === 'error'
-              ? 'bg-red-100 border border-red-300 text-red-700'
-              : 'bg-green-100 border border-green-300 text-green-700'
+              ? 'bg-error border border-error text-error'
+              : 'bg-success border border-success text-success'
           }`}>
             {statusMessage}
           </div>
         )}
 
         {groupInfo?.is_frozen && (
-          <div className="mb-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-            <p className="text-sm text-yellow-800">
+          <div className="mb-6 bg-warning border border-warning rounded-lg p-4">
+            <p className="text-sm text-warning">
               <strong>🔒 Group Locked:</strong> This group is locked. You may not be able to join until it&apos;s unlocked by the creator.
             </p>
           </div>
         )}
 
         {!groupInfo?.is_open && (
-          <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
-            <p className="text-sm text-red-800">
+          <div className="mb-6 bg-error border border-error rounded-lg p-4">
+            <p className="text-sm text-error">
               <strong>🔴 Group Closed:</strong> This group is no longer accepting new members.
             </p>
           </div>
@@ -264,22 +267,22 @@ export default function JoinGroupPage() {
           {groupInfo && (
             <div className="px-6 py-6">
               <div className="flex items-center mb-4">
-                <h2 className="text-lg font-medium text-gray-900">Group Details</h2>
+                <h2 className="text-lg font-medium text-primary">Group Details</h2>
                 <div className="flex items-center space-x-2 ml-3">
                   {!groupInfo.is_frozen && (
                     groupInfo.is_open ? (
-                      <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
-                        🟢 Open
+                      <span className="text-xs bg-success text-success px-2 py-1 rounded-full">
+                        🟢<span className="hidden sm:inline ml-1">Open</span>
                       </span>
                     ) : (
-                      <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full">
-                        🔴 Closed
+                      <span className="text-xs bg-error text-error px-2 py-1 rounded-full">
+                        🔴<span className="hidden sm:inline ml-1">Closed</span>
                       </span>
                     )
                   )}
                   {groupInfo.is_frozen && (
-                    <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">
-                      🔒 Locked
+                    <span className="text-xs bg-warning text-warning px-2 py-1 rounded-full">
+                      🔒<span className="hidden sm:inline ml-1">Locked</span>
                     </span>
                   )}
                 </div>
@@ -287,11 +290,11 @@ export default function JoinGroupPage() {
 
               {groupInfo.description && (
                 <div className="mb-4">
-                  <p className="text-base text-gray-700 font-medium">{groupInfo.description}</p>
+                  <p className="text-base text-label font-medium">{groupInfo.description}</p>
                 </div>
               )}
 
-              <div className="space-y-2 text-sm text-gray-600">
+              <div className="space-y-2 text-sm text-secondary">
                 <div className="flex justify-between">
                   <span>Group Code:</span>
                   <span className="font-medium">{groupGuid}</span>
@@ -308,12 +311,12 @@ export default function JoinGroupPage() {
                   <span>Password:</span>
                   <span className="font-medium">{groupInfo.password ? 'Required' : 'None'}</span>
                 </div>
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg opacity-60">
                   <span>Use code names instead of real names:</span>
                   <div className="relative">
                     <div
-                      className={`w-12 h-6 rounded-full flex items-center ${
-                        groupInfo.use_code_names ? 'bg-red-300' : 'bg-gray-200'
+                      className={`w-12 h-6 rounded-full cursor-not-allowed transition-colors duration-200 flex items-center ${
+                        groupInfo.use_code_names ? 'bg-toggle-active' : 'bg-toggle-inactive'
                       }`}
                     >
                       <div
@@ -325,12 +328,12 @@ export default function JoinGroupPage() {
                   </div>
                 </div>
                 {groupInfo.use_code_names && (
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg opacity-60">
                     <span>Automatically assign code names (e.g., &quot;FuzzyPanda&quot;, &quot;MagicDragon&quot;):</span>
                     <div className="relative">
                       <div
-                        className={`w-12 h-6 rounded-full flex items-center ${
-                          groupInfo.auto_assign_code_names ? 'bg-red-300' : 'bg-gray-200'
+                        className={`w-12 h-6 rounded-full cursor-not-allowed transition-colors duration-200 flex items-center ${
+                          groupInfo.auto_assign_code_names ? 'bg-toggle-active' : 'bg-toggle-inactive'
                         }`}
                       >
                         <div
@@ -350,7 +353,7 @@ export default function JoinGroupPage() {
         {/* Join Form Section - Separate Card */}
         <div className="bg-white rounded-lg shadow-md mt-6">
           <div className="px-6 py-6">
-            <h2 className="text-lg font-medium text-gray-900 mb-4">Join Group</h2>
+            <h2 className="text-lg font-medium text-primary mb-4">Join Group</h2>
 
             <form action={handleJoinGroup} className="space-y-6">
               {/* Hidden fields */}
@@ -368,7 +371,7 @@ export default function JoinGroupPage() {
               {/* Member Information */}
               <div className="space-y-4">
                 <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="name" className="block text-sm font-medium text-label mb-1">
                     Your Name *
                   </label>
                   <input
@@ -376,7 +379,7 @@ export default function JoinGroupPage() {
                     id="name"
                     name="name"
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                    className="input-primary w-full px-3 py-2 rounded-md text-primary placeholder:text-muted"
                     placeholder="Enter your name"
                   />
                 </div>
@@ -384,7 +387,7 @@ export default function JoinGroupPage() {
                 {/* Password field - only show if group has a password */}
                 {groupInfo?.password && (
                   <div>
-                    <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="password" className="block text-sm font-medium text-label mb-1">
                       Group Password *
                     </label>
                     <input
@@ -392,10 +395,10 @@ export default function JoinGroupPage() {
                       id="password"
                       name="password"
                       required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                      className="input-primary w-full px-3 py-2 rounded-md text-primary placeholder:text-muted"
                       placeholder="Enter the group password"
                     />
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-muted mt-1">
                       You need the password to join this private group
                     </p>
                   </div>
@@ -404,7 +407,7 @@ export default function JoinGroupPage() {
                 {/* Code Name field - only show if group uses code names and doesn't auto-assign them */}
                 {groupInfo?.use_code_names && !groupInfo?.auto_assign_code_names && (
                   <div>
-                    <label htmlFor="codeName" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="codeName" className="block text-sm font-medium text-label mb-1">
                       Your Code Name *
                     </label>
                     <input
@@ -412,10 +415,10 @@ export default function JoinGroupPage() {
                       id="codeName"
                       name="codeName"
                       required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                      className="input-primary w-full px-3 py-2 rounded-md text-primary placeholder:text-muted"
                       placeholder="Enter your code name (e.g., MysteriousElf)"
                     />
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-muted mt-1">
                       This is how other members will see you during the Secret Santa
                     </p>
                   </div>
@@ -427,7 +430,7 @@ export default function JoinGroupPage() {
                 <button
                   type="submit"
                   disabled={!groupInfo?.is_open || groupInfo?.is_frozen}
-                  className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium btn-success focus-btn-success transition-colors duration-200 cursor-pointer"
                 >
                   🎁 Join Group
                 </button>
@@ -437,7 +440,7 @@ export default function JoinGroupPage() {
         </div>
 
         <div className="mt-6 text-center">
-          <Link href="/" className="text-sm text-red-600 hover:text-red-500">
+          <Link href="/" className="text-sm link-primary">
             ← Back to Home
           </Link>
         </div>

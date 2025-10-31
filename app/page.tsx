@@ -48,12 +48,15 @@ export default function Home() {
   };
 
   return (
-    <div className="bg-gray-50 flex items-center justify-center px-4 h-full">
+    <div className="bg-surface flex items-center justify-center px-4 h-full">
       <div className="text-center">
-        <h1 className="text-4xl font-bold text-gray-900 mb-8">
-          🎅 Secret Santa-inator
+        <h1 className="text-4xl font-bold text-primary mb-8">
+          <span className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3">
+            <span className="text-5xl sm:text-4xl">🎅</span>
+            <span>Secret Santa-inator</span>
+          </span>
         </h1>
-        <p className="text-lg text-gray-600 mb-8">
+        <p className="text-lg text-secondary mb-8">
           Create and manage your Secret Santa groups
         </p>
         <div className="space-y-12">
@@ -66,13 +69,13 @@ export default function Home() {
                 value={groupGuid}
                 onChange={(e) => setGroupGuid(e.target.value)}
                 placeholder="Enter group code..."
-                className="flex-1 px-4 py-3 text-lg border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                className="input-primary flex-1 px-4 py-3 text-lg border-2 rounded-lg shadow-sm placeholder:text-muted"
                 required
               />
               <button
                 type="submit"
                 disabled={!groupGuid.trim()}
-                className="bg-green-600 text-white py-3 px-6 text-lg font-semibold rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-colors whitespace-nowrap shadow-md sm:w-auto w-full"
+                className="btn-success py-3 px-6 text-lg font-semibold rounded-lg focus-btn-success cursor-pointer transition-colors whitespace-nowrap shadow-md sm:w-auto w-full"
               >
                 🎁 Join Group
               </button>
@@ -83,14 +86,14 @@ export default function Home() {
           <div className="space-y-4">
             <Link
               href="/create"
-              className="inline-block bg-red-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-red-700 transition-colors"
+              className="inline-block btn-primary px-6 py-3 rounded-lg font-medium transition-colors"
             >
               Create New Group
             </Link>
             <br />
             <Link
               href="/my-groups"
-              className="inline-block bg-red-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-red-700 transition-colors"
+              className="inline-block btn-primary px-6 py-3 rounded-lg font-medium transition-colors"
             >
               View My Groups
             </Link>

@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import Link from 'next/link';
+import DarkModeToggle from './DarkModeToggle';
 
 export default function Footer() {
   // Initialize localStorage on component mount
@@ -27,19 +28,24 @@ export default function Footer() {
   };
 
   return (
-    <footer className="bg-gray-100 border-t border-gray-200 mt-auto">
+    <footer className="bg-card border-t border-accent mt-auto">
       <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
-          {/* Left side - Copyright */}
-          <div className="text-sm text-gray-600">
+        <div className="relative flex flex-col sm:flex-row justify-between items-center sm:items-center space-y-4 sm:space-y-0">
+          {/* Copyright - centered on mobile, left on desktop */}
+          <div className="text-sm text-secondary text-center sm:text-left">
             © 2025 Secret Santa-inator
           </div>
 
-          {/* Right side - Links */}
-          <div className="flex flex-wrap justify-center sm:justify-end space-x-6 text-sm">
+          {/* Single toggle - positioned absolutely to not interfere with flex layout */}
+          <div className="absolute top-0 right-0 flex items-center -mt-4 -mr-2 sm:static sm:left-1/2 sm:transform sm:-translate-x-1/2 sm:mt-0 sm:mr-0">
+            <DarkModeToggle />
+          </div>
+
+          {/* Links - centered on mobile, right on desktop */}
+          <div className="flex flex-wrap justify-center sm:justify-end space-x-6 text-sm w-full sm:w-auto">
             <Link
               href="/about"
-              className="text-gray-600 hover:text-gray-900 transition-colors"
+              className="text-secondary hover:text-primary transition-colors"
             >
               About
             </Link>
@@ -47,13 +53,13 @@ export default function Footer() {
               href="https://github.com/ihtnc/secret-santa-inator"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-gray-600 hover:text-gray-900 transition-colors"
+              className="text-secondary hover:text-primary transition-colors"
             >
               GitHub
             </a>
             <button
               onClick={handleResetData}
-              className="text-gray-600 hover:text-gray-900 transition-colors cursor-pointer"
+              className="text-secondary hover:text-primary transition-colors cursor-pointer"
             >
               Reset Data
             </button>
