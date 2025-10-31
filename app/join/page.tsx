@@ -55,23 +55,26 @@ export default function JoinPage() {
   };
 
   return (
-    <div className="bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 h-full">
+    <div className="bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8 h-full">
       <div className="max-w-md mx-auto">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            🎅 Join Secret Santa Group
+          <h1 className="text-3xl font-bold text-primary mb-2">
+            <span className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3">
+              <span className="text-4xl sm:text-3xl">🎅</span>
+              <span>Join Secret Santa Group</span>
+            </span>
           </h1>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-secondary">
             Enter the group code to join a Secret Santa group
           </p>
         </div>
 
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-card dark:bg-gray-800 rounded-lg shadow-md p-6">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <h2 className="text-lg font-medium text-gray-900 mb-4">Group Details</h2>
+              <h2 className="text-lg font-medium text-primary mb-4">Group Details</h2>
               <div>
-                <label htmlFor="groupGuid" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="groupGuid" className="block text-sm font-medium text-label mb-2">
                   Group Code *
                 </label>
                 <input
@@ -80,11 +83,11 @@ export default function JoinPage() {
                   value={groupGuid}
                   onChange={(e) => setGroupGuid(e.target.value)}
                   placeholder="Enter group code..."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                  className="input-primary w-full px-3 py-2 rounded-md text-primary placeholder:text-muted"
                   required
                   disabled={isLoading}
                 />
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-muted mt-1">
                   Enter the group code or paste any link to the group
                 </p>
               </div>
@@ -93,7 +96,7 @@ export default function JoinPage() {
             <button
               type="submit"
               disabled={!groupGuid.trim() || isLoading}
-              className="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="w-full btn-success py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 cursor-pointer transition-colors"
             >
               {isLoading ? 'Joining...' : '🎁 Join Group'}
             </button>
@@ -103,7 +106,7 @@ export default function JoinPage() {
         <div className="mt-6 text-center">
           <Link
             href="/"
-            className="text-red-600 hover:text-red-500 text-sm font-medium"
+            className="link-primary text-sm font-medium"
           >
             ← Back to Home
           </Link>

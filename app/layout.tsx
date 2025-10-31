@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Footer from "./components/Footer";
 import { Analytics } from "@vercel/analytics/next"
+import { DarkModeProvider } from "./components/DarkModeProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -26,14 +27,31 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="h-full">
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              try {
+                if (localStorage.getItem('darkMode') === 'true' || (!localStorage.getItem('darkMode') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                  document.documentElement.classList.add('dark')
+                } else {
+                  document.documentElement.classList.remove('dark')
+                }
+              } catch (_) {}
+            `,
+          }}
+        />
+      </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased h-full flex flex-col`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased h-full flex flex-col bg-surface dark:bg-gray-900 text-primary`}
       >
-        <main className="flex-1">
-          {children}
-        </main>
-        <Footer />
-        <Analytics/>
+        <DarkModeProvider>
+          <main className="flex-1">
+            {children}
+          </main>
+          <Footer />
+          <Analytics/>
+        </DarkModeProvider>
       </body>
     </html>
   );

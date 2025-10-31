@@ -4,14 +4,14 @@ import Link from 'next/link';
 
 export default function AboutPage() {
   return (
-    <div className="bg-gray-50 h-full flex flex-col">
+    <div className="bg-gray-50 dark:bg-gray-900 h-full flex flex-col">
       <div className="flex-1 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="bg-white rounded-lg shadow-md p-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-6">About Secret Santa-inator</h1>
+        <div className="bg-card dark:bg-gray-800 rounded-lg shadow-md p-8">
+          <h1 className="text-3xl font-bold text-primary mb-6">About Secret Santa-inator</h1>
 
-          <div className="space-y-6 text-gray-700">
+          <div className="space-y-6 text-secondary">
             <section>
-              <h2 className="text-xl font-semibold text-gray-900 mb-3">What is Secret Santa-inator?</h2>
+              <h2 className="text-xl font-semibold text-primary mb-3">What is Secret Santa-inator?</h2>
               <p className="leading-relaxed">
                 Secret Santa-inator is a simple, privacy-focused web application that helps you organize
                 Secret Santa gift exchanges with your friends, family, or coworkers. No registration required,
@@ -20,7 +20,7 @@ export default function AboutPage() {
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold text-gray-900 mb-3">How it Works</h2>
+              <h2 className="text-xl font-semibold text-primary mb-3">How it Works</h2>
               <div className="space-y-3">
                 <div className="flex items-start space-x-3">
                   <span className="shrink-0 w-6 h-6 bg-green-600 text-white rounded-full flex items-center justify-center text-sm font-bold">1</span>
@@ -32,7 +32,7 @@ export default function AboutPage() {
                 </div>
                 <div className="flex items-start space-x-3">
                   <span className="shrink-0 w-6 h-6 bg-green-600 text-white rounded-full flex items-center justify-center text-sm font-bold">3</span>
-                  <p className="leading-relaxed"><s><strong>Add Wish Lists:</strong> Everyone can add their wish list items to help their Secret Santa choose the perfect gift.</s> <em className="text-sm text-gray-500">(maybe in the future)</em></p>
+                  <p className="leading-relaxed"><s><strong>Add Wish Lists:</strong> Everyone can add their wish list items to help their Secret Santa choose the perfect gift.</s> <em className="text-sm text-muted">(maybe in the future)</em></p>
                 </div>
                 <div className="flex items-start space-x-3">
                   <span className="shrink-0 w-6 h-6 bg-green-600 text-white rounded-full flex items-center justify-center text-sm font-bold">4</span>
@@ -46,7 +46,7 @@ export default function AboutPage() {
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold text-gray-900 mb-3">Privacy & Security</h2>
+              <h2 className="text-xl font-semibold text-primary mb-3">Privacy & Security</h2>
               <ul className="space-y-2 list-disc list-inside">
                 <li>No account registration required</li>
                 <li>Data is stored locally in your browser</li>
@@ -57,10 +57,10 @@ export default function AboutPage() {
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold text-gray-900 mb-3">Features</h2>
+              <h2 className="text-xl font-semibold text-primary mb-3">Features</h2>
               <div className="grid md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <h3 className="font-medium text-gray-900">For Everyone:</h3>
+                  <h3 className="font-medium text-primary">For Everyone:</h3>
                   <ul className="space-y-1 text-sm list-disc list-inside ml-4">
                     <li>Join multiple Secret Santa groups</li>
                     <li>Create and manage wish lists</li>
@@ -69,7 +69,7 @@ export default function AboutPage() {
                   </ul>
                 </div>
                 <div className="space-y-2">
-                  <h3 className="font-medium text-gray-900">For Group Creators:</h3>
+                  <h3 className="font-medium text-primary">For Group Creators:</h3>
                   <ul className="space-y-1 text-sm list-disc list-inside ml-4">
                     <li>Create and manage groups</li>
                     <li>View all group members</li>
@@ -81,7 +81,7 @@ export default function AboutPage() {
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold text-gray-900 mb-3">Technical Details</h2>
+              <h2 className="text-xl font-semibold text-primary mb-3">Technical Details</h2>
               <p className="leading-relaxed">
                 Built with Next.js, React, and Tailwind CSS. Data is managed through Supabase for reliable
                 group coordination while maintaining privacy. The app works entirely in your browser with
@@ -90,7 +90,7 @@ export default function AboutPage() {
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold text-gray-900 mb-3">From the author</h2>
+              <h2 className="text-xl font-semibold text-primary mb-3">From the author</h2>
               <p className="leading-relaxed mb-2">
                 This project came about due to a random request from my sister to hunt for a tool that could help her organize Secret Santa groups.
               </p>
@@ -120,7 +120,7 @@ export default function AboutPage() {
         </div>
 
         <div className="mt-6 text-center">
-          <Link href="/" className="text-sm text-red-600 hover:text-red-500">
+          <Link href="/" className="text-sm link-primary">
             ← Back to Home
           </Link>
         </div>

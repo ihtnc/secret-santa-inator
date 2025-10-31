@@ -205,10 +205,10 @@ export default function GroupPage() {
 
   if (isLoading) {
     return (
-      <div className="bg-gray-50 flex items-center justify-center h-full">
+      <div className="bg-gray-50 dark:bg-gray-900 flex items-center justify-center h-full">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading group information...</p>
+          <p className="mt-4 text-secondary">Loading group information...</p>
         </div>
       </div>
     );
@@ -216,13 +216,13 @@ export default function GroupPage() {
 
   if (error) {
     return (
-      <div className="bg-gray-50 flex items-center justify-center px-4 h-full">
+      <div className="bg-gray-50 dark:bg-gray-900 flex items-center justify-center px-4 h-full">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-red-600 mb-4">Error</h1>
-          <p className="text-gray-600 mb-4">{error}</p>
+          <h1 className="text-2xl font-bold text-error mb-4">Error</h1>
+          <p className="text-secondary mb-4">{error}</p>
           <Link
             href="/"
-            className="inline-block bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors"
+            className="inline-block btn-primary px-4 py-2 rounded-md transition-colors"
           >
             Go Home
           </Link>
@@ -232,24 +232,27 @@ export default function GroupPage() {
   }
 
   return (
-    <div className="bg-gray-50 h-full relative">
+    <div className="bg-gray-50 dark:bg-gray-900 h-full relative">
       {/* Live indicator in upper right margin */}
       {isRealtimeConnected && (
-        <div className="absolute top-4 right-4 flex items-center bg-white rounded-full px-3 py-1 shadow-md border border-green-200">
-          <div className="h-2 w-2 bg-green-400 rounded-full animate-pulse"></div>
-          <span className="ml-2 text-xs text-green-600 font-medium">Live</span>
+        <div className="absolute top-4 right-4 flex items-center bg-white rounded-full px-3 py-1 shadow-md border border-success">
+          <div className="h-2 w-2 bg-success-solid rounded-full animate-pulse"></div>
+          <span className="ml-2 text-xs text-success font-medium">Live</span>
         </div>
       )}
 
       <div className="py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md mx-auto">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              🎁 Secret Santa Group
+            <h1 className="text-3xl font-bold text-primary mb-2">
+              <span className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3">
+                <span className="text-4xl sm:text-3xl">🎁</span>
+                <span>Secret Santa Group</span>
+              </span>
             </h1>
-            <p className="text-sm text-gray-500 mb-2">Group Code: {groupGuid}</p>
+            <p className="text-sm text-muted mb-2">Group Code: {groupGuid}</p>
             {groupInfo?.description && (
-              <p className="text-lg text-gray-600">{groupInfo.description}</p>
+              <p className="text-lg text-secondary">{groupInfo.description}</p>
             )}
           </div>
 
@@ -257,8 +260,8 @@ export default function GroupPage() {
         {statusMessage && (
           <div className={`mb-6 px-4 py-2 rounded-md text-sm animate-pulse ${
             statusType === 'error'
-              ? 'bg-red-100 border border-red-300 text-red-700'
-              : 'bg-green-100 border border-green-300 text-green-700'
+              ? 'bg-error border border-error text-error'
+              : 'bg-success border border-success text-success'
           }`}>
             {statusMessage}
           </div>
@@ -266,37 +269,38 @@ export default function GroupPage() {
 
         {/* Group status alerts */}
         {groupInfo?.is_frozen && (
-          <div className="mb-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-            <p className="text-sm text-yellow-800">
+          <div className="mb-6 bg-warning border border-warning rounded-lg p-4">
+            <p className="text-sm text-warning">
               <strong>🔒 Group Locked:</strong> Secret Santa assignments have been made! The group is now locked.
             </p>
           </div>
         )}
 
         {!groupInfo?.is_open && (
-          <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
-            <p className="text-sm text-red-800">
+          <div className="mb-6 bg-error border border-error rounded-lg p-4">
+            <p className="text-sm text-error">
               <strong>🔴 Group Closed:</strong> This group is no longer accepting new members.
             </p>
           </div>
         )}
 
         {/* Secret Santa Assignment Section - Always show */}
-        <div className="bg-green-50 border border-green-200 rounded-lg shadow-md mb-6">
+        <div className="bg-success border border-success rounded-lg shadow-md mb-6">
           <div className="px-6 py-6">
-            <h2 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-              🎁 Your Secret Santa Assignment
+            <h2 className="text-lg font-medium text-primary mb-4 flex flex-col sm:flex-row items-center justify-center sm:justify-start gap-2 sm:gap-3">
+              <span className="text-xl sm:text-lg">🎁</span>
+              <span>Your Secret Santa Assignment</span>
             </h2>
 
             {/* User Information */}
-            <div className="bg-white rounded-md p-4 border border-green-300 mb-4">
-              <p className="text-sm text-gray-600 mb-2">Your code name:</p>
+            <div className="bg-white dark:bg-gray-800 rounded-md p-4 border border-green-300 dark:border-green-700 mb-4">
+              <p className="text-sm text-label mb-2">Your code name:</p>
               {groupInfo?.use_code_names && userInfo?.code_name ? (
-                <p className="text-lg font-bold text-green-800">{userInfo.code_name}</p>
+                <p className="text-lg font-bold text-success">{userInfo.code_name}</p>
               ) : (
-                <p className="text-lg font-bold text-green-800">{userInfo?.name}</p>
+                <p className="text-lg font-bold text-success">{userInfo?.name}</p>
               )}
-              <p className="text-xs text-gray-500 mt-2">
+              <p className="text-xs text-muted mt-2">
                 👤 This is how other members know you in the group.
               </p>
             </div>
@@ -305,24 +309,24 @@ export default function GroupPage() {
             {groupInfo?.is_frozen ? (
               // Show assignment when group is frozen
               secretSanta ? (
-                <div className="bg-white rounded-md p-4 border border-green-300">
-                  <p className="text-sm text-gray-600 mb-2">You are giving a gift to:</p>
-                  <p className="text-xl font-bold text-green-800">{secretSanta}</p>
-                  <p className="text-xs text-gray-500 mt-2">
+                <div className="bg-white dark:bg-gray-800 rounded-md p-4 border border-green-300 dark:border-green-700">
+                  <p className="text-sm text-label mb-2">You are giving a gift to:</p>
+                  <p className="text-xl font-bold text-success">{secretSanta}</p>
+                  <p className="text-xs text-muted mt-2">
                     🤫 Keep this secret! Don&apos;t let them know you&apos;re their Secret Santa.
                   </p>
                 </div>
               ) : (
-                <div className="bg-yellow-100 border border-yellow-300 rounded-md p-4">
-                  <p className="text-yellow-700 text-sm">
+                <div className="bg-warning border border-warning rounded-md p-4">
+                  <p className="text-warning text-sm">
                     Unable to load your Secret Santa assignment. Please refresh the page.
                   </p>
                 </div>
               )
             ) : (
               // Show waiting message when group is not frozen
-              <div className="bg-yellow-100 border border-yellow-300 rounded-md p-4">
-                <p className="text-yellow-700 text-sm">
+              <div className="bg-warning border border-warning rounded-md p-4">
+                <p className="text-warning text-sm">
                   <strong>⏳ Waiting for Secret Santa Assignments:</strong> The group creator hasn&apos;t assigned Secret Santa pairs yet.
                 </p>
               </div>
@@ -336,15 +340,15 @@ export default function GroupPage() {
             <button
               type="button"
               onClick={() => setIsMemberListExpanded(!isMemberListExpanded)}
-              className="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-gray-50 focus:outline-none focus:bg-gray-50 cursor-pointer"
+              className="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none focus:bg-gray-100 dark:focus:bg-gray-800 cursor-pointer"
             >
               <div className="flex items-center">
-                <h2 className="text-lg font-medium text-gray-900">
+                <h2 className="text-lg font-medium text-primary">
                   Group Members ({members.length} / {groupInfo?.capacity})
                 </h2>
               </div>
               <svg
-                className={`h-5 w-5 text-gray-500 transform transition-transform ${
+                className={`h-5 w-5 text-icon transform transition-transform ${
                   isMemberListExpanded ? 'rotate-180' : ''
                 }`}
                 fill="none"
@@ -356,20 +360,25 @@ export default function GroupPage() {
             </button>
 
             {isMemberListExpanded && (
-              <div className="px-6 pb-6">
+              <div className="px-6 pt-4 pb-6">
                 {members.length > 0 ? (
                   <div className="space-y-2">
                     {members.map((member, index) => (
-                      <div key={index} className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-md">
+                      <div key={index} className="flex items-center justify-between px-4 py-3 bg-gray-50 dark:bg-gray-800 rounded-md transition-all duration-200 hover:bg-gray-100 dark:hover:bg-gray-700">
                         <div className="flex items-center">
-                          <span className="text-sm font-medium text-gray-900">{member.name}</span>
+                          <div className="h-8 w-8 bg-info rounded-full flex items-center justify-center">
+                            <span className="text-info text-sm font-medium">
+                              {member.name.charAt(0).toUpperCase()}
+                            </span>
+                          </div>
+                          <span className="ml-3 text-primary">{member.name}</span>
                           {member.name === userInfo?.name && (
-                            <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                            <span className="ml-2 text-xs bg-info text-info px-2 py-1 rounded-full">
                               You
                             </span>
                           )}
                           {member.name === groupInfo?.creator_name && (
-                            <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
+                            <span className="ml-2 text-xs bg-success text-success px-2 py-1 rounded-full">
                               Creator
                             </span>
                           )}
@@ -378,7 +387,7 @@ export default function GroupPage() {
                     ))}
                   </div>
                 ) : (
-                  <p className="text-sm text-gray-500 italic">No members found.</p>
+                  <p className="text-sm text-muted italic">No members found.</p>
                 )}
               </div>
             )}
@@ -388,8 +397,8 @@ export default function GroupPage() {
         {/* Leave Group Section */}
         <div className="bg-white rounded-lg shadow-md mb-6">
           <div className="px-6 py-6">
-            <h2 className="text-lg font-medium text-gray-900 mb-4">Leave Group</h2>
-            <p className="text-sm text-gray-600 mb-4">
+            <h2 className="text-lg font-medium text-primary mb-4">Leave Group</h2>
+            <p className="text-sm text-secondary mb-4">
               {groupInfo?.is_frozen ? (
                 "You cannot leave this group because Secret Santa assignments have been made and the group is locked."
               ) : (
@@ -404,7 +413,7 @@ export default function GroupPage() {
               <button
                 type="submit"
                 disabled={groupInfo?.is_frozen}
-                className="w-full py-3 px-6 bg-red-600 text-white text-sm font-medium rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors duration-200 border border-transparent shadow-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full py-3 px-6 btn-primary text-sm font-medium rounded-md transition-colors duration-200 shadow-sm cursor-pointer"
               >
                 Leave Group
               </button>
@@ -413,7 +422,7 @@ export default function GroupPage() {
         </div>
 
         <div className="text-center">
-          <Link href="/" className="text-sm text-red-600 hover:text-red-500">
+          <Link href="/" className="text-sm link-primary">
             ← Back to Home
           </Link>
         </div>

@@ -163,16 +163,22 @@ export default function MyGroupsPage() {
     setExpandedGroups(newExpanded);
   };
 
+  // Function to shorten GUID for mobile display
+  const formatGroupGuid = (guid: string) => {
+    if (guid.length <= 16) return guid;
+    return `${guid.slice(0, 8)}...${guid.slice(-12)}`;
+  };
+
   const isUserCreator = (group: GroupInfo) => {
     return group.is_creator;
   };
 
   if (isLoading) {
     return (
-      <div className="bg-gray-50 flex items-center justify-center h-full">
+      <div className="bg-gray-50 dark:bg-gray-900 flex items-center justify-center h-full">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading your groups...</p>
+          <p className="mt-4 text-secondary">Loading your groups...</p>
         </div>
       </div>
     );
@@ -180,13 +186,13 @@ export default function MyGroupsPage() {
 
   if (error) {
     return (
-      <div className="bg-gray-50 flex items-center justify-center px-4 h-full">
+      <div className="bg-gray-50 dark:bg-gray-900 flex items-center justify-center px-4 h-full">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-red-600 mb-4">Error</h1>
-          <p className="text-gray-600 mb-4">{error}</p>
+          <h1 className="text-2xl font-bold text-error mb-4">Error</h1>
+          <p className="text-secondary mb-4">{error}</p>
           <Link
             href="/"
-            className="inline-block bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors"
+            className="inline-block btn-primary px-4 py-2 rounded-md transition-colors"
           >
             Go Home
           </Link>
@@ -196,28 +202,31 @@ export default function MyGroupsPage() {
   }
 
   return (
-    <div className="bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 h-full relative">
+    <div className="bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8 h-full relative">
       {/* Live indicator in upper right margin */}
       {groups.length > 0 && isRealtimeConnected && (
-        <div className="absolute top-4 right-4 flex items-center bg-white rounded-full px-3 py-1 shadow-md border border-green-200">
-          <div className="h-2 w-2 bg-green-400 rounded-full animate-pulse"></div>
-          <span className="ml-2 text-xs text-green-600 font-medium">Live</span>
+        <div className="absolute top-4 right-4 flex items-center bg-white rounded-full px-3 py-1 shadow-md border border-success">
+          <div className="h-2 w-2 bg-success-solid rounded-full animate-pulse"></div>
+          <span className="ml-2 text-xs text-success font-medium">Live</span>
         </div>
       )}
 
       <div className="max-w-md mx-auto">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            🎄 My Secret Santa Groups
+          <h1 className="text-3xl font-bold text-primary mb-2">
+            <span className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3">
+              <span className="text-4xl sm:text-3xl">🎄</span>
+              <span>My Secret Santa Groups</span>
+            </span>
           </h1>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-secondary">
             Your active Secret Santa groups
           </p>
         </div>
 
         {groups.length === 0 ? (
           <div className="bg-white rounded-lg shadow-md p-6 text-center">
-            <p className="text-gray-500 mb-4">You haven&apos;t joined any Secret Santa groups yet.</p>
+            <p className="text-muted mb-4">You haven&apos;t joined any Secret Santa groups yet.</p>
             <Link
               href="/"
               className="inline-block bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors"
@@ -233,59 +242,60 @@ export default function MyGroupsPage() {
                 <button
                   type="button"
                   onClick={() => toggleGroupExpansion(group.group_guid)}
-                  className="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-gray-50 focus:outline-none focus:bg-gray-50 rounded-lg cursor-pointer"
+                  className="w-full px-4 sm:px-6 py-4 text-left flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none focus:bg-gray-100 dark:focus:bg-gray-800 rounded-lg cursor-pointer"
                 >
                   <div className="flex items-start justify-between w-full">
                     <div className="flex items-start space-x-4">
                       <div className="flex flex-col items-center">
                         <Link
                           href={`/group/${group.group_guid}`}
-                          className="text-sm text-red-600 hover:text-red-700 transition-colors pt-1 flex flex-col items-center"
+                          className="text-sm link-primary transition-colors pt-1 flex flex-col items-center"
                           onClick={(e) => e.stopPropagation()}
                         >
                           <span className="text-lg">🎁</span>
                           <span className="text-xs">View</span>
                         </Link>
-                        <span className="text-xs font-medium text-gray-600 mt-1">{group.member_count} / {group.capacity}</span>
+                        <span className="text-xs font-medium text-secondary mt-1">{group.member_count} / {group.capacity}</span>
                       </div>
                       <div className="flex flex-col">
-                        <p className="text-xs text-gray-500 mb-1">Your code name in this group:</p>
+                        <p className="text-xs text-muted mb-1">Your code name in this group:</p>
                         <div className="flex items-center space-x-2">
-                          <span className="text-lg font-medium text-gray-900">
+                          <span className="text-lg font-medium text-primary">
                             {group.name}
                           </span>
                           {isUserCreator(group) && (
-                            <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
+                            <span className="text-xs bg-success text-success px-2 py-1 rounded-full">
                               Creator
                             </span>
                           )}
                         </div>
-                        <p className="text-xs text-gray-400 mt-1">
-                          {group.group_guid}
+                        <p className="text-xs text-muted mt-1">
+                          <span className="sm:hidden">{formatGroupGuid(group.group_guid)}</span>
+                          <span className="hidden sm:inline">{group.group_guid}</span>
                         </p>
                       </div>
                     </div>
                     <div className="flex items-center space-x-3">
                       {!group.is_frozen && (
                         group.is_open ? (
-                          <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
-                            🟢 Open
+                          <span className="text-xs bg-success text-success px-2 py-1 rounded-full">
+                            🟢<span className="hidden sm:inline ml-1">Open</span>
                           </span>
                         ) : (
-                          <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full">
-                            🔴 Closed
+                          <span className="text-xs bg-error text-error px-2 py-1 rounded-full">
+                            🔴<span className="hidden sm:inline ml-1">Closed</span>
                           </span>
                         )
                       )}
                       {group.is_frozen && (
-                        <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">
-                          🔒 Locked
+                        <span className="text-xs bg-warning text-warning px-2 py-1 rounded-full">
+                          🔒<span className="hidden sm:inline ml-1">Locked</span>
                         </span>
                       )}
                     </div>
                   </div>
                   <svg
-                    className={`h-5 w-5 text-gray-500 transform transition-transform ${
+                    className={`h-5 w-5 text-icon transform transition-transform ${
                       expandedGroups.has(group.group_guid) ? 'rotate-180' : ''
                     }`}
                     fill="none"
@@ -298,8 +308,8 @@ export default function MyGroupsPage() {
 
                 {/* Group Details - Expandable */}
                 {expandedGroups.has(group.group_guid) && (
-                  <div className="px-6 pb-6 pt-2">
-                    <div className="text-sm text-gray-700 mb-4">
+                  <div className="px-4 sm:px-6 pb-6 pt-4">
+                    <div className="text-sm text-secondary mb-4">
                       {group.description}
                     </div>
 
@@ -307,7 +317,7 @@ export default function MyGroupsPage() {
                     {isUserCreator(group) && (
                       <Link
                         href={`/admin/${group.group_guid}`}
-                        className="w-full inline-block text-center py-3 px-6 bg-red-600 text-white text-sm font-medium rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors duration-200"
+                        className="w-full inline-block text-center py-3 px-6 btn-primary text-sm font-medium rounded-md transition-colors duration-200"
                       >
                         Manage Group
                       </Link>
@@ -320,7 +330,7 @@ export default function MyGroupsPage() {
         )}
 
         <div className="mt-6 text-center">
-          <Link href="/" className="text-sm text-red-600 hover:text-red-500">
+          <Link href="/" className="text-sm link-primary">
             ← Back to Home
           </Link>
         </div>

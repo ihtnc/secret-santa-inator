@@ -36,22 +36,25 @@ export default function CreateGroupPage() {
   };
 
   return (
-    <div className="bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 h-full">
+    <div className="bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8 h-full">
       <div className="max-w-md mx-auto">
         <div className="text-center">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            🎅 Create Secret Santa Group
+          <h1 className="text-3xl font-bold text-primary mb-2">
+            <span className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3">
+              <span className="text-4xl sm:text-3xl">🎅</span>
+              <span>Create Secret Santa Group</span>
+            </span>
           </h1>
-          <p className="text-gray-600 mb-8">
+          <p className="text-secondary mb-8">
             Set up a new Secret Santa group for your friends, family, or colleagues!
           </p>
         </div>
 
-        <div className="bg-white shadow-md rounded-lg p-6">
+        <div className="bg-card dark:bg-gray-800 shadow-md rounded-lg p-6">
           {/* Error display */}
           {error && (
-            <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
-              <p className="text-sm text-red-800">{error}</p>
+            <div className="mb-6 bg-red-50 dark:bg-red-900/50 border border-red-200 dark:border-red-800 rounded-lg p-4">
+              <p className="text-sm text-error">{error}</p>
             </div>
           )}
 
@@ -64,12 +67,12 @@ export default function CreateGroupPage() {
             />
 
             {/* Creator Information */}
-            <div className="border-b border-gray-200 pb-6">
-              <h2 className="text-lg font-medium text-gray-900 mb-4">Your Information</h2>
+            <div className="border-b border-accent pb-6">
+              <h2 className="text-lg font-medium text-primary mb-4">Your Information</h2>
 
               <div className="space-y-4">
                 <div>
-                  <label htmlFor="creatorName" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="creatorName" className="block text-sm font-medium text-label mb-1">
                     Your Name *
                   </label>
                   <input
@@ -77,7 +80,7 @@ export default function CreateGroupPage() {
                     id="creatorName"
                     name="creatorName"
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                    className="input-primary w-full px-3 py-2 rounded-md text-primary placeholder:text-muted"
                     placeholder="Enter your name"
                   />
                 </div>
@@ -85,12 +88,12 @@ export default function CreateGroupPage() {
             </div>
 
             {/* Group Settings */}
-            <div className="border-b border-gray-200 pb-6">
-              <h2 className="text-lg font-medium text-gray-900 mb-4">Group Settings</h2>
+            <div className="border-b border-accent pb-6">
+              <h2 className="text-lg font-medium text-primary mb-4">Group Settings</h2>
 
               <div className="space-y-4">
                 <div>
-                  <label htmlFor="capacity" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="capacity" className="block text-sm font-medium text-label mb-1">
                     Maximum Members *
                   </label>
                   <input
@@ -101,28 +104,28 @@ export default function CreateGroupPage() {
                     min="2"
                     max="100"
                     defaultValue="10"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                    className="input-primary w-full px-3 py-2 rounded-md text-primary placeholder:text-muted"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="password" className="block text-sm font-medium text-label mb-1">
                     Group Password (Optional)
                   </label>
                   <input
                     type="password"
                     id="password"
                     name="password"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                    className="input-primary w-full px-3 py-2 rounded-md text-primary placeholder:text-muted"
                     placeholder="Leave blank for no password"
                   />
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-muted mt-1">
                     If set, members will need this password to join
                   </p>
                 </div>
 
                 <div>
-                  <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="description" className="block text-sm font-medium text-label mb-1">
                     Description *
                   </label>
                   <textarea
@@ -130,25 +133,25 @@ export default function CreateGroupPage() {
                     name="description"
                     required
                     rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                    className="input-primary w-full px-3 py-2 rounded-md text-primary placeholder:text-muted"
                     placeholder="Describe your Secret Santa event..."
                   />
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-muted mt-1">
                     Provide a meaningful description for your Secret Santa group
                   </p>
                 </div>
 
                 <div>
-                  <label htmlFor="expiryDate" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="expiryDate" className="block text-sm font-medium text-label mb-1">
                     Expiry Date (Optional)
                   </label>
                   <input
                     type="date"
                     id="expiryDate"
                     name="expiryDate"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                    className="input-primary w-full px-3 py-2 rounded-md text-primary"
                   />
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-muted mt-1">
                     Defaults to 1 month from now if not specified
                   </p>
                 </div>
@@ -156,12 +159,12 @@ export default function CreateGroupPage() {
             </div>
 
             {/* Code Name Settings */}
-            <div className="pb-6">
-              <h2 className="text-lg font-medium text-gray-900 mb-4">Code Name Settings</h2>
+            <div className="border-b border-gray-200 dark:border-gray-700 pb-6">
+              <h2 className="text-lg font-medium text-primary mb-4">Code Name Settings</h2>
 
               <div className="space-y-4">
-                <div className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
-                  <label htmlFor="useCodeNames" className="block text-sm font-medium text-gray-700">
+                <div className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg">
+                  <label htmlFor="useCodeNames" className="block text-sm font-medium text-label">
                     Use code names instead of real names
                   </label>
                   <div className="relative">
@@ -187,7 +190,7 @@ export default function CreateGroupPage() {
                         }
                       }}
                       className={`w-12 h-6 rounded-full cursor-pointer transition-colors duration-200 flex items-center ${
-                        useCodeNames ? 'bg-red-600' : 'bg-gray-300'
+                        useCodeNames ? 'bg-toggle-active' : 'bg-toggle-inactive'
                       }`}
                     >
                       <div
@@ -199,8 +202,8 @@ export default function CreateGroupPage() {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
-                  <label htmlFor="autoAssignCodeNames" className={`block text-sm font-medium ${!useCodeNames ? 'text-gray-400' : 'text-gray-700'}`}>
+                <div className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg">
+                  <label htmlFor="autoAssignCodeNames" className={`block text-sm font-medium ${!useCodeNames ? 'text-muted' : 'text-label'}`}>
                     Automatically assign code names (e.g., &quot;FuzzyPanda&quot;, &quot;MagicDragon&quot;)
                   </label>
                   <div className="relative">
@@ -217,7 +220,7 @@ export default function CreateGroupPage() {
                       onClick={() => useCodeNames && setAutoAssignCodeNames(!autoAssignCodeNames)}
                       className={`w-12 h-6 rounded-full transition-colors duration-200 flex items-center ${
                         !useCodeNames ? 'bg-gray-200 cursor-not-allowed' :
-                        autoAssignCodeNames ? 'bg-red-600 cursor-pointer' : 'bg-gray-300 cursor-pointer'
+                        autoAssignCodeNames ? 'bg-toggle-active cursor-pointer' : 'bg-toggle-inactive cursor-pointer'
                       }`}
                     >
                       <div
@@ -229,7 +232,7 @@ export default function CreateGroupPage() {
                   </div>
                 </div>
 
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-muted">
                   Code names add fun and mystery to your Secret Santa! If auto-assign is disabled,
                   you must provide a code name when joining.
                 </p>
@@ -237,12 +240,12 @@ export default function CreateGroupPage() {
             </div>
 
             {/* Join Group Settings */}
-            <div className="border-b border-gray-200 pb-6">
-              <h2 className="text-lg font-medium text-gray-900 mb-4">Join Settings</h2>
+            <div className="border-b border-gray-200 dark:border-gray-700 pb-6">
+              <h2 className="text-lg font-medium text-primary mb-4">Join Settings</h2>
 
               <div className="space-y-4">
-                <div className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
-                  <label htmlFor="autoJoinGroup" className="block text-sm font-medium text-gray-700">
+                <div className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg">
+                  <label htmlFor="autoJoinGroup" className="block text-sm font-medium text-label">
                     Automatically join the group as a member
                   </label>
                   <div className="relative">
@@ -257,7 +260,7 @@ export default function CreateGroupPage() {
                     <div
                       onClick={() => setAutoJoinGroup(!autoJoinGroup)}
                       className={`w-12 h-6 rounded-full cursor-pointer transition-colors duration-200 flex items-center ${
-                        autoJoinGroup ? 'bg-red-600' : 'bg-gray-300'
+                        autoJoinGroup ? 'bg-toggle-active' : 'bg-toggle-inactive'
                       }`}
                     >
                       <div
@@ -272,7 +275,7 @@ export default function CreateGroupPage() {
                 {/* Show code name input if use code names is enabled, auto-assign is disabled, and auto-join is enabled */}
                 {useCodeNames && !autoAssignCodeNames && autoJoinGroup && (
                   <div>
-                    <label htmlFor="creatorCodeName" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="creatorCodeName" className="block text-sm font-medium text-label mb-1">
                       Your Code Name *
                     </label>
                     <input
@@ -280,16 +283,16 @@ export default function CreateGroupPage() {
                       id="creatorCodeName"
                       name="creatorCodeName"
                       required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                      className="input-primary w-full px-3 py-2 rounded-md text-primary placeholder:text-muted"
                       placeholder="Enter your code name (e.g., MysteriousElf)"
                     />
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-muted mt-1">
                       Code name is required when auto-assignment is disabled
                     </p>
                   </div>
                 )}
 
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-muted">
                   If checked, you will be automatically added as a member of the group after creation.
                   You can always leave later if needed.
                 </p>
@@ -301,7 +304,7 @@ export default function CreateGroupPage() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                className="btn-success w-full flex justify-center py-3 px-4 rounded-md text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors duration-200 cursor-pointer"
               >
                 {isSubmitting ? 'Creating...' : '🎁 Create Secret Santa Group'}
               </button>
@@ -310,7 +313,7 @@ export default function CreateGroupPage() {
         </div>
 
         <div className="mt-6 text-center">
-          <Link href="/" className="text-sm text-red-600 hover:text-red-500">
+          <Link href="/" className="text-sm link-primary">
             ← Back to Home
           </Link>
         </div>
