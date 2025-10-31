@@ -1,4 +1,6 @@
-# Secret Santa Inator 🎄
+# Secret Santa-inator 🎄
+
+[![deploy](https://deploy-badge.vercel.app/vercel/dooduel?name=website)](https://dooduel.vercel.app/)
 
 A modern, real-time web application for organizing Secret Santa gift exchanges with friends, family, or colleagues.
 
