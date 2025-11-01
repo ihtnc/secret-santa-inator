@@ -34,10 +34,8 @@ export default function RootLayout({
               try {
                 if (localStorage.getItem('darkMode') === 'true' || (!localStorage.getItem('darkMode') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
                   document.documentElement.classList.add('dark')
-                  document.documentElement.classList.remove('light')
                 } else {
                   document.documentElement.classList.remove('dark')
-                  document.documentElement.classList.add('light')
                 }
               } catch (_) {}
             `,

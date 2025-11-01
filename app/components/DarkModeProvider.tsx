@@ -24,10 +24,8 @@ export function DarkModeProvider({ children }: { children: React.ReactNode }) {
         // Apply theme class
         if (shouldBeDark) {
           document.documentElement.classList.add('dark');
-          document.documentElement.classList.remove('light');
         } else {
           document.documentElement.classList.remove('dark');
-          document.documentElement.classList.add('light');
         }
       }
     };
@@ -40,11 +38,9 @@ export function DarkModeProvider({ children }: { children: React.ReactNode }) {
     if (typeof window !== 'undefined') {
       if (isDarkMode) {
         document.documentElement.classList.add('dark');
-        document.documentElement.classList.remove('light');
         localStorage.setItem('darkMode', 'true');
       } else {
         document.documentElement.classList.remove('dark');
-        document.documentElement.classList.add('light');
         localStorage.setItem('darkMode', 'false');
       }
     }
