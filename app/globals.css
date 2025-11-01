@@ -121,7 +121,7 @@
 
 /* Fallback for system preference */
 @media (prefers-color-scheme: dark) {
-  :root:not(.dark) {
+  :root:not(.dark):not(.light) {
     --background: #0a0a0a;
     --foreground: #ededed;
 
@@ -144,95 +144,95 @@
   }
 
   /* Essential overrides for system preference */
-  :root:not(.dark) .bg-white { background-color: #1f2937; }
-  :root:not(.dark) .bg-gray-50 { background-color: #111827; }
-  :root:not(.dark) .border-gray-200 { border-color: #374151; }
-  :root:not(.dark) .hover\:bg-gray-100:hover { background-color: #374151; }
+  :root:not(.dark):not(.light) .bg-white { background-color: #1f2937; }
+  :root:not(.dark):not(.light) .bg-gray-50 { background-color: #111827; }
+  :root:not(.dark):not(.light) .border-gray-200 { border-color: #374151; }
+  :root:not(.dark):not(.light) .hover\:bg-gray-100:hover { background-color: #374151; }
 
   /* Date picker specific styling for system preference dark mode */
-  :root:not(.dark) input[type="date"] {
+  :root:not(.dark):not(.light) input[type="date"] {
     color-scheme: dark;
   }
 
-  :root:not(.dark) input[type="date"]::-webkit-calendar-picker-indicator {
+  :root:not(.dark):not(.light) input[type="date"]::-webkit-calendar-picker-indicator {
     filter: invert(1);
     color-scheme: light; /* Keep icon using light scheme */
   }
 
-  :root:not(.dark) input[type="datetime-local"] {
+  :root:not(.dark):not(.light) input[type="datetime-local"] {
     color-scheme: dark;
   }
 
-  :root:not(.dark) input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  :root:not(.dark):not(.light) input[type="datetime-local"]::-webkit-calendar-picker-indicator {
     filter: invert(1);
     color-scheme: light; /* Keep icon using light scheme */
   }
 
   /* Semantic text colors for system preference */
-  :root:not(.dark) .text-primary { color: #f9fafb; }
-  :root:not(.dark) .text-secondary { color: #9ca3af; }
-  :root:not(.dark) .text-muted { color: #6b7280; }
-  :root:not(.dark) .text-label { color: #d1d5db; }
-  :root:not(.dark) .text-icon { color: #6b7280; }
+  :root:not(.dark):not(.light) .text-primary { color: #f9fafb; }
+  :root:not(.dark):not(.light) .text-secondary { color: #9ca3af; }
+  :root:not(.dark):not(.light) .text-muted { color: #6b7280; }
+  :root:not(.dark):not(.light) .text-label { color: #d1d5db; }
+  :root:not(.dark):not(.light) .text-icon { color: #6b7280; }
 
   /* Border colors for system preference dark mode */
-  :root:not(.dark) .border-primary { border-color: #4b5563; }
-  :root:not(.dark) .border-accent { border-color: #374151; }
+  :root:not(.dark):not(.light) .border-primary { border-color: #4b5563; }
+  :root:not(.dark):not(.light) .border-accent { border-color: #374151; }
 
   /* Background colors for system preference dark mode */
-  :root:not(.dark) .bg-card { background-color: #1f2937; }
-  :root:not(.dark) .bg-surface { background-color: #111827; }
-  :root:not(.dark) .bg-page { background-color: #0f172a; }
+  :root:not(.dark):not(.light) .bg-card { background-color: #1f2937; }
+  :root:not(.dark):not(.light) .bg-surface { background-color: #111827; }
+  :root:not(.dark):not(.light) .bg-page { background-color: #0f172a; }
 
   /* Input styles for system preference dark mode */
-  :root:not(.dark) .input-primary {
+  :root:not(.dark):not(.light) .input-primary {
     border-color: #4b5563;
     background-color: #374151;
     color: #f9fafb;
   }
 
-  :root:not(.dark) .input-primary:focus {
+  :root:not(.dark):not(.light) .input-primary:focus {
     border-color: #f87171;
     box-shadow: 0 0 0 2px rgba(248, 113, 113, 0.2);
   }
 
   /* Link colors for system preference */
-  :root:not(.dark) .link-primary { color: #dc2626; } /* red-600 - lighter for better visibility in dark mode */
-  :root:not(.dark) .link-primary:hover { color: #b91c1c; } /* red-700 - lighter hover state */
+  :root:not(.dark):not(.light) .link-primary { color: #dc2626; } /* red-600 - lighter for better visibility in dark mode */
+  :root:not(.dark):not(.light) .link-primary:hover { color: #b91c1c; } /* red-700 - lighter hover state */
 
   /* Destructive action colors for system preference */
-  :root:not(.dark) .action-destructive { color: #f87171; } /* red-400 */
-  :root:not(.dark) .action-destructive:hover {
+  :root:not(.dark):not(.light) .action-destructive { color: #f87171; } /* red-400 */
+  :root:not(.dark):not(.light) .action-destructive:hover {
     color: #fca5a5; /* red-300 */
     background-color: #7f1d1d; /* red-900 */
   }
 
   /* Toggle colors for system preference */
-  :root:not(.dark) .bg-toggle-active { background-color: #991b1b; } /* red-800 - matches btn-primary dark mode */
-  :root:not(.dark) .bg-toggle-active:hover { background-color: #7f1d1d; } /* red-900 - matches btn-primary dark mode hover */
-  :root:not(.dark) .bg-toggle-inactive { background-color: #d1d5db; } /* gray-300 */
+  :root:not(.dark):not(.light) .bg-toggle-active { background-color: #991b1b; } /* red-800 - matches btn-primary dark mode */
+  :root:not(.dark):not(.light) .bg-toggle-active:hover { background-color: #7f1d1d; } /* red-900 - matches btn-primary dark mode hover */
+  :root:not(.dark):not(.light) .bg-toggle-inactive { background-color: #d1d5db; } /* gray-300 */
 
   /* Button hover states for system preference */
-  :root:not(.dark) .btn-success:hover { background-color: #065f46; } /* green-800 */
-  :root:not(.dark) .btn-primary:hover { background-color: #7f1d1d; } /* red-800 */
+  :root:not(.dark):not(.light) .btn-success:hover { background-color: #065f46; } /* green-800 */
+  :root:not(.dark):not(.light) .btn-primary:hover { background-color: #7f1d1d; } /* red-800 */
 
   /* Button disabled states for system preference dark mode */
-  :root:not(.dark) .btn-success:disabled {
+  :root:not(.dark):not(.light) .btn-success:disabled {
     background-color: #047857; /* green-700 - muted dark green for disabled state */
     color: #d1fae5; /* green-100 - lighter text for better contrast */
     opacity: 0.5;
   }
 
   /* Button background colors for system preference dark mode */
-  :root:not(.dark) .btn-success {
+  :root:not(.dark):not(.light) .btn-success {
     background-color: #047857; /* green-700 - less bright for dark mode buttons specifically */
   }
 
-  :root:not(.dark) .btn-primary {
+  :root:not(.dark):not(.light) .btn-primary {
     background-color: #991b1b; /* red-800 - less bright for system dark mode */
   }
 
-  :root:not(.dark) .btn-primary:hover {
+  :root:not(.dark):not(.light) .btn-primary:hover {
     background-color: #7f1d1d; /* red-900 - darker on hover */
   }
 }
