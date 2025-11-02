@@ -1,6 +1,8 @@
 # Secret Santa-inator 🎄
 
-[![deploy](https://deploy-badge.vercel.app/vercel/dooduel?name=website)](https://dooduel.vercel.app/)
+[![deploy](https://deploy-badge.vercel.app/vercel/secret-santa-inator?name=website)](https://secret-santa-inator.vercel.app/)
+
+See it [live](https://secret-santa-inator.vercel.app)!
 
 A modern, real-time web application for organizing Secret Santa gift exchanges with friends, family, or colleagues.
 
@@ -53,10 +55,15 @@ A modern, real-time web application for organizing Secret Santa gift exchanges w
 3. **Set up environment variables**
    Create a `.env.local` file in the root directory:
    ```env
-   NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-   SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+   NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your_supabase_anon_public_key
+   NEXT_PUBLIC_SUPABASE_KEY=your_supabase_secret_key
    ```
+
+   You can find these values in your Supabase project settings:
+   - **Project URL**: Go to Settings → API → Project URL
+   - **Anon/Public Key**: Go to Settings → API Keys → Publishable key
+   - **Secret Key**: Go to Settings → API Keys → Secret keys (keep this secret!)
 
 4. **Set up the database**
    Run the SQL migration file in your Supabase database:
