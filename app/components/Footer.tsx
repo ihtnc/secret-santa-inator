@@ -17,16 +17,6 @@ export default function Footer() {
     }
   }, []);
 
-  const handleResetData = () => {
-    if (typeof window !== 'undefined') {
-      const newCreatorCode = uuidv4();
-      localStorage.setItem('creatorCode', newCreatorCode);
-
-      // Reload the page to reflect changes
-      window.location.reload();
-    }
-  };
-
   return (
     <footer className="bg-card border-t border-accent mt-auto">
       <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
@@ -57,12 +47,12 @@ export default function Footer() {
             >
               GitHub
             </a>
-            <button
-              onClick={handleResetData}
-              className="text-secondary hover:text-primary transition-colors cursor-pointer"
+            <Link
+              href="/reset-data"
+              className="text-secondary hover:text-primary transition-colors"
             >
               Reset Data
-            </button>
+            </Link>
           </div>
         </div>
       </div>
