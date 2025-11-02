@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { getGroupDetails, updateGroup, getGroupMembers, assignSecretSanta, joinGroupAsCreator, kickMember, unlockGroup } from "./actions";
+import LiveIndicator from "@/app/components/LiveIndicator";
 import supabase from "@/utilities/supabase/browser";
 
 interface GroupDetails {
@@ -441,12 +442,7 @@ export default function AdminPage() {
   return (
     <div className="bg-surface h-full relative">
       {/* Live indicator in upper right margin */}
-      {isRealtimeConnected && (
-        <div className="absolute top-4 right-4 flex items-center bg-page rounded-full px-3 py-1 shadow-md border border-success">
-          <div className="h-2 w-2 bg-success-solid rounded-full animate-pulse"></div>
-          <span className="ml-2 text-xs text-success font-medium">Live</span>
-        </div>
-      )}
+      <LiveIndicator isVisible={isRealtimeConnected} />
 
       <div className="py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md mx-auto">
