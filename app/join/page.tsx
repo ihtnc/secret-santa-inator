@@ -69,7 +69,7 @@ export default function JoinPage() {
           </p>
         </div>
 
-        <div className="bg-card dark:bg-gray-800 rounded-lg shadow-md p-6">
+        <div className="bg-card rounded-lg shadow-md p-6">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <h2 className="text-lg font-medium text-primary mb-4">Group Details</h2>

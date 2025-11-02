@@ -235,7 +235,7 @@ export default function GroupPage() {
     <div className="bg-surface h-full relative">
       {/* Live indicator in upper right margin */}
       {isRealtimeConnected && (
-        <div className="absolute top-4 right-4 flex items-center bg-white rounded-full px-3 py-1 shadow-md border border-success">
+        <div className="absolute top-4 right-4 flex items-center bg-page rounded-full px-3 py-1 shadow-md border border-success">
           <div className="h-2 w-2 bg-success-solid rounded-full animate-pulse"></div>
           <span className="ml-2 text-xs text-success font-medium">Live</span>
         </div>
@@ -293,7 +293,7 @@ export default function GroupPage() {
             </h2>
 
             {/* User Information */}
-            <div className="bg-white dark:bg-gray-800 rounded-md p-4 border border-green-300 dark:border-green-700 mb-4">
+            <div className="bg-page rounded-md p-4 border border-success mb-4">
               <p className="text-sm text-label mb-2">Your code name:</p>
               {groupInfo?.use_code_names && userInfo?.code_name ? (
                 <p className="text-lg font-bold text-success">{userInfo.code_name}</p>
@@ -309,7 +309,7 @@ export default function GroupPage() {
             {groupInfo?.is_frozen ? (
               // Show assignment when group is frozen
               secretSanta ? (
-                <div className="bg-white dark:bg-gray-800 rounded-md p-4 border border-green-300 dark:border-green-700">
+                <div className="bg-page rounded-md p-4 border border-success">
                   <p className="text-sm text-label mb-2">You are giving a gift to:</p>
                   <p className="text-xl font-bold text-success">{secretSanta}</p>
                   <p className="text-xs text-muted mt-2">
@@ -335,12 +335,12 @@ export default function GroupPage() {
         </div>
 
         {/* Members List Section - Collapsible */}
-        <div className="bg-white rounded-lg shadow-md mb-6">
+        <div className="bg-card rounded-lg shadow-md mb-6">
           <div>
             <button
               type="button"
               onClick={() => setIsMemberListExpanded(!isMemberListExpanded)}
-              className="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none focus:bg-gray-100 dark:focus:bg-gray-800 cursor-pointer"
+              className="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-surface-hover focus:outline-none focus:bg-surface-hover cursor-pointer"
             >
               <div className="flex items-center">
                 <h2 className="text-lg font-medium text-primary">
@@ -364,7 +364,7 @@ export default function GroupPage() {
                 {members.length > 0 ? (
                   <div className="space-y-2">
                     {members.map((member, index) => (
-                      <div key={index} className="flex items-center justify-between px-4 py-3 bg-gray-50 dark:bg-gray-800 rounded-md transition-all duration-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+                      <div key={index} className="flex items-center justify-between px-4 py-3 bg-card rounded-md transition-all duration-200 hover:bg-surface-hover">
                         <div className="flex items-center">
                           <div className="h-8 w-8 bg-info rounded-full flex items-center justify-center">
                             <span className="text-info text-sm font-medium">
@@ -395,7 +395,7 @@ export default function GroupPage() {
         </div>
 
         {/* Leave Group Section */}
-        <div className="bg-white rounded-lg shadow-md mb-6">
+        <div className="bg-card rounded-lg shadow-md mb-6">
           <div className="px-6 py-6">
             <h2 className="text-lg font-medium text-primary mb-4">Leave Group</h2>
             <p className="text-sm text-secondary mb-4">

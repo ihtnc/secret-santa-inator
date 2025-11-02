@@ -215,7 +215,7 @@ export default function JoinGroupPage() {
     <div className="bg-surface relative min-h-full">
       {/* Live indicator in upper right margin */}
       {groupInfo && isRealtimeConnected && (
-        <div className="absolute top-4 right-4 flex items-center bg-white dark:bg-gray-800 rounded-full px-3 py-1 shadow-md border border-success">
+        <div className="absolute top-4 right-4 flex items-center bg-page rounded-full px-3 py-1 shadow-md border border-success">
           <div className="h-2 w-2 bg-success-solid rounded-full animate-pulse"></div>
           <span className="ml-2 text-xs text-success font-medium">Live</span>
         </div>
@@ -262,7 +262,7 @@ export default function JoinGroupPage() {
           </div>
         )}
 
-        <div className="bg-white rounded-lg shadow-md">
+        <div className="bg-card rounded-lg shadow-md">
           {/* Group Information Section */}
           {groupInfo && (
             <div className="px-6 py-6">
@@ -351,7 +351,7 @@ export default function JoinGroupPage() {
         </div>
 
         {/* Join Form Section - Separate Card */}
-        <div className="bg-white rounded-lg shadow-md mt-6">
+        <div className="bg-card rounded-lg shadow-md mt-6">
           <div className="px-6 py-6">
             <h2 className="text-lg font-medium text-primary mb-4">Join Group</h2>
 

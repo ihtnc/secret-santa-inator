@@ -50,7 +50,7 @@ export default function CreateGroupPage() {
           </p>
         </div>
 
-        <div className="bg-card dark:bg-gray-800 shadow-md rounded-lg p-6">
+        <div className="bg-card shadow-md rounded-lg p-6">
           {/* Error display */}
           {error && (
             <div className="mb-6 bg-red-50 dark:bg-red-900/50 border border-red-200 dark:border-red-800 rounded-lg p-4">

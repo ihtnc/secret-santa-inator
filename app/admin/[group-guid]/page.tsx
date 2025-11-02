@@ -442,7 +442,7 @@ export default function AdminPage() {
     <div className="bg-surface h-full relative">
       {/* Live indicator in upper right margin */}
       {isRealtimeConnected && (
-        <div className="absolute top-4 right-4 flex items-center bg-white rounded-full px-3 py-1 shadow-md border border-success">
+        <div className="absolute top-4 right-4 flex items-center bg-page rounded-full px-3 py-1 shadow-md border border-success">
           <div className="h-2 w-2 bg-success-solid rounded-full animate-pulse"></div>
           <span className="ml-2 text-xs text-success font-medium">Live</span>
         </div>
@@ -488,7 +488,7 @@ export default function AdminPage() {
             <button
               type="button"
               onClick={() => setIsGroupDetailsExpanded(!isGroupDetailsExpanded)}
-              className="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none focus:bg-gray-100 dark:focus:bg-gray-800 cursor-pointer"
+              className="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-surface-hover focus:outline-none focus:bg-surface-hover cursor-pointer"
             >
               <div className="flex items-center">
                 <h2 className="text-lg font-medium text-primary">
@@ -742,7 +742,7 @@ export default function AdminPage() {
             <button
               type="button"
               onClick={() => setIsMemberListExpanded(!isMemberListExpanded)}
-              className="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none focus:bg-gray-100 dark:focus:bg-gray-800 cursor-pointer"
+              className="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-surface-hover focus:outline-none focus:bg-surface-hover cursor-pointer"
             >
               <div className="flex items-center">
                 <h2 className="text-lg font-medium text-primary">
@@ -777,7 +777,7 @@ export default function AdminPage() {
                     {groupMembers.map((memberName) => (
                       <div
                         key={memberName}
-                        className="flex items-center justify-between px-4 py-3 bg-gray-50 dark:bg-gray-800 rounded-md transition-all duration-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                        className="flex items-center justify-between px-4 py-3 bg-card rounded-md transition-all duration-200 hover:bg-surface-hover"
                       >
                         <div className="flex items-center">
                           <div className="h-8 w-8 bg-info rounded-full flex items-center justify-center">
@@ -801,7 +801,7 @@ export default function AdminPage() {
                                 {/* Confirm kick button */}
                                 <button
                                   onClick={() => handleKickMember(memberName)}
-                                  className="text-success hover:text-success hover:bg-success/10 p-1 rounded-md transition-colors duration-200 cursor-pointer"
+                                  className="text-success hover:text-success hover:bg-success-hover p-1 rounded-md transition-colors duration-200 cursor-pointer"
                                   title={`Confirm remove ${memberName}`}
                                 >
                                   <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -811,7 +811,7 @@ export default function AdminPage() {
                                 {/* Cancel kick button */}
                                 <button
                                   onClick={handleCancelKick}
-                                  className="text-secondary hover:text-primary hover:bg-gray-100 dark:hover:bg-gray-700 p-1 rounded-md transition-colors duration-200 cursor-pointer"
+                                  className="text-secondary hover:text-primary p-1 rounded-md transition-colors duration-200 cursor-pointer"
                                   title="Cancel"
                                 >
                                   <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -847,7 +847,7 @@ export default function AdminPage() {
           (!groupDetails.is_frozen && groupDetails.is_open) ||
           (groupDetails.is_frozen && isCreatorMember)
         ) && (
-          <div className="bg-white rounded-lg shadow-md mt-6 p-6">
+          <div className="bg-card rounded-lg shadow-md mt-6 p-6">
             <div>
               {!isCreatorMember ? (
                 <>
@@ -910,7 +910,7 @@ export default function AdminPage() {
         )}
 
         {/* Assign Santa Section - Non-collapsible */}
-        <div className="bg-white rounded-lg shadow-md mt-6 p-6">
+        <div className="bg-card rounded-lg shadow-md mt-6 p-6">
           <div>
             <h2 className="text-lg font-medium text-primary mb-2">
               Assign Secret Santa

@@ -6,7 +6,7 @@ export default function AboutPage() {
   return (
     <div className="bg-surface h-full flex flex-col">
       <div className="flex-1 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="bg-card dark:bg-gray-800 rounded-lg shadow-md p-8">
+        <div className="bg-card rounded-lg shadow-md p-8">
           <h1 className="text-3xl font-bold text-primary mb-6">About Secret Santa-inator</h1>
 
           <div className="space-y-6 text-secondary">

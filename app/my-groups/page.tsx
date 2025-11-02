@@ -205,7 +205,7 @@ export default function MyGroupsPage() {
     <div className="bg-surface py-12 px-4 sm:px-6 lg:px-8 h-full relative">
       {/* Live indicator in upper right margin */}
       {groups.length > 0 && isRealtimeConnected && (
-        <div className="absolute top-4 right-4 flex items-center bg-white rounded-full px-3 py-1 shadow-md border border-success">
+        <div className="absolute top-4 right-4 flex items-center bg-page rounded-full px-3 py-1 shadow-md border border-success">
           <div className="h-2 w-2 bg-success-solid rounded-full animate-pulse"></div>
           <span className="ml-2 text-xs text-success font-medium">Live</span>
         </div>
@@ -225,7 +225,7 @@ export default function MyGroupsPage() {
         </div>
 
         {groups.length === 0 ? (
-          <div className="bg-white rounded-lg shadow-md p-6 text-center">
+          <div className="bg-card rounded-lg shadow-md p-6 text-center">
             <p className="text-muted mb-4">You haven&apos;t joined any Secret Santa groups yet.</p>
             <Link
               href="/"
@@ -237,12 +237,12 @@ export default function MyGroupsPage() {
         ) : (
           <div className="space-y-4">
             {groups.map((group) => (
-              <div key={group.group_guid} className="bg-white rounded-lg shadow-md">
+              <div key={group.group_guid} className="bg-card rounded-lg shadow-md">
                 {/* Group Header - Collapsible */}
                 <button
                   type="button"
                   onClick={() => toggleGroupExpansion(group.group_guid)}
-                  className="w-full px-4 sm:px-6 py-4 text-left flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none focus:bg-gray-100 dark:focus:bg-gray-800 rounded-lg cursor-pointer"
+                  className="w-full px-4 sm:px-6 py-4 text-left flex items-center justify-between hover:bg-surface-hover focus:outline-none focus:bg-surface-hover rounded-lg cursor-pointer"
                 >
                   <div className="flex items-start justify-between w-full">
                     <div className="flex items-start space-x-4">

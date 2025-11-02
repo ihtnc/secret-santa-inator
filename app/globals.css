@@ -198,6 +198,11 @@
 .bg-surface { background-color: #f9fafb; } /* Very subtle gray-white for main content areas */
 .bg-page { background-color: #ffffff; } /* Pure white for full page backgrounds when needed */
 
+/* Semantic hover styles */
+.hover\:bg-surface-hover:hover { background-color: #f3f4f6; } /* gray-100 - slightly darker than surface */
+.focus\:bg-surface-hover:focus { background-color: #f3f4f6; } /* gray-100 - slightly darker than surface */
+.hover\:bg-success-hover:hover { background-color: rgba(4, 120, 87, 0.1); } /* success with 10% opacity */
+
 /* Semantic input and form styles */
 .input-primary {
   border: 1px solid #d1d5db;
@@ -267,6 +272,11 @@
 .dark .bg-card { background-color: #1f2937; } /* Gray-800 for cards */
 .dark .bg-surface { background-color: #111827; } /* Gray-900 for main areas */
 .dark .bg-page { background-color: #0f172a; } /* Slate-900 for full page */
+
+/* Hover styles for manual dark mode */
+.dark .hover\:bg-surface-hover:hover { background-color: #374151; } /* gray-700 - more visible contrast against gray-900 surface */
+.dark .focus\:bg-surface-hover:focus { background-color: #374151; } /* gray-700 - more visible contrast against gray-900 surface */
+.dark .hover\:bg-success-hover:hover { background-color: rgba(16, 185, 129, 0.1); } /* success with 10% opacity for dark mode */
 
 /* Input styles for manual dark mode */
 .dark .input-primary {
