@@ -19,7 +19,7 @@ export default function Footer() {
 
   return (
     <footer className="bg-card border-t border-accent mt-auto">
-      <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
         <div className="relative flex flex-col sm:flex-row justify-between items-center sm:items-center space-y-4 sm:space-y-0">
           {/* Copyright - centered on mobile, left on desktop */}
           <div className="text-sm text-secondary text-center sm:text-left">
@@ -27,7 +27,7 @@ export default function Footer() {
           </div>
 
           {/* Single toggle - positioned absolutely to not interfere with flex layout */}
-          <div className="absolute top-0 right-0 flex items-center -mt-4 -mr-2 sm:static sm:left-1/2 sm:transform sm:-translate-x-1/2 sm:mt-0 sm:mr-0">
+          <div className="absolute top-0 right-0 flex items-center -mt-2 -mr-2 sm:static sm:mt-0 sm:mr-0">
             <DarkModeToggle />
           </div>
 

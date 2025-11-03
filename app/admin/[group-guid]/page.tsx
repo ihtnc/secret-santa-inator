@@ -11,7 +11,7 @@ import { StatusBadge, RoleBadge } from "@/app/components/Badge";
 import { Card } from "@/app/components/Card";
 import { PageHeader } from "@/app/components/PageHeader";
 import { BackToHome } from "@/app/components/BackToHome";
-import { WarningMessage, ErrorMessage, InfoMessage } from "@/app/components/AlertMessage";
+import { WarningMessage, ErrorMessage, InfoMessage, AlertMessage } from "@/app/components/AlertMessage";
 import { Loading } from "@/app/components/Loading";
 import supabase from "@/utilities/supabase/browser";
 
@@ -471,20 +471,15 @@ export default function AdminPage() {
 
         {/* Status notification */}
         {statusMessage && (
-          <div className={`mb-4 px-4 py-2 rounded-md text-sm animate-pulse ${
-            statusType === 'error'
-              ? 'bg-error border border-error text-error'
-              : 'bg-success border border-success text-success'
-          }`}>
+          <AlertMessage variant={statusType} className="mb-4 animate-pulse">
             {statusMessage}
-          </div>
+          </AlertMessage>
         )}
 
         <CollapsibleSection
           title="Group Details & Settings"
           isExpanded={isGroupDetailsExpanded}
           onToggle={() => setIsGroupDetailsExpanded(!isGroupDetailsExpanded)}
-          hasBorder={true}
           className="rounded-b-none"
           rightContent={
             <div className="flex pt-0.5 space-x-2">
@@ -659,8 +654,8 @@ export default function AdminPage() {
                   />
                 </div>
 
-                <div className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
-                  <label htmlFor="isOpen" className="block text-sm font-medium text-label">
+                <div className={`flex items-center justify-between p-3 border border-gray-200 rounded-lg ${groupDetails.is_frozen ? 'opacity-60' : ''}`}>
+                  <label htmlFor="isOpen" className={`block text-sm font-medium ${groupDetails.is_frozen ? 'text-muted' : 'text-label'}`}>
                     Group is open for new members
                   </label>
                   <div className="relative">
@@ -670,13 +665,16 @@ export default function AdminPage() {
                       name="isOpen"
                       checked={isGroupOpen}
                       onChange={(e) => setIsGroupOpen(e.target.checked)}
+                      disabled={groupDetails.is_frozen}
                       className="sr-only"
                     />
                     <div
-                      onClick={() => setIsGroupOpen(!isGroupOpen)}
-                      className={`w-12 h-6 rounded-full cursor-pointer transition-colors duration-200 flex items-center ${
-                        isGroupOpen ? 'bg-toggle-active' : 'bg-toggle-inactive'
-                      }`}
+                      onClick={() => !groupDetails.is_frozen && setIsGroupOpen(!isGroupOpen)}
+                      className={`w-12 h-6 rounded-full transition-colors duration-200 flex items-center ${
+                        groupDetails.is_frozen
+                          ? 'cursor-not-allowed'
+                          : 'cursor-pointer'
+                      } ${isGroupOpen ? 'bg-toggle-active' : 'bg-toggle-inactive'}`}
                     >
                       <div
                         className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-200 ${
@@ -708,7 +706,7 @@ export default function AdminPage() {
           title={`Group Members (${groupMembers.length} / ${groupDetails.capacity})`}
           isExpanded={isMemberListExpanded}
           onToggle={() => setIsMemberListExpanded(!isMemberListExpanded)}
-          className="rounded-t-none -mt-1 border-t border-accent [&>div>button]:rounded-t-none"
+          className="rounded-t-none -mt-6 border-t border-accent [&>div>button]:rounded-t-none"
         >
           {loadingMembers ? (
             <div className="flex items-center justify-center py-8">

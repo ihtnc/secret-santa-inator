@@ -8,7 +8,7 @@ import { StatusBadge } from "@/app/components/Badge";
 import { Card } from "@/app/components/Card";
 import { PageHeader } from "@/app/components/PageHeader";
 import { BackToHome } from "@/app/components/BackToHome";
-import { WarningMessage, ErrorMessage } from "@/app/components/AlertMessage";
+import { WarningMessage, ErrorMessage, AlertMessage } from "@/app/components/AlertMessage";
 import { Loading } from "@/app/components/Loading";
 import supabase from "@/utilities/supabase/browser";
 
@@ -35,6 +35,7 @@ export default function JoinGroupPage() {
 
   const [groupInfo, setGroupInfo] = useState<GroupInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isJoining, setIsJoining] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [statusType, setStatusType] = useState<'success' | 'error'>('success');
@@ -155,6 +156,7 @@ export default function JoinGroupPage() {
     try {
       setError(null);
       setStatusMessage(null);
+      setIsJoining(true);
 
       await joinGroup(formData);
 
@@ -169,6 +171,8 @@ export default function JoinGroupPage() {
 
       // Use showErrorMessage for action errors (user can retry)
       showErrorMessage(errorMessage);
+    } finally {
+      setIsJoining(false);
     }
   };
 
@@ -227,113 +231,106 @@ export default function JoinGroupPage() {
             emoji="🎅"
           />
 
-        {/* Status notification */}
-        {statusMessage && (
-          <div className={`mb-4 px-4 py-2 rounded-md text-sm animate-pulse ${
-            statusType === 'error'
-              ? 'bg-error border border-error text-error'
-              : 'bg-success border border-success text-success'
-          }`}>
-            {statusMessage}
-          </div>
-        )}
+          {/* Status notification */}
+          {statusMessage && (
+            <AlertMessage variant={statusType} className="mb-4 animate-pulse">
+              {statusMessage}
+            </AlertMessage>
+          )}
 
-        {groupInfo?.is_frozen && (
-          <WarningMessage>
-            <strong>🔒 Group Locked:</strong> This group is locked. You may not be able to join until it&apos;s unlocked by the creator.
-          </WarningMessage>
-        )}
+          {groupInfo?.is_frozen && (
+            <WarningMessage>
+              <strong>🔒 Group Locked:</strong> This group is locked. You may not be able to join until it&apos;s unlocked by the creator.
+            </WarningMessage>
+          )}
 
-        {!groupInfo?.is_open && (
-          <div className="bg-error border border-error rounded-lg p-4">
-            <p className="text-sm text-error">
-              <strong>🔴 Group Closed:</strong> This group is no longer accepting new members.
-            </p>
-          </div>
-        )}
+          {!groupInfo?.is_open && (
+            <ErrorMessage>
+              🔴 <strong>Group Closed:</strong> This group is no longer accepting new members.
+            </ErrorMessage>
+          )}
 
-        <div className="bg-card rounded-lg shadow-md">
-          {/* Group Information Section */}
-          {groupInfo && (
-            <div className="px-6 py-6">
-              <div className="flex items-center mb-4">
-                <h2 className="text-lg font-medium text-primary">Group Details</h2>
-                <div className="flex items-center space-x-2 ml-3">
-                  {!groupInfo.is_frozen && (
-                    <StatusBadge status={groupInfo.is_open ? 'open' : 'closed'} />
-                  )}
-                  {groupInfo.is_frozen && (
-                    <StatusBadge status="locked" />
-                  )}
-                </div>
-              </div>
-
-              {groupInfo.description && (
-                <div className="mb-4">
-                  <p className="text-base text-label font-medium">{groupInfo.description}</p>
-                </div>
-              )}
-
-              <div className="space-y-2 text-sm text-secondary">
-                <div className="flex justify-between">
-                  <span>Group Code:</span>
-                  <span className="font-medium">{groupGuid}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Creator Name:</span>
-                  <span className="font-medium">{groupInfo.creator_name}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Capacity:</span>
-                  <span className="font-medium">{groupInfo.member_count} / {groupInfo.capacity}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Password:</span>
-                  <span className="font-medium">{groupInfo.password ? 'Required' : 'None'}</span>
-                </div>
-                <div className="flex items-center justify-between p-3 border border-primary rounded-lg opacity-60">
-                  <span>Use code names instead of real names:</span>
-                  <div className="relative">
-                    <div
-                      className={`w-12 h-6 rounded-full cursor-not-allowed transition-colors duration-200 flex items-center ${
-                        groupInfo.use_code_names ? 'bg-toggle-active' : 'bg-toggle-inactive'
-                      }`}
-                    >
-                      <div
-                        className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-200 ${
-                          groupInfo.use_code_names ? 'translate-x-6' : 'translate-x-0.5'
-                        }`}
-                      />
-                    </div>
+          <div className="bg-card rounded-lg shadow-md">
+            {/* Group Information Section */}
+            {groupInfo && (
+              <div className="px-6 py-6">
+                <div className="flex items-center mb-4">
+                  <h2 className="text-lg font-medium text-primary">Group Details</h2>
+                  <div className="flex items-center space-x-2 ml-3">
+                    {!groupInfo.is_frozen && (
+                      <StatusBadge status={groupInfo.is_open ? 'open' : 'closed'} />
+                    )}
+                    {groupInfo.is_frozen && (
+                      <StatusBadge status="locked" />
+                    )}
                   </div>
                 </div>
-                {groupInfo.use_code_names && (
+
+                {groupInfo.description && (
+                  <div className="mb-4">
+                    <p className="text-base text-label font-medium">{groupInfo.description}</p>
+                  </div>
+                )}
+
+                <div className="space-y-2 text-sm text-secondary">
+                  <div className="flex justify-between">
+                    <span>Group Code:</span>
+                    <span className="font-medium">{groupGuid}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Creator Name:</span>
+                    <span className="font-medium">{groupInfo.creator_name}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Capacity:</span>
+                    <span className="font-medium">{groupInfo.member_count} / {groupInfo.capacity}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Password:</span>
+                    <span className="font-medium">{groupInfo.password ? 'Required' : 'None'}</span>
+                  </div>
                   <div className="flex items-center justify-between p-3 border border-primary rounded-lg opacity-60">
-                    <span>Automatically assign code names (e.g., &quot;FuzzyPanda&quot;, &quot;MagicDragon&quot;):</span>
+                    <span>Use code names instead of real names:</span>
                     <div className="relative">
                       <div
                         className={`w-12 h-6 rounded-full cursor-not-allowed transition-colors duration-200 flex items-center ${
-                          groupInfo.auto_assign_code_names ? 'bg-toggle-active' : 'bg-toggle-inactive'
+                          groupInfo.use_code_names ? 'bg-toggle-active' : 'bg-toggle-inactive'
                         }`}
                       >
                         <div
                           className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-200 ${
-                            groupInfo.auto_assign_code_names ? 'translate-x-6' : 'translate-x-0.5'
+                            groupInfo.use_code_names ? 'translate-x-6' : 'translate-x-0.5'
                           }`}
                         />
                       </div>
                     </div>
                   </div>
-                )}
+                  {groupInfo.use_code_names && (
+                    <div className="flex items-center justify-between p-3 border border-primary rounded-lg opacity-60">
+                      <span>Automatically assign code names (e.g., &quot;FuzzyPanda&quot;, &quot;MagicDragon&quot;):</span>
+                      <div className="relative">
+                        <div
+                          className={`w-12 h-6 rounded-full cursor-not-allowed transition-colors duration-200 flex items-center ${
+                            groupInfo.auto_assign_code_names ? 'bg-toggle-active' : 'bg-toggle-inactive'
+                          }`}
+                        >
+                          <div
+                            className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-200 ${
+                              groupInfo.auto_assign_code_names ? 'translate-x-6' : 'translate-x-0.5'
+                            }`}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
 
-        <Card
-          title="Join Group"
-        >
-
+          <Card
+            title="Join Group"
+          >
             <form action={handleJoinGroup} className="space-y-6">
               {/* Hidden fields */}
               <input
@@ -408,16 +405,16 @@ export default function JoinGroupPage() {
               <div>
                 <button
                   type="submit"
-                  disabled={!groupInfo?.is_open || groupInfo?.is_frozen}
+                  disabled={!groupInfo?.is_open || groupInfo?.is_frozen || isJoining}
                   className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium btn-success focus-btn-success transition-colors duration-200 cursor-pointer"
                 >
-                  🎁 Join Group
+                  {isJoining ? 'Joining...' : '🎁 Join Group'}
                 </button>
               </div>
             </form>
-        </Card>
+          </Card>
 
-        <BackToHome />
+          <BackToHome />
         </div>
       </div>
     </div>

@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { PageHeader } from '@/app/components/PageHeader';
 import { BackToHome } from '@/app/components/BackToHome';
+import { WarningMessage } from '@/app/components/AlertMessage';
 
 export default function ResetDataPage() {
   const router = useRouter();
@@ -63,19 +64,29 @@ export default function ResetDataPage() {
         <div className="bg-card rounded-lg shadow-md p-8">
           <div className="space-y-6">
             {/* Warning Section */}
-            <div className="bg-warning border border-warning rounded-md p-4">
-              <p className="text-warning">
-                ⚠️ <strong>Important Warning:</strong> Resetting your data will permanently remove your access to all Secret Santa groups, both created and joined.
-              </p>
-              <p className="text-warning mt-2">
-                Here&apos;s what will happen:
-              </p>
-              <ul className="list-disc list-inside space-y-2 text-warning mt-2">
-                <li><strong>You will lose access</strong> to all groups you&apos;ve created or joined</li>
-                <li><strong>Groups won&apos;t be deleted</strong> - they will continue to exist</li>
-                <li><strong>You won&apos;t be removed</strong> from any groups automatically</li>
-                <li><strong>No way back</strong> - you cannot undo this action</li>
-              </ul>
+            <WarningMessage title="Important Warning">
+              Resetting your data will permanently remove your access to all Secret Santa groups, both created and joined.
+            </WarningMessage>
+
+            {/* What Will Happen Section */}
+            <h2 className="text-xl font-semibold text-primary mb-3">What Will Happen</h2>
+            <div className="space-y-2">
+              <div className="flex items-start space-x-3">
+                <span className="shrink-0 w-6 h-6 bg-error-solid text-white rounded-full flex items-center justify-center text-sm font-bold">!</span>
+                <p className="leading-relaxed text-secondary"><strong>You will lose access</strong> to all groups you&apos;ve created or joined</p>
+              </div>
+              <div className="flex items-start space-x-3">
+                <span className="shrink-0 w-6 h-6 bg-error-solid text-white rounded-full flex items-center justify-center text-sm font-bold">!</span>
+                <p className="leading-relaxed text-secondary"><strong>Groups won&apos;t be deleted</strong> - they will continue to exist</p>
+              </div>
+              <div className="flex items-start space-x-3">
+                <span className="shrink-0 w-6 h-6 bg-error-solid text-white rounded-full flex items-center justify-center text-sm font-bold">!</span>
+                <p className="leading-relaxed text-secondary"><strong>You won&apos;t be removed</strong> from any groups automatically</p>
+              </div>
+              <div className="flex items-start space-x-3">
+                <span className="shrink-0 w-6 h-6 bg-error-solid text-white rounded-full flex items-center justify-center text-sm font-bold">!</span>
+                <p className="leading-relaxed text-secondary"><strong>No way back</strong> - you cannot undo this action</p>
+              </div>
             </div>
 
             {/* Recommended Actions Section */}
@@ -85,23 +96,23 @@ export default function ResetDataPage() {
             </p>
             <div className="space-y-3">
               <div className="flex items-start space-x-3">
-                <span className="shrink-0 w-6 h-6 bg-green-600 text-white rounded-full flex items-center justify-center text-sm font-bold">1</span>
+                <span className="shrink-0 w-6 h-6 bg-success-solid text-white rounded-full flex items-center justify-center text-sm font-bold">1</span>
                 <p className="leading-relaxed text-secondary"><strong>Leave joined groups</strong> - Exit any groups you&apos;ve joined to avoid orphaned entries</p>
               </div>
               <div className="flex items-start space-x-3">
-                <span className="shrink-0 w-6 h-6 bg-green-600 text-white rounded-full flex items-center justify-center text-sm font-bold">2</span>
+                <span className="shrink-0 w-6 h-6 bg-success-solid text-white rounded-full flex items-center justify-center text-sm font-bold">2</span>
                 <p className="leading-relaxed text-secondary"><strong>Remove members</strong> from groups you created - Clean up your created groups</p>
               </div>
               <div className="flex items-start space-x-3">
-                <span className="shrink-0 w-6 h-6 bg-green-600 text-white rounded-full flex items-center justify-center text-sm font-bold">3</span>
+                <span className="shrink-0 w-6 h-6 bg-success-solid text-white rounded-full flex items-center justify-center text-sm font-bold">3</span>
                 <p className="leading-relaxed text-secondary"><strong>Inform group members</strong> - Let others know you&apos;re leaving</p>
               </div>
               <div className="flex items-start space-x-3">
-                <span className="shrink-0 w-6 h-6 bg-green-600 text-white rounded-full flex items-center justify-center text-sm font-bold">4</span>
+                <span className="shrink-0 w-6 h-6 bg-success-solid text-white rounded-full flex items-center justify-center text-sm font-bold">4</span>
                 <p className="leading-relaxed text-secondary"><strong>Export any important information</strong> - Save any details you need</p>
               </div>
               <div className="flex items-start space-x-3">
-                <span className="shrink-0 w-6 h-6 bg-green-600 text-white rounded-full flex items-center justify-center text-sm font-bold">5</span>
+                <span className="shrink-0 w-6 h-6 bg-success-solid text-white rounded-full flex items-center justify-center text-sm font-bold">5</span>
                 <p className="leading-relaxed text-secondary"><strong>Go to My Groups</strong> to manage your groups first</p>
               </div>
             </div>

@@ -200,7 +200,9 @@ export default function MyGroupsPage() {
         </div>
       </div>
     );
-  }  return (
+  }
+
+  return (
     <div className="bg-surface py-12 px-4 sm:px-6 lg:px-8 h-full relative">
       {/* Live indicator in upper right margin */}
       <LiveIndicator isVisible={groups.length > 0 && isRealtimeConnected} />
@@ -272,19 +274,19 @@ export default function MyGroupsPage() {
                   </div>
                 }
               >
-                    <div className="text-sm text-secondary mb-4">
-                      {group.description}
-                    </div>
+                <div className="text-sm text-secondary mb-4">
+                  {group.description}
+                </div>
 
-                    {/* Action Button - Only for creators */}
-                    {isUserCreator(group) && (
-                      <Link
-                        href={`/admin/${group.group_guid}`}
-                        className="w-full inline-block text-center py-3 px-6 btn-primary text-sm font-medium rounded-md transition-colors duration-200"
-                      >
-                        Manage Group
-                      </Link>
-                    )}
+                {/* Action Button - Only for creators */}
+                {isUserCreator(group) && (
+                  <Link
+                    href={`/admin/${group.group_guid}`}
+                    className="w-full inline-block text-center py-3 px-6 btn-primary text-sm font-medium rounded-md transition-colors duration-200"
+                  >
+                    Manage Group
+                  </Link>
+                )}
               </CollapsibleSection>
             ))}
           </div>

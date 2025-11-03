@@ -10,7 +10,7 @@ import { RoleBadge } from "@/app/components/Badge";
 import { Card } from "@/app/components/Card";
 import { PageHeader } from "@/app/components/PageHeader";
 import { BackToHome } from "@/app/components/BackToHome";
-import { WarningMessage, ErrorMessage } from "@/app/components/AlertMessage";
+import { WarningMessage, ErrorMessage, AlertMessage } from "@/app/components/AlertMessage";
 import { Loading } from "@/app/components/Loading";
 import supabase from "@/utilities/supabase/browser";
 
@@ -49,6 +49,7 @@ export default function GroupPage() {
   const [secretSanta, setSecretSanta] = useState<string | null>(null);
   const [isMemberListExpanded, setIsMemberListExpanded] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLeaving, setIsLeaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [statusType, setStatusType] = useState<'success' | 'error'>('success');
@@ -199,6 +200,7 @@ export default function GroupPage() {
     try {
       setError(null);
       setStatusMessage(null);
+      setIsLeaving(true);
 
       await leaveGroup(formData);
 
@@ -208,6 +210,8 @@ export default function GroupPage() {
       console.error('Failed to leave group:', err);
       const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
       showErrorMessage(errorMessage);
+    } finally {
+      setIsLeaving(false);
     }
   };
 
@@ -235,7 +239,9 @@ export default function GroupPage() {
         </div>
       </div>
     );
-  }  return (
+  }
+
+  return (
     <div className="bg-surface h-full relative">
       {/* Live indicator in upper right margin */}
       <LiveIndicator isVisible={isRealtimeConnected} />
@@ -257,13 +263,9 @@ export default function GroupPage() {
 
         {/* Status notification */}
         {statusMessage && (
-          <div className={`px-4 py-2 rounded-md text-sm animate-pulse ${
-            statusType === 'error'
-              ? 'bg-error border border-error text-error'
-              : 'bg-success border border-success text-success'
-          }`}>
+          <AlertMessage variant={statusType} className="animate-pulse">
             {statusMessage}
-          </div>
+          </AlertMessage>
         )}
 
         {/* Group status alerts */}
@@ -274,11 +276,9 @@ export default function GroupPage() {
         )}
 
         {!groupInfo?.is_open && (
-          <div className="bg-error border border-error rounded-lg p-4">
-            <p className="text-sm text-error">
-              <strong>🔴 Group Closed:</strong> This group is no longer accepting new members.
-            </p>
-          </div>
+          <ErrorMessage>
+            🔴 <strong>Group Closed:</strong> This group is no longer accepting new members.
+          </ErrorMessage>
         )}
 
         {/* Secret Santa Assignment Section - Always show */}
@@ -314,19 +314,15 @@ export default function GroupPage() {
                   </p>
                 </div>
               ) : (
-                <div className="bg-warning border border-warning rounded-md p-4">
-                  <p className="text-warning text-sm">
-                    Unable to load your Secret Santa assignment. Please refresh the page.
-                  </p>
-                </div>
+                <WarningMessage>
+                  Unable to load your Secret Santa assignment. Please refresh the page.
+                </WarningMessage>
               )
             ) : (
               // Show waiting message when group is not frozen
-              <div className="bg-warning border border-warning rounded-md p-4">
-                <p className="text-warning text-sm">
-                  <strong>⏳ Waiting for Secret Santa Assignments:</strong> The group creator hasn&apos;t assigned Secret Santa pairs yet.
-                </p>
-              </div>
+              <WarningMessage>
+                <strong>⏳ Waiting for Secret Santa Assignments:</strong> The group creator hasn&apos;t assigned Secret Santa pairs yet.
+              </WarningMessage>
             )}
           </div>
         </div>
@@ -338,28 +334,28 @@ export default function GroupPage() {
           onToggle={() => setIsMemberListExpanded(!isMemberListExpanded)}
           className="mb-6"
         >
-                {members.length > 0 ? (
-                  <div className="space-y-2">
-                    {members.map((member, index) => (
-                      <MemberListItem
-                        key={index}
-                        name={member.name}
-                        badges={
-                          <>
-                            {member.name === userInfo?.name && (
-                              <RoleBadge role="you" />
-                            )}
-                            {member.name === groupInfo?.creator_name && (
-                              <RoleBadge role="creator" />
-                            )}
-                          </>
-                        }
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-sm text-muted italic">No members found.</p>
-                )}
+          {members.length > 0 ? (
+            <div className="space-y-2">
+              {members.map((member, index) => (
+                <MemberListItem
+                  key={index}
+                  name={member.name}
+                  badges={
+                    <>
+                      {member.name === userInfo?.name && (
+                        <RoleBadge role="you" />
+                      )}
+                      {member.name === groupInfo?.creator_name && (
+                        <RoleBadge role="creator" />
+                      )}
+                    </>
+                  }
+                />
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-muted italic">No members found.</p>
+          )}
         </CollapsibleSection>
 
         {/* Leave Group Section */}
@@ -377,10 +373,10 @@ export default function GroupPage() {
 
             <button
               type="submit"
-              disabled={groupInfo?.is_frozen}
+              disabled={groupInfo?.is_frozen || isLeaving}
               className="w-full py-3 px-6 btn-primary text-sm font-medium rounded-md transition-colors duration-200 shadow-sm cursor-pointer"
             >
-              Leave Group
+              {isLeaving ? 'Leaving...' : 'Leave Group'}
             </button>
           </form>
         </Card>

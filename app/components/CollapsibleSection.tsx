@@ -27,7 +27,7 @@ export default function CollapsibleSection({
           onClick={onToggle}
           className={`w-full px-6 py-4 text-left flex items-center justify-between hover:bg-surface-hover focus:outline-none focus:bg-surface-hover cursor-pointer rounded-lg ${
             isExpanded ? 'rounded-b-none' : ''
-          }`}
+          } ${className.includes('rounded-b-none') && !isExpanded ? 'rounded-b-none' : ''}`}
         >
           <div className="flex items-start flex-1 justify-between">
             <div className="flex items-center">
