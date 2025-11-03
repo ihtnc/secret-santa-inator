@@ -6,6 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import { getUserInfo, getMySecretSanta, getGroupMembers, getGroupInfo, leaveGroup } from "./actions";
 import LiveIndicator from "@/app/components/LiveIndicator";
 import CollapsibleSection from "@/app/components/CollapsibleSection";
+import MemberListItem from "@/app/components/MemberListItem";
 import supabase from "@/utilities/supabase/browser";
 
 interface UserInfo {
@@ -341,26 +342,24 @@ export default function GroupPage() {
                 {members.length > 0 ? (
                   <div className="space-y-2">
                     {members.map((member, index) => (
-                      <div key={index} className="flex items-center justify-between px-4 py-3 bg-card rounded-md transition-all duration-200 hover:bg-surface-hover">
-                        <div className="flex items-center">
-                          <div className="h-8 w-8 bg-info rounded-full flex items-center justify-center">
-                            <span className="text-info text-sm font-medium">
-                              {member.name.charAt(0).toUpperCase()}
-                            </span>
-                          </div>
-                          <span className="ml-3 text-primary">{member.name}</span>
-                          {member.name === userInfo?.name && (
-                            <span className="ml-2 text-xs bg-info text-info px-2 py-1 rounded-full">
-                              You
-                            </span>
-                          )}
-                          {member.name === groupInfo?.creator_name && (
-                            <span className="ml-2 text-xs bg-success text-success px-2 py-1 rounded-full">
-                              Creator
-                            </span>
-                          )}
-                        </div>
-                      </div>
+                      <MemberListItem
+                        key={index}
+                        name={member.name}
+                        badges={
+                          <>
+                            {member.name === userInfo?.name && (
+                              <span className="text-xs bg-info text-info px-2 py-1 rounded-full">
+                                You
+                              </span>
+                            )}
+                            {member.name === groupInfo?.creator_name && (
+                              <span className="text-xs bg-success text-success px-2 py-1 rounded-full">
+                                Creator
+                              </span>
+                            )}
+                          </>
+                        }
+                      />
                     ))}
                   </div>
                 ) : (
