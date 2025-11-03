@@ -11,7 +11,7 @@ import { StatusBadge, RoleBadge } from "@/app/components/Badge";
 import { Card } from "@/app/components/Card";
 import { PageHeader } from "@/app/components/PageHeader";
 import { BackToHome } from "@/app/components/BackToHome";
-import { WarningMessage, ErrorMessage } from "@/app/components/AlertMessage";
+import { WarningMessage, ErrorMessage, InfoMessage } from "@/app/components/AlertMessage";
 import { Loading } from "@/app/components/Loading";
 import supabase from "@/utilities/supabase/browser";
 
@@ -442,7 +442,9 @@ export default function AdminPage() {
         </div>
       </div>
     );
-  }  return (
+  }
+
+  return (
     <div className="bg-surface h-full relative">
       {/* Live indicator in upper right margin */}
       <LiveIndicator isVisible={isRealtimeConnected} />
@@ -858,19 +860,15 @@ export default function AdminPage() {
               </button>
             </div>
           ) : groupMembers.length < 2 ? (
-            <div className="bg-warning border border-warning rounded-md p-4">
-              <p className="text-warning">
-                ⚠️ You need at least 2 members to assign Secret Santa pairs.
-              </p>
-            </div>
+            <WarningMessage>
+              <strong>⚠️ Minimum Members Required:</strong> You need at least 2 members to assign Secret Santa pairs.
+            </WarningMessage>
           ) : (
             <div>
-              <div className="bg-info border border-info rounded-md p-4 mb-4">
-                <p className="text-info text-sm">
-                  <strong>Ready to assign!</strong> You have {groupMembers.length} members.
-                  Once assigned, the group will be frozen and no more changes can be made.
-                </p>
-              </div>
+              <InfoMessage className="mb-4">
+                <strong>🎯 Ready to assign!</strong> You have {groupMembers.length} members.
+                Once assigned, the group will be frozen and no more changes can be made.
+              </InfoMessage>
               <button
                 onClick={handleAssignSanta}
                 disabled={assigning}
