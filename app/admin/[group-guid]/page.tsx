@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { getGroupDetails, updateGroup, getGroupMembers, assignSecretSanta, joinGroupAsCreator, kickMember, unlockGroup } from "./actions";
 import LiveIndicator from "@/app/components/LiveIndicator";
+import CollapsibleSection from "@/app/components/CollapsibleSection";
 import supabase from "@/utilities/supabase/browser";
 
 interface GroupDetails {
@@ -478,365 +479,323 @@ export default function AdminPage() {
           </div>
         )}
 
-        <div className="bg-card rounded-lg shadow-md">
-          {/* Group Details Section - Collapsible */}
-          <div className="border-b border-accent">
-            <button
-              type="button"
-              onClick={() => setIsGroupDetailsExpanded(!isGroupDetailsExpanded)}
-              className="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-surface-hover focus:outline-none focus:bg-surface-hover cursor-pointer"
-            >
-              <div className="flex items-center">
-                <h2 className="text-lg font-medium text-primary">
-                  Group Details & Settings
-                </h2>
-                <div className="flex items-center space-x-2 ml-3">
-                  {!groupDetails.is_frozen && (
-                    groupDetails.is_open ? (
-                      <span className="text-xs bg-success text-success px-2 py-1 rounded-full">
-                        🟢<span className="hidden sm:inline ml-1">Open</span>
-                      </span>
-                    ) : (
-                      <span className="text-xs bg-error text-error px-2 py-1 rounded-full">
-                        🔴<span className="hidden sm:inline ml-1">Closed</span>
-                      </span>
-                    )
-                  )}
-                  {groupDetails.is_frozen && (
-                    <span className="text-xs bg-warning text-warning px-2 py-1 rounded-full">
-                      🔒<span className="hidden sm:inline ml-1">Locked</span>
-                    </span>
-                  )}
+        <CollapsibleSection
+          title="Group Details & Settings"
+          isExpanded={isGroupDetailsExpanded}
+          onToggle={() => setIsGroupDetailsExpanded(!isGroupDetailsExpanded)}
+          hasBorder={true}
+          className="rounded-b-none"
+          rightContent={
+            <div className="flex pt-0.5 space-x-2">
+              {!groupDetails.is_frozen && (
+                groupDetails.is_open ? (
+                  <span className="text-xs bg-success text-success px-2 py-1 rounded-full">
+                    🟢<span className="hidden sm:inline ml-1">Open</span>
+                  </span>
+                ) : (
+                  <span className="text-xs bg-error text-error px-2 py-1 rounded-full">
+                    🔴<span className="hidden sm:inline ml-1">Closed</span>
+                  </span>
+                )
+              )}
+              {groupDetails.is_frozen && (
+                <span className="text-xs bg-warning text-warning px-2 py-1 rounded-full">
+                  🔒<span className="hidden sm:inline ml-1">Locked</span>
+                </span>
+              )}
+            </div>
+          }
+        >
+          {groupDetails.is_frozen && (
+            <div className="mb-4 bg-warning border border-warning rounded-md p-3">
+              <p className="text-warning text-sm">
+                🔒 <strong>Group Locked:</strong> Settings cannot be modified after Secret Santa assignments are made.
+              </p>
+            </div>
+          )}
+          <form action={handleSubmit} className="space-y-6">
+            <fieldset disabled={groupDetails.is_frozen}>
+            {/* Group Info */}
+            <div className="border-b border-accent pb-6">
+              <h3 className="text-md font-medium text-primary mb-4">Group Details</h3>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-label mb-1">
+                    Group Code
+                  </label>
+                  <input
+                    type="text"
+                    value={groupDetails.group_guid}
+                    disabled
+                    className="input-primary w-full px-3 py-2 rounded-md text-primary"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-label mb-1">
+                    Creator Name
+                  </label>
+                  <input
+                    type="text"
+                    value={groupDetails.creator_name}
+                    disabled
+                    className="input-primary w-full px-3 py-2 rounded-md text-primary"
+                  />
+                </div>
+
+              <div>
+                <label className="block text-sm font-medium text-label mb-3">
+                  Code Name Settings
+                </label>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg opacity-60">
+                    <label className="block text-sm font-medium text-secondary">
+                      Use code names instead of real names
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="checkbox"
+                        checked={groupDetails.use_code_names}
+                        disabled
+                        className="sr-only"
+                      />
+                      <div
+                        className={`w-12 h-6 rounded-full cursor-not-allowed transition-colors duration-200 flex items-center ${
+                          groupDetails.use_code_names ? 'bg-toggle-active' : 'bg-toggle-inactive'
+                        }`}
+                      >
+                        <div
+                          className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-200 ${
+                            groupDetails.use_code_names ? 'translate-x-6' : 'translate-x-0.5'
+                          }`}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg opacity-60">
+                    <label className="block text-sm font-medium text-secondary">
+                      Automatically assign code names (e.g., &quot;FuzzyPanda&quot;, &quot;MagicDragon&quot;)
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="checkbox"
+                        checked={groupDetails.auto_assign_code_names}
+                        disabled
+                        className="sr-only"
+                      />
+                      <div
+                        className={`w-12 h-6 rounded-full cursor-not-allowed transition-colors duration-200 flex items-center ${
+                          groupDetails.auto_assign_code_names ? 'bg-toggle-active' : 'bg-toggle-inactive'
+                        }`}
+                      >
+                        <div
+                          className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-200 ${
+                            groupDetails.auto_assign_code_names ? 'translate-x-6' : 'translate-x-0.5'
+                          }`}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
                 </div>
               </div>
-              <svg
-                className={`h-5 w-5 text-icon transform transition-transform ${
-                  isGroupDetailsExpanded ? 'rotate-180' : ''
-                }`}
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
+            </div>
 
-            {isGroupDetailsExpanded && (
-              <div className="px-6 pt-4 pb-6">
-                {groupDetails.is_frozen && (
-                  <div className="mb-4 bg-warning border border-warning rounded-md p-3">
-                    <p className="text-warning text-sm">
-                      🔒 <strong>Group Locked:</strong> Settings cannot be modified after Secret Santa assignments are made.
-                    </p>
-                  </div>
-                )}
-                <form action={handleSubmit} className="space-y-6">
-                  <fieldset disabled={groupDetails.is_frozen}>
-                  {/* Group Info */}
-                  <div className="border-b border-accent pb-6">
-                    <h3 className="text-md font-medium text-primary mb-4">Group Details</h3>
+            {/* Editable Settings */}
+            <div className="border-b border-accent pb-6 pt-6">
+              <h3 className="text-md font-medium text-primary mb-4">Group Settings</h3>
 
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium text-label mb-1">
-                          Group Code
-                        </label>
-                        <input
-                          type="text"
-                          value={groupDetails.group_guid}
-                          disabled
-                          className="input-primary w-full px-3 py-2 rounded-md text-primary"
-                        />
-                      </div>
+              <div className="space-y-4">
+                <div>
+                  <label htmlFor="capacity" className="block text-sm font-medium text-label mb-1">
+                    Maximum Members *
+                  </label>
+                  <input
+                    type="number"
+                    id="capacity"
+                    name="capacity"
+                    required
+                    min="2"
+                    max="100"
+                    defaultValue={groupDetails.capacity}
+                    className="input-primary w-full px-3 py-2 rounded-md text-primary placeholder:text-muted"
+                  />
+                  <p className="text-xs text-muted mt-1">
+                    Minimum 2 members, maximum 100 members
+                  </p>
+                </div>
 
-                      <div>
-                        <label className="block text-sm font-medium text-label mb-1">
-                          Creator Name
-                        </label>
-                        <input
-                          type="text"
-                          value={groupDetails.creator_name}
-                          disabled
-                          className="input-primary w-full px-3 py-2 rounded-md text-primary"
-                        />
-                      </div>
+                <div>
+                  <label htmlFor="password" className="block text-sm font-medium text-label mb-1">
+                    Group Password
+                  </label>
+                  <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    defaultValue={groupDetails.password || ''}
+                    className="input-primary w-full px-3 py-2 rounded-md text-primary placeholder:text-muted"
+                    placeholder="Leave blank for no password"
+                  />
+                </div>
 
-                    <div>
-                      <label className="block text-sm font-medium text-label mb-3">
-                        Code Name Settings
-                      </label>
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg opacity-60">
-                          <label className="block text-sm font-medium text-secondary">
-                            Use code names instead of real names
-                          </label>
-                          <div className="relative">
-                            <input
-                              type="checkbox"
-                              checked={groupDetails.use_code_names}
-                              disabled
-                              className="sr-only"
-                            />
-                            <div
-                              className={`w-12 h-6 rounded-full cursor-not-allowed transition-colors duration-200 flex items-center ${
-                                groupDetails.use_code_names ? 'bg-toggle-active' : 'bg-toggle-inactive'
-                              }`}
-                            >
-                              <div
-                                className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-200 ${
-                                  groupDetails.use_code_names ? 'translate-x-6' : 'translate-x-0.5'
-                                }`}
-                              />
-                            </div>
-                          </div>
-                        </div>
+                <div>
+                  <label htmlFor="description" className="block text-sm font-medium text-label mb-1">
+                    Description
+                  </label>
+                  <textarea
+                    value={groupDetails.description || ''}
+                    disabled
+                    rows={3}
+                    className="input-primary w-full px-3 py-2 rounded-md text-primary"
+                    placeholder="Description cannot be updated"
+                  />
+                  <p className="text-xs text-muted mt-1">
+                    Description can only be set when creating the group
+                  </p>
+                </div>
 
-                        <div className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg opacity-60">
-                          <label className="block text-sm font-medium text-secondary">
-                            Automatically assign code names (e.g., &quot;FuzzyPanda&quot;, &quot;MagicDragon&quot;)
-                          </label>
-                          <div className="relative">
-                            <input
-                              type="checkbox"
-                              checked={groupDetails.auto_assign_code_names}
-                              disabled
-                              className="sr-only"
-                            />
-                            <div
-                              className={`w-12 h-6 rounded-full cursor-not-allowed transition-colors duration-200 flex items-center ${
-                                groupDetails.auto_assign_code_names ? 'bg-toggle-active' : 'bg-toggle-inactive'
-                              }`}
-                            >
-                              <div
-                                className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-200 ${
-                                  groupDetails.auto_assign_code_names ? 'translate-x-6' : 'translate-x-0.5'
-                                }`}
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      </div>
-                    </div>
-                  </div>
+                <div>
+                  <label htmlFor="expiryDate" className="block text-sm font-medium text-label mb-1">
+                    Expiry Date
+                  </label>
+                  <input
+                    type="date"
+                    id="expiryDate"
+                    name="expiryDate"
+                    defaultValue={groupDetails.expiry_date ? new Date(groupDetails.expiry_date).toISOString().split('T')[0] : ''}
+                    className="input-primary w-full px-3 py-2 rounded-md text-primary"
+                  />
+                </div>
 
-                  {/* Editable Settings */}
-                  <div className="border-b border-accent pb-6 pt-6">
-                    <h3 className="text-md font-medium text-primary mb-4">Group Settings</h3>
-
-                    <div className="space-y-4">
-                      <div>
-                        <label htmlFor="capacity" className="block text-sm font-medium text-label mb-1">
-                          Maximum Members *
-                        </label>
-                        <input
-                          type="number"
-                          id="capacity"
-                          name="capacity"
-                          required
-                          min="2"
-                          max="100"
-                          defaultValue={groupDetails.capacity}
-                          className="input-primary w-full px-3 py-2 rounded-md text-primary placeholder:text-muted"
-                        />
-                        <p className="text-xs text-muted mt-1">
-                          Minimum 2 members, maximum 100 members
-                        </p>
-                      </div>
-
-                      <div>
-                        <label htmlFor="password" className="block text-sm font-medium text-label mb-1">
-                          Group Password
-                        </label>
-                        <input
-                          type="password"
-                          id="password"
-                          name="password"
-                          defaultValue={groupDetails.password || ''}
-                          className="input-primary w-full px-3 py-2 rounded-md text-primary placeholder:text-muted"
-                          placeholder="Leave blank for no password"
-                        />
-                      </div>
-
-                      <div>
-                        <label htmlFor="description" className="block text-sm font-medium text-label mb-1">
-                          Description
-                        </label>
-                        <textarea
-                          value={groupDetails.description || ''}
-                          disabled
-                          rows={3}
-                          className="input-primary w-full px-3 py-2 rounded-md text-primary"
-                          placeholder="Description cannot be updated"
-                        />
-                        <p className="text-xs text-muted mt-1">
-                          Description can only be set when creating the group
-                        </p>
-                      </div>
-
-                      <div>
-                        <label htmlFor="expiryDate" className="block text-sm font-medium text-label mb-1">
-                          Expiry Date
-                        </label>
-                        <input
-                          type="date"
-                          id="expiryDate"
-                          name="expiryDate"
-                          defaultValue={groupDetails.expiry_date ? new Date(groupDetails.expiry_date).toISOString().split('T')[0] : ''}
-                          className="input-primary w-full px-3 py-2 rounded-md text-primary"
-                        />
-                      </div>
-
-                      <div className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
-                        <label htmlFor="isOpen" className="block text-sm font-medium text-label">
-                          Group is open for new members
-                        </label>
-                        <div className="relative">
-                          <input
-                            type="checkbox"
-                            id="isOpen"
-                            name="isOpen"
-                            checked={isGroupOpen}
-                            onChange={(e) => setIsGroupOpen(e.target.checked)}
-                            className="sr-only"
-                          />
-                          <div
-                            onClick={() => setIsGroupOpen(!isGroupOpen)}
-                            className={`w-12 h-6 rounded-full cursor-pointer transition-colors duration-200 flex items-center ${
-                              isGroupOpen ? 'bg-toggle-active' : 'bg-toggle-inactive'
-                            }`}
-                          >
-                            <div
-                              className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-200 ${
-                                isGroupOpen ? 'translate-x-6' : 'translate-x-0.5'
-                              }`}
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="flex flex-col sm:flex-row gap-3">
-                    <button
-                      type="submit"
-                      disabled={saving || groupDetails.is_frozen}
-                      className="w-full py-3 px-6 btn-primary text-sm font-medium rounded-md transition-colors duration-200 shadow-sm cursor-pointer"
+                <div className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+                  <label htmlFor="isOpen" className="block text-sm font-medium text-label">
+                    Group is open for new members
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="checkbox"
+                      id="isOpen"
+                      name="isOpen"
+                      checked={isGroupOpen}
+                      onChange={(e) => setIsGroupOpen(e.target.checked)}
+                      className="sr-only"
+                    />
+                    <div
+                      onClick={() => setIsGroupOpen(!isGroupOpen)}
+                      className={`w-12 h-6 rounded-full cursor-pointer transition-colors duration-200 flex items-center ${
+                        isGroupOpen ? 'bg-toggle-active' : 'bg-toggle-inactive'
+                      }`}
                     >
-                      {saving ? 'Saving...' : 'Save Changes'}
-                    </button>
-                  </div>
-                  </fieldset>
-                </form>
-              </div>
-            )}
-          </div>
-
-          {/* Member List Section - Collapsible */}
-          <div>
-            <button
-              type="button"
-              onClick={() => setIsMemberListExpanded(!isMemberListExpanded)}
-              className="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-surface-hover focus:outline-none focus:bg-surface-hover cursor-pointer"
-            >
-              <div className="flex items-center">
-                <h2 className="text-lg font-medium text-primary">
-                  Group Members ({groupMembers.length} / {groupDetails.capacity})
-                </h2>
-              </div>
-              <svg
-                className={`h-5 w-5 text-icon transform transition-transform ${
-                  isMemberListExpanded ? 'rotate-180' : ''
-                }`}
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-
-            {isMemberListExpanded && (
-              <div className="px-6 pt-4 pb-6">
-                {loadingMembers ? (
-                  <div className="flex items-center justify-center py-8">
-                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-red-600"></div>
-                    <span className="ml-2 text-secondary">Loading members...</span>
-                  </div>
-                ) : groupMembers.length === 0 ? (
-                  <div className="text-center py-8">
-                    <p className="text-muted">No members have joined this group yet.</p>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    {groupMembers.map((memberName) => (
                       <div
-                        key={memberName}
-                        className="flex items-center justify-between px-4 py-3 bg-card rounded-md transition-all duration-200 hover:bg-surface-hover"
-                      >
-                        <div className="flex items-center">
-                          <div className="h-8 w-8 bg-info rounded-full flex items-center justify-center">
-                            <span className="text-info text-sm font-medium">
-                              {memberName.charAt(0).toUpperCase()}
-                            </span>
-                          </div>
-                          <span className="ml-3 text-primary">{memberName}</span>
-                          {memberName === groupDetails?.creator_name && (
-                            <span className="ml-2 text-xs bg-success text-success px-2 py-1 rounded-full">
-                              Creator
-                            </span>
-                          )}
-                        </div>
-
-                        {/* Action buttons - only show for non-frozen groups */}
-                        {groupDetails && !groupDetails.is_frozen && (
-                          <div className="flex items-center space-x-1">
-                            {memberToKick === memberName ? (
-                              <>
-                                {/* Confirm kick button */}
-                                <button
-                                  onClick={() => handleKickMember(memberName)}
-                                  className="text-success hover:text-success hover:bg-success-hover p-1 rounded-md transition-colors duration-200 cursor-pointer"
-                                  title={`Confirm remove ${memberName}`}
-                                >
-                                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                  </svg>
-                                </button>
-                                {/* Cancel kick button */}
-                                <button
-                                  onClick={handleCancelKick}
-                                  className="text-secondary hover:text-primary p-1 rounded-md transition-colors duration-200 cursor-pointer"
-                                  title="Cancel"
-                                >
-                                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                  </svg>
-                                </button>
-                              </>
-                            ) : (
-                              /* Delete button */
-                              <button
-                                onClick={() => handleConfirmKick(memberName)}
-                                className="action-destructive p-1 rounded-md transition-colors duration-200 cursor-pointer"
-                                title={`Remove ${memberName} from group`}
-                              >
-                                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                </svg>
-                              </button>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    ))}
+                        className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-200 ${
+                          isGroupOpen ? 'translate-x-6' : 'translate-x-0.5'
+                        }`}
+                      />
+                    </div>
                   </div>
-                )}
+                </div>
               </div>
-            )}
-          </div>
-        </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button
+                type="submit"
+                disabled={saving || groupDetails.is_frozen}
+                className="w-full py-3 px-6 btn-primary text-sm font-medium rounded-md transition-colors duration-200 shadow-sm cursor-pointer"
+              >
+                {saving ? 'Saving...' : 'Save Changes'}
+              </button>
+            </div>
+            </fieldset>
+          </form>
+        </CollapsibleSection>
+
+        {/* Member List Section - Collapsible */}
+        <CollapsibleSection
+          title={`Group Members (${groupMembers.length} / ${groupDetails.capacity})`}
+          isExpanded={isMemberListExpanded}
+          onToggle={() => setIsMemberListExpanded(!isMemberListExpanded)}
+          className="rounded-t-none -mt-1 border-t border-accent [&>div>button]:rounded-t-none"
+        >
+          {loadingMembers ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-red-600"></div>
+              <span className="ml-2 text-secondary">Loading members...</span>
+            </div>
+          ) : groupMembers.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-muted">No members have joined this group yet.</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {groupMembers.map((memberName) => (
+                <div
+                  key={memberName}
+                  className="flex items-center justify-between px-4 py-3 bg-card rounded-md transition-all duration-200 hover:bg-surface-hover"
+                >
+                  <div className="flex items-center">
+                    <div className="h-8 w-8 bg-info rounded-full flex items-center justify-center">
+                      <span className="text-info text-sm font-medium">
+                        {memberName.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                    <span className="ml-3 text-primary">{memberName}</span>
+                    {memberName === groupDetails?.creator_name && (
+                      <span className="ml-2 text-xs bg-success text-success px-2 py-1 rounded-full">
+                        Creator
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Action buttons - only show for non-frozen groups */}
+                  {groupDetails && !groupDetails.is_frozen && (
+                    <div className="flex items-center space-x-1">
+                      {memberToKick === memberName ? (
+                        <>
+                          {/* Confirm kick button */}
+                          <button
+                            onClick={() => handleKickMember(memberName)}
+                            className="text-success hover:text-success hover:bg-success-hover p-1 rounded-md transition-colors duration-200 cursor-pointer"
+                            title={`Confirm remove ${memberName}`}
+                          >
+                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                          </button>
+                          {/* Cancel kick button */}
+                          <button
+                            onClick={handleCancelKick}
+                            className="text-secondary hover:text-primary p-1 rounded-md transition-colors duration-200 cursor-pointer"
+                            title="Cancel"
+                          >
+                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        </>
+                      ) : (
+                        /* Delete button */
+                        <button
+                          onClick={() => handleConfirmKick(memberName)}
+                          className="action-destructive p-1 rounded-md transition-colors duration-200 cursor-pointer"
+                          title={`Remove ${memberName} from group`}
+                        >
+                          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </CollapsibleSection>
 
         {/* Join Group Section or View Group Link */}
         {groupDetails && (

@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { getMyGroups } from "./actions";
 import supabase from "@/utilities/supabase/browser";
 import LiveIndicator from "@/app/components/LiveIndicator";
+import CollapsibleSection from "@/app/components/CollapsibleSection";
 
 interface GroupInfo {
   group_guid: string;
@@ -233,15 +234,11 @@ export default function MyGroupsPage() {
         ) : (
           <div className="space-y-4">
             {groups.map((group) => (
-              <div key={group.group_guid} className="bg-card rounded-lg shadow-md">
-                {/* Group Header - Collapsible */}
-                <button
-                  type="button"
-                  onClick={() => toggleGroupExpansion(group.group_guid)}
-                  className="w-full px-4 sm:px-6 py-4 text-left flex items-center justify-between hover:bg-surface-hover focus:outline-none focus:bg-surface-hover rounded-lg cursor-pointer"
-                >
-                  <div className="flex items-start justify-between w-full">
-                    <div className="flex items-start space-x-4">
+              <CollapsibleSection
+                key={group.group_guid}
+                title={
+                  <div className="flex items-start justify-between w-full flex-1">
+                    <div className="flex items-start space-x-4 flex-1">
                       <div className="flex flex-col items-center">
                         <Link
                           href={`/group/${group.group_guid}`}
@@ -271,40 +268,31 @@ export default function MyGroupsPage() {
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center space-x-3">
-                      {!group.is_frozen && (
-                        group.is_open ? (
-                          <span className="text-xs bg-success text-success px-2 py-1 rounded-full">
-                            🟢<span className="hidden sm:inline ml-1">Open</span>
-                          </span>
-                        ) : (
-                          <span className="text-xs bg-error text-error px-2 py-1 rounded-full">
-                            🔴<span className="hidden sm:inline ml-1">Closed</span>
-                          </span>
-                        )
-                      )}
-                      {group.is_frozen && (
-                        <span className="text-xs bg-warning text-warning px-2 py-1 rounded-full">
-                          🔒<span className="hidden sm:inline ml-1">Locked</span>
-                        </span>
-                      )}
-                    </div>
                   </div>
-                  <svg
-                    className={`h-5 w-5 text-icon transform transition-transform ${
-                      expandedGroups.has(group.group_guid) ? 'rotate-180' : ''
-                    }`}
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-
-                {/* Group Details - Expandable */}
-                {expandedGroups.has(group.group_guid) && (
-                  <div className="px-4 sm:px-6 pb-6 pt-4">
+                }
+                isExpanded={expandedGroups.has(group.group_guid)}
+                onToggle={() => toggleGroupExpansion(group.group_guid)}
+                rightContent={
+                  <div className="flex space-x-3">
+                    {!group.is_frozen && (
+                      group.is_open ? (
+                        <span className="text-xs bg-success text-success px-2 py-1 rounded-full">
+                          🟢<span className="hidden sm:inline ml-1">Open</span>
+                        </span>
+                      ) : (
+                        <span className="text-xs bg-error text-error px-2 py-1 rounded-full">
+                          🔴<span className="hidden sm:inline ml-1">Closed</span>
+                        </span>
+                      )
+                    )}
+                    {group.is_frozen && (
+                      <span className="text-xs bg-warning text-warning px-2 py-1 rounded-full">
+                        🔒<span className="hidden sm:inline ml-1">Locked</span>
+                      </span>
+                    )}
+                  </div>
+                }
+              >
                     <div className="text-sm text-secondary mb-4">
                       {group.description}
                     </div>
@@ -318,9 +306,7 @@ export default function MyGroupsPage() {
                         Manage Group
                       </Link>
                     )}
-                  </div>
-                )}
-              </div>
+              </CollapsibleSection>
             ))}
           </div>
         )}

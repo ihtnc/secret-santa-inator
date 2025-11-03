@@ -5,6 +5,7 @@ import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { getUserInfo, getMySecretSanta, getGroupMembers, getGroupInfo, leaveGroup } from "./actions";
 import LiveIndicator from "@/app/components/LiveIndicator";
+import CollapsibleSection from "@/app/components/CollapsibleSection";
 import supabase from "@/utilities/supabase/browser";
 
 interface UserInfo {
@@ -331,32 +332,12 @@ export default function GroupPage() {
         </div>
 
         {/* Members List Section - Collapsible */}
-        <div className="bg-card rounded-lg shadow-md mb-6">
-          <div>
-            <button
-              type="button"
-              onClick={() => setIsMemberListExpanded(!isMemberListExpanded)}
-              className="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-surface-hover focus:outline-none focus:bg-surface-hover cursor-pointer"
-            >
-              <div className="flex items-center">
-                <h2 className="text-lg font-medium text-primary">
-                  Group Members ({members.length} / {groupInfo?.capacity})
-                </h2>
-              </div>
-              <svg
-                className={`h-5 w-5 text-icon transform transition-transform ${
-                  isMemberListExpanded ? 'rotate-180' : ''
-                }`}
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-
-            {isMemberListExpanded && (
-              <div className="px-6 pt-4 pb-6">
+        <CollapsibleSection
+          title={`Group Members (${members.length} / ${groupInfo?.capacity})`}
+          isExpanded={isMemberListExpanded}
+          onToggle={() => setIsMemberListExpanded(!isMemberListExpanded)}
+          className="mb-6"
+        >
                 {members.length > 0 ? (
                   <div className="space-y-2">
                     {members.map((member, index) => (
@@ -385,10 +366,7 @@ export default function GroupPage() {
                 ) : (
                   <p className="text-sm text-muted italic">No members found.</p>
                 )}
-              </div>
-            )}
-          </div>
-        </div>
+        </CollapsibleSection>
 
         {/* Leave Group Section */}
         <div className="bg-card rounded-lg shadow-md mb-6">
