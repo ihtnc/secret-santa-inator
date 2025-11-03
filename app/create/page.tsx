@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { createGroup } from "./actions";
+import { Card, CardSection } from "@/app/components/Card";
 
 export default function CreateGroupPage() {
   // Get creator code from localStorage
@@ -50,7 +51,7 @@ export default function CreateGroupPage() {
           </p>
         </div>
 
-        <div className="bg-card shadow-md rounded-lg p-6">
+        <Card>
           {/* Error display */}
           {error && (
             <div className="mb-6 bg-red-50 dark:bg-red-900/50 border border-red-200 dark:border-red-800 rounded-lg p-4">
@@ -67,9 +68,7 @@ export default function CreateGroupPage() {
             />
 
             {/* Creator Information */}
-            <div className="border-b border-accent pb-6">
-              <h2 className="text-lg font-medium text-primary mb-4">Your Information</h2>
-
+            <CardSection title="Your Information" titleVariant="h2">
               <div className="space-y-4">
                 <div>
                   <label htmlFor="creatorName" className="block text-sm font-medium text-label mb-1">
@@ -85,11 +84,10 @@ export default function CreateGroupPage() {
                   />
                 </div>
               </div>
-            </div>
+            </CardSection>
 
             {/* Group Settings */}
-            <div className="border-b border-accent pb-6">
-              <h2 className="text-lg font-medium text-primary mb-4">Group Settings</h2>
+            <CardSection title="Group Settings" titleVariant="h2">
 
               <div className="space-y-4">
                 <div>
@@ -156,11 +154,10 @@ export default function CreateGroupPage() {
                   </p>
                 </div>
               </div>
-            </div>
+            </CardSection>
 
             {/* Code Name Settings */}
-            <div className="border-b border-gray-200 dark:border-gray-700 pb-6">
-              <h2 className="text-lg font-medium text-primary mb-4">Code Name Settings</h2>
+            <CardSection title="Code Name Settings" titleVariant="h2">
 
               <div className="space-y-4">
                 <div className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg">
@@ -237,11 +234,10 @@ export default function CreateGroupPage() {
                   you must provide a code name when joining.
                 </p>
               </div>
-            </div>
+            </CardSection>
 
             {/* Join Group Settings */}
-            <div className="border-b border-gray-200 dark:border-gray-700 pb-6">
-              <h2 className="text-lg font-medium text-primary mb-4">Join Settings</h2>
+            <CardSection title="Join Settings" titleVariant="h2" isLast>
 
               <div className="space-y-4">
                 <div className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg">
@@ -297,7 +293,7 @@ export default function CreateGroupPage() {
                   You can always leave later if needed.
                 </p>
               </div>
-            </div>
+            </CardSection>
 
             {/* Submit Button */}
             <div>
@@ -310,7 +306,7 @@ export default function CreateGroupPage() {
               </button>
             </div>
           </form>
-        </div>
+        </Card>
 
         <div className="mt-6 text-center">
           <Link href="/" className="text-sm link-primary">

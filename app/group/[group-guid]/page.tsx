@@ -8,6 +8,7 @@ import LiveIndicator from "@/app/components/LiveIndicator";
 import CollapsibleSection from "@/app/components/CollapsibleSection";
 import MemberListItem from "@/app/components/MemberListItem";
 import { RoleBadge } from "@/app/components/Badge";
+import { Card } from "@/app/components/Card";
 import supabase from "@/utilities/supabase/browser";
 
 interface UserInfo {
@@ -241,8 +242,8 @@ export default function GroupPage() {
       <LiveIndicator isVisible={isRealtimeConnected} />
 
       <div className="py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md mx-auto">
-          <div className="text-center mb-8">
+        <div className="max-w-md mx-auto space-y-6">
+          <div className="text-center">
             <h1 className="text-3xl font-bold text-primary mb-2">
               <span className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3">
                 <span className="text-4xl sm:text-3xl">🎁</span>
@@ -257,7 +258,7 @@ export default function GroupPage() {
 
         {/* Status notification */}
         {statusMessage && (
-          <div className={`mb-6 px-4 py-2 rounded-md text-sm animate-pulse ${
+          <div className={`px-4 py-2 rounded-md text-sm animate-pulse ${
             statusType === 'error'
               ? 'bg-error border border-error text-error'
               : 'bg-success border border-success text-success'
@@ -268,7 +269,7 @@ export default function GroupPage() {
 
         {/* Group status alerts */}
         {groupInfo?.is_frozen && (
-          <div className="mb-6 bg-warning border border-warning rounded-lg p-4">
+          <div className="bg-warning border border-warning rounded-lg p-4">
             <p className="text-sm text-warning">
               <strong>🔒 Group Locked:</strong> Secret Santa assignments have been made! The group is now locked.
             </p>
@@ -276,7 +277,7 @@ export default function GroupPage() {
         )}
 
         {!groupInfo?.is_open && (
-          <div className="mb-6 bg-error border border-error rounded-lg p-4">
+          <div className="bg-error border border-error rounded-lg p-4">
             <p className="text-sm text-error">
               <strong>🔴 Group Closed:</strong> This group is no longer accepting new members.
             </p>
@@ -284,7 +285,7 @@ export default function GroupPage() {
         )}
 
         {/* Secret Santa Assignment Section - Always show */}
-        <div className="bg-success border border-success rounded-lg shadow-md mb-6">
+        <div className="bg-success border border-success rounded-lg shadow-md">
           <div className="px-6 py-6">
             <h2 className="text-lg font-medium text-primary mb-4 flex flex-col sm:flex-row items-center justify-center sm:justify-start gap-2 sm:gap-3">
               <span className="text-xl sm:text-lg">🎁</span>
@@ -365,31 +366,27 @@ export default function GroupPage() {
         </CollapsibleSection>
 
         {/* Leave Group Section */}
-        <div className="bg-card rounded-lg shadow-md mb-6">
-          <div className="px-6 py-6">
-            <h2 className="text-lg font-medium text-primary mb-4">Leave Group</h2>
-            <p className="text-sm text-secondary mb-4">
-              {groupInfo?.is_frozen ? (
-                "You cannot leave this group because Secret Santa assignments have been made and the group is locked."
-              ) : (
-                "If you leave this group, you won't be able to rejoin if it's password protected or closed."
-              )}
-            </p>
+        <Card
+          title="Leave Group"
+          description={groupInfo?.is_frozen ? (
+            "You cannot leave this group because Secret Santa assignments have been made and the group is locked."
+          ) : (
+            "If you leave this group, you won't be able to rejoin if it's password protected or closed."
+          )}
+        >
+          <form action={handleLeaveGroup}>
+            <input type="hidden" name="groupGuid" value={groupGuid} />
+            <input type="hidden" name="memberCode" value={memberCode} />
 
-            <form action={handleLeaveGroup}>
-              <input type="hidden" name="groupGuid" value={groupGuid} />
-              <input type="hidden" name="memberCode" value={memberCode} />
-
-              <button
-                type="submit"
-                disabled={groupInfo?.is_frozen}
-                className="w-full py-3 px-6 btn-primary text-sm font-medium rounded-md transition-colors duration-200 shadow-sm cursor-pointer"
-              >
-                Leave Group
-              </button>
-            </form>
-          </div>
-        </div>
+            <button
+              type="submit"
+              disabled={groupInfo?.is_frozen}
+              className="w-full py-3 px-6 btn-primary text-sm font-medium rounded-md transition-colors duration-200 shadow-sm cursor-pointer"
+            >
+              Leave Group
+            </button>
+          </form>
+        </Card>
 
         <div className="text-center">
           <Link href="/" className="text-sm link-primary">

@@ -8,6 +8,7 @@ import LiveIndicator from "@/app/components/LiveIndicator";
 import CollapsibleSection from "@/app/components/CollapsibleSection";
 import MemberListItem from "@/app/components/MemberListItem";
 import { StatusBadge, RoleBadge } from "@/app/components/Badge";
+import { Card } from "@/app/components/Card";
 import supabase from "@/utilities/supabase/browser";
 
 interface GroupDetails {
@@ -783,118 +784,111 @@ export default function AdminPage() {
           (!groupDetails.is_frozen && groupDetails.is_open) ||
           (groupDetails.is_frozen && isCreatorMember)
         ) && (
-          <div className="bg-card rounded-lg shadow-md mt-6 p-6">
-            <div>
-              {!isCreatorMember ? (
-                <>
-                  <h2 className="text-lg font-medium text-primary mb-2">
-                    Join Group as Member
-                  </h2>
-                  <p className="text-sm text-secondary mb-6">
-                    Join your own group as a member to participate in the Secret Santa exchange.
-                  </p>
+          <Card className="mt-6">
+            {!isCreatorMember ? (
+              <>
+                <h2 className="text-lg font-medium text-primary mb-2">
+                  Join Group as Member
+                </h2>
+                <p className="text-sm text-secondary mb-6">
+                  Join your own group as a member to participate in the Secret Santa exchange.
+                </p>
 
-                  <form action={handleJoinGroup} className="space-y-4">
-                    {/* Show code name input if group uses code names and auto-assign is disabled */}
-                    {groupDetails.use_code_names && !groupDetails.auto_assign_code_names && (
-                      <div>
-                        <label htmlFor="creatorCodeName" className="block text-sm font-medium text-label mb-1">
-                          Your Code Name *
-                        </label>
-                        <input
-                          type="text"
-                          id="creatorCodeName"
-                          name="creatorCodeName"
-                          required
-                          className="input-primary w-full px-3 py-2 rounded-md text-primary placeholder:text-muted"
-                          placeholder="Enter your code name (e.g., MysteriousElf)"
-                        />
-                        <p className="text-xs text-muted mt-1">
-                          Code name is required for this group
-                        </p>
-                      </div>
-                    )}
+                <form action={handleJoinGroup} className="space-y-4">
+                  {/* Show code name input if group uses code names and auto-assign is disabled */}
+                  {groupDetails.use_code_names && !groupDetails.auto_assign_code_names && (
+                    <div>
+                      <label htmlFor="creatorCodeName" className="block text-sm font-medium text-label mb-1">
+                        Your Code Name *
+                      </label>
+                      <input
+                        type="text"
+                        id="creatorCodeName"
+                        name="creatorCodeName"
+                        required
+                        className="input-primary w-full px-3 py-2 rounded-md text-primary placeholder:text-muted"
+                        placeholder="Enter your code name (e.g., MysteriousElf)"
+                      />
+                      <p className="text-xs text-muted mt-1">
+                        Code name is required for this group
+                      </p>
+                    </div>
+                  )}
 
-                    <button
-                      type="submit"
-                      disabled={joining}
-                      className="w-full py-3 px-6 btn-primary text-sm font-medium rounded-md transition-colors duration-200 shadow-sm cursor-pointer"
-                    >
-                      {joining ? 'Joining...' : 'Join Group'}
-                    </button>
-                  </form>
-                </>
-              ) : (
-                <>
-                  <h2 className="text-lg font-medium text-primary mb-2">
-                    View Group Details
-                  </h2>
-                  <p className="text-sm text-secondary mb-6">
-                    You are a member of this group. View the group page to see member details and your Secret Santa assignment{groupDetails.is_frozen ? '' : ' (when available)'}.
-                  </p>
-
-                  <Link
-                    href={`/group/${groupGuid}`}
-                    className="inline-block w-full py-3 px-6 btn-primary text-sm font-medium rounded-md transition-colors duration-200 shadow-sm text-center"
+                  <button
+                    type="submit"
+                    disabled={joining}
+                    className="w-full py-3 px-6 btn-primary text-sm font-medium rounded-md transition-colors duration-200 shadow-sm cursor-pointer"
                   >
-                    View Group
-                  </Link>
-                </>
-              )}
-            </div>
-          </div>
+                    {joining ? 'Joining...' : 'Join Group'}
+                  </button>
+                </form>
+              </>
+            ) : (
+              <>
+                <h2 className="text-lg font-medium text-primary mb-2">
+                  View Group Details
+                </h2>
+                <p className="text-sm text-secondary mb-6">
+                  You are a member of this group. View the group page to see member details and your Secret Santa assignment{groupDetails.is_frozen ? '' : ' (when available)'}.
+                </p>
+
+                <Link
+                  href={`/group/${groupGuid}`}
+                  className="inline-block w-full py-3 px-6 btn-primary text-sm font-medium rounded-md transition-colors duration-200 shadow-sm text-center"
+                >
+                  View Group
+                </Link>
+              </>
+            )}
+          </Card>
         )}
 
         {/* Assign Santa Section - Non-collapsible */}
-        <div className="bg-card rounded-lg shadow-md mt-6 p-6">
-          <div>
-            <h2 className="text-lg font-medium text-primary mb-2">
-              Assign Secret Santa
-            </h2>
-            <p className="text-sm text-secondary mb-6">
-              Ready to create the Secret Santa assignments? This will randomly pair all members and freeze the group.
-            </p>
-
-            {groupDetails.is_frozen ? (
-              <div>
-                <div className="bg-warning border border-warning rounded-md p-4 mb-4">
-                  <p className="text-warning">
-                    🔒 Group Locked: Secret Santa assignments have already been made.
-                  </p>
-                </div>
-                <button
-                  onClick={handleUnlockGroup}
-                  disabled={unlocking}
-                  className="w-full py-3 px-6 btn-primary text-sm font-medium rounded-md transition-colors duration-200 shadow-sm cursor-pointer"
-                >
-                  {unlocking ? 'Resetting...' : 'Reset Secret Santa'}
-                </button>
-              </div>
-            ) : groupMembers.length < 2 ? (
-              <div className="bg-warning border border-warning rounded-md p-4">
+        <Card 
+          title="Assign Secret Santa"
+          description="Ready to create the Secret Santa assignments? This will randomly pair all members and freeze the group."
+          className="mt-6"
+        >
+          {groupDetails.is_frozen ? (
+            <div>
+              <div className="bg-warning border border-warning rounded-md p-4 mb-4">
                 <p className="text-warning">
-                  ⚠️ You need at least 2 members to assign Secret Santa pairs.
+                  🔒 Group Locked: Secret Santa assignments have already been made.
                 </p>
               </div>
-            ) : (
-              <div>
-                <div className="bg-info border border-info rounded-md p-4 mb-4">
-                  <p className="text-info text-sm">
-                    <strong>Ready to assign!</strong> You have {groupMembers.length} members.
-                    Once assigned, the group will be frozen and no more changes can be made.
-                  </p>
-                </div>
-                <button
-                  onClick={handleAssignSanta}
-                  disabled={assigning}
-                  className="btn-success w-full py-3 px-6 text-sm font-medium rounded-md focus-btn-success transition-colors duration-200 cursor-pointer"
-                >
-                  {assigning ? 'Assigning...' : '🎁 Assign Secret Santa'}
-                </button>
+              <button
+                onClick={handleUnlockGroup}
+                disabled={unlocking}
+                className="w-full py-3 px-6 btn-primary text-sm font-medium rounded-md transition-colors duration-200 shadow-sm cursor-pointer"
+              >
+                {unlocking ? 'Resetting...' : 'Reset Secret Santa'}
+              </button>
+            </div>
+          ) : groupMembers.length < 2 ? (
+            <div className="bg-warning border border-warning rounded-md p-4">
+              <p className="text-warning">
+                ⚠️ You need at least 2 members to assign Secret Santa pairs.
+              </p>
+            </div>
+          ) : (
+            <div>
+              <div className="bg-info border border-info rounded-md p-4 mb-4">
+                <p className="text-info text-sm">
+                  <strong>Ready to assign!</strong> You have {groupMembers.length} members.
+                  Once assigned, the group will be frozen and no more changes can be made.
+                </p>
               </div>
-            )}
-          </div>
-        </div>
+              <button
+                onClick={handleAssignSanta}
+                disabled={assigning}
+                className="btn-success w-full py-3 px-6 text-sm font-medium rounded-md focus-btn-success transition-colors duration-200 cursor-pointer"
+              >
+                {assigning ? 'Assigning...' : '🎁 Assign Secret Santa'}
+              </button>
+            </div>
+          )}
+        </Card>
 
         {/* Back to Home Link */}
         <div className="mt-6 text-center">

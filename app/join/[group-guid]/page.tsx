@@ -6,6 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import { joinGroup, getGroupInfo, checkMembership } from "./actions";
 import LiveIndicator from "@/app/components/LiveIndicator";
 import { StatusBadge } from "@/app/components/Badge";
+import { Card } from "@/app/components/Card";
 import supabase from "@/utilities/supabase/browser";
 
 interface GroupInfo {
@@ -219,8 +220,8 @@ export default function JoinGroupPage() {
       <LiveIndicator isVisible={groupInfo && isRealtimeConnected} />
 
       <div className="py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md mx-auto">
-          <div className="text-center mb-8">
+        <div className="max-w-md mx-auto space-y-6">
+          <div className="text-center">
             <h1 className="text-3xl font-bold text-primary mb-2">
               <span className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3">
                 <span className="text-4xl sm:text-3xl">🎅</span>
@@ -244,7 +245,7 @@ export default function JoinGroupPage() {
         )}
 
         {groupInfo?.is_frozen && (
-          <div className="mb-6 bg-warning border border-warning rounded-lg p-4">
+          <div className="bg-warning border border-warning rounded-lg p-4">
             <p className="text-sm text-warning">
               <strong>🔒 Group Locked:</strong> This group is locked. You may not be able to join until it&apos;s unlocked by the creator.
             </p>
@@ -252,7 +253,7 @@ export default function JoinGroupPage() {
         )}
 
         {!groupInfo?.is_open && (
-          <div className="mb-6 bg-error border border-error rounded-lg p-4">
+          <div className="bg-error border border-error rounded-lg p-4">
             <p className="text-sm text-error">
               <strong>🔴 Group Closed:</strong> This group is no longer accepting new members.
             </p>
@@ -337,10 +338,9 @@ export default function JoinGroupPage() {
           )}
         </div>
 
-        {/* Join Form Section - Separate Card */}
-        <div className="bg-card rounded-lg shadow-md mt-6">
-          <div className="px-6 py-6">
-            <h2 className="text-lg font-medium text-primary mb-4">Join Group</h2>
+        <Card 
+          title="Join Group"
+        >
 
             <form action={handleJoinGroup} className="space-y-6">
               {/* Hidden fields */}
@@ -423,8 +423,7 @@ export default function JoinGroupPage() {
                 </button>
               </div>
             </form>
-          </div>
-        </div>
+        </Card>
 
         <div className="mt-6 text-center">
           <Link href="/" className="text-sm link-primary">
