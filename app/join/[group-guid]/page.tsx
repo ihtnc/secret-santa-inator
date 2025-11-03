@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { joinGroup, getGroupInfo, checkMembership } from "./actions";
 import LiveIndicator from "@/app/components/LiveIndicator";
+import { StatusBadge } from "@/app/components/Badge";
 import supabase from "@/utilities/supabase/browser";
 
 interface GroupInfo {
@@ -266,20 +267,10 @@ export default function JoinGroupPage() {
                 <h2 className="text-lg font-medium text-primary">Group Details</h2>
                 <div className="flex items-center space-x-2 ml-3">
                   {!groupInfo.is_frozen && (
-                    groupInfo.is_open ? (
-                      <span className="text-xs bg-success text-success px-2 py-1 rounded-full">
-                        🟢<span className="hidden sm:inline ml-1">Open</span>
-                      </span>
-                    ) : (
-                      <span className="text-xs bg-error text-error px-2 py-1 rounded-full">
-                        🔴<span className="hidden sm:inline ml-1">Closed</span>
-                      </span>
-                    )
+                    <StatusBadge status={groupInfo.is_open ? 'open' : 'closed'} />
                   )}
                   {groupInfo.is_frozen && (
-                    <span className="text-xs bg-warning text-warning px-2 py-1 rounded-full">
-                      🔒<span className="hidden sm:inline ml-1">Locked</span>
-                    </span>
+                    <StatusBadge status="locked" />
                   )}
                 </div>
               </div>

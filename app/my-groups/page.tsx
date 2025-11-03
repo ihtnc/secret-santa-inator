@@ -6,6 +6,7 @@ import { getMyGroups } from "./actions";
 import supabase from "@/utilities/supabase/browser";
 import LiveIndicator from "@/app/components/LiveIndicator";
 import CollapsibleSection from "@/app/components/CollapsibleSection";
+import { StatusBadge, RoleBadge } from "@/app/components/Badge";
 
 interface GroupInfo {
   group_guid: string;
@@ -257,9 +258,7 @@ export default function MyGroupsPage() {
                             {group.name}
                           </span>
                           {isUserCreator(group) && (
-                            <span className="text-xs bg-success text-success px-2 py-1 rounded-full">
-                              Creator
-                            </span>
+                            <RoleBadge role="creator" />
                           )}
                         </div>
                         <p className="text-xs text-muted mt-1">
@@ -275,20 +274,10 @@ export default function MyGroupsPage() {
                 rightContent={
                   <div className="flex space-x-3">
                     {!group.is_frozen && (
-                      group.is_open ? (
-                        <span className="text-xs bg-success text-success px-2 py-1 rounded-full">
-                          🟢<span className="hidden sm:inline ml-1">Open</span>
-                        </span>
-                      ) : (
-                        <span className="text-xs bg-error text-error px-2 py-1 rounded-full">
-                          🔴<span className="hidden sm:inline ml-1">Closed</span>
-                        </span>
-                      )
+                      <StatusBadge status={group.is_open ? 'open' : 'closed'} />
                     )}
                     {group.is_frozen && (
-                      <span className="text-xs bg-warning text-warning px-2 py-1 rounded-full">
-                        🔒<span className="hidden sm:inline ml-1">Locked</span>
-                      </span>
+                      <StatusBadge status="locked" />
                     )}
                   </div>
                 }

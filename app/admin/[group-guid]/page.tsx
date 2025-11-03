@@ -7,6 +7,7 @@ import { getGroupDetails, updateGroup, getGroupMembers, assignSecretSanta, joinG
 import LiveIndicator from "@/app/components/LiveIndicator";
 import CollapsibleSection from "@/app/components/CollapsibleSection";
 import MemberListItem from "@/app/components/MemberListItem";
+import { StatusBadge, RoleBadge } from "@/app/components/Badge";
 import supabase from "@/utilities/supabase/browser";
 
 interface GroupDetails {
@@ -489,20 +490,10 @@ export default function AdminPage() {
           rightContent={
             <div className="flex pt-0.5 space-x-2">
               {!groupDetails.is_frozen && (
-                groupDetails.is_open ? (
-                  <span className="text-xs bg-success text-success px-2 py-1 rounded-full">
-                    🟢<span className="hidden sm:inline ml-1">Open</span>
-                  </span>
-                ) : (
-                  <span className="text-xs bg-error text-error px-2 py-1 rounded-full">
-                    🔴<span className="hidden sm:inline ml-1">Closed</span>
-                  </span>
-                )
+                <StatusBadge status={groupDetails.is_open ? 'open' : 'closed'} />
               )}
               {groupDetails.is_frozen && (
-                <span className="text-xs bg-warning text-warning px-2 py-1 rounded-full">
-                  🔒<span className="hidden sm:inline ml-1">Locked</span>
-                </span>
+                <StatusBadge status="locked" />
               )}
             </div>
           }
@@ -739,9 +730,7 @@ export default function AdminPage() {
                   name={memberName}
                   badges={
                     memberName === groupDetails?.creator_name && (
-                      <span className="text-xs bg-success text-success px-2 py-1 rounded-full">
-                        Creator
-                      </span>
+                      <RoleBadge role="creator" />
                     )
                   }
                   actions={

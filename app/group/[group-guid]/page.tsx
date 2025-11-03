@@ -7,6 +7,7 @@ import { getUserInfo, getMySecretSanta, getGroupMembers, getGroupInfo, leaveGrou
 import LiveIndicator from "@/app/components/LiveIndicator";
 import CollapsibleSection from "@/app/components/CollapsibleSection";
 import MemberListItem from "@/app/components/MemberListItem";
+import { RoleBadge } from "@/app/components/Badge";
 import supabase from "@/utilities/supabase/browser";
 
 interface UserInfo {
@@ -348,14 +349,10 @@ export default function GroupPage() {
                         badges={
                           <>
                             {member.name === userInfo?.name && (
-                              <span className="text-xs bg-info text-info px-2 py-1 rounded-full">
-                                You
-                              </span>
+                              <RoleBadge role="you" />
                             )}
                             {member.name === groupInfo?.creator_name && (
-                              <span className="text-xs bg-success text-success px-2 py-1 rounded-full">
-                                Creator
-                              </span>
+                              <RoleBadge role="creator" />
                             )}
                           </>
                         }
