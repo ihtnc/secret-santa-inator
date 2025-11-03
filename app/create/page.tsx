@@ -1,9 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
 import { createGroup } from "./actions";
 import { Card, CardSection } from "@/app/components/Card";
+import { PageHeader } from "@/app/components/PageHeader";
+import { BackToHome } from "@/app/components/BackToHome";
 
 export default function CreateGroupPage() {
   // Get creator code from localStorage
@@ -38,18 +39,12 @@ export default function CreateGroupPage() {
 
   return (
     <div className="bg-surface py-12 px-4 sm:px-6 lg:px-8 h-full">
-      <div className="max-w-md mx-auto">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold text-primary mb-2">
-            <span className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3">
-              <span className="text-4xl sm:text-3xl">🎅</span>
-              <span>Create Secret Santa Group</span>
-            </span>
-          </h1>
-          <p className="text-secondary mb-8">
-            Set up a new Secret Santa group for your friends, family, or colleagues!
-          </p>
-        </div>
+      <div className="max-w-md mx-auto space-y-6">
+        <PageHeader
+          title="Create Secret Santa Group"
+          subtitle="Set up a new Secret Santa group for your friends, family, or colleagues!"
+          emoji="🎅"
+        />
 
         <Card>
           {/* Error display */}
@@ -160,7 +155,7 @@ export default function CreateGroupPage() {
             <CardSection title="Code Name Settings" titleVariant="h2">
 
               <div className="space-y-4">
-                <div className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg">
+                <div className="flex items-center justify-between p-3 border border-primary rounded-lg">
                   <label htmlFor="useCodeNames" className="block text-sm font-medium text-label">
                     Use code names instead of real names
                   </label>
@@ -199,7 +194,7 @@ export default function CreateGroupPage() {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg">
+                <div className="flex items-center justify-between p-3 border border-primary rounded-lg">
                   <label htmlFor="autoAssignCodeNames" className={`block text-sm font-medium ${!useCodeNames ? 'text-muted' : 'text-label'}`}>
                     Automatically assign code names (e.g., &quot;FuzzyPanda&quot;, &quot;MagicDragon&quot;)
                   </label>
@@ -240,7 +235,7 @@ export default function CreateGroupPage() {
             <CardSection title="Join Settings" titleVariant="h2" isLast>
 
               <div className="space-y-4">
-                <div className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg">
+                <div className="flex items-center justify-between p-3 border border-primary rounded-lg">
                   <label htmlFor="autoJoinGroup" className="block text-sm font-medium text-label">
                     Automatically join the group as a member
                   </label>
@@ -308,11 +303,7 @@ export default function CreateGroupPage() {
           </form>
         </Card>
 
-        <div className="mt-6 text-center">
-          <Link href="/" className="text-sm link-primary">
-            ← Back to Home
-          </Link>
-        </div>
+        <BackToHome />
       </div>
     </div>
   );

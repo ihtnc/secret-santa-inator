@@ -7,6 +7,8 @@ import supabase from "@/utilities/supabase/browser";
 import LiveIndicator from "@/app/components/LiveIndicator";
 import CollapsibleSection from "@/app/components/CollapsibleSection";
 import { StatusBadge, RoleBadge } from "@/app/components/Badge";
+import { PageHeader } from "@/app/components/PageHeader";
+import { BackToHome } from "@/app/components/BackToHome";
 
 interface GroupInfo {
   group_guid: string;
@@ -209,18 +211,12 @@ export default function MyGroupsPage() {
       {/* Live indicator in upper right margin */}
       <LiveIndicator isVisible={groups.length > 0 && isRealtimeConnected} />
 
-      <div className="max-w-md mx-auto">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-primary mb-2">
-            <span className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3">
-              <span className="text-4xl sm:text-3xl">🎄</span>
-              <span>My Secret Santa Groups</span>
-            </span>
-          </h1>
-          <p className="text-sm text-secondary">
-            Your active Secret Santa groups
-          </p>
-        </div>
+      <div className="max-w-md mx-auto space-y-6">
+        <PageHeader 
+          title="My Secret Santa Groups"
+          subtitle="Your active Secret Santa groups"
+          emoji="🎄"
+        />
 
         {groups.length === 0 ? (
           <div className="bg-card rounded-lg shadow-md p-6 text-center">
@@ -300,11 +296,7 @@ export default function MyGroupsPage() {
           </div>
         )}
 
-        <div className="mt-6 text-center">
-          <Link href="/" className="text-sm link-primary">
-            ← Back to Home
-          </Link>
-        </div>
+        <BackToHome />
       </div>
     </div>
   );

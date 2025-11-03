@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { PageHeader } from '@/app/components/PageHeader';
+import { BackToHome } from '@/app/components/BackToHome';
 
 export default function ResetDataPage() {
   const router = useRouter();
@@ -35,18 +37,16 @@ export default function ResetDataPage() {
   if (isResetting) {
     return (
       <div className="bg-surface flex items-center justify-center h-full px-4">
-        <div className="text-center">
-          <div className="mb-8">
-            <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full border-2 text-success" style={{borderColor: 'var(--color-success)'}}>
-              <svg className="h-8 w-8 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
+        <div className="text-center space-y-6">
+          <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full border-2 text-success" style={{borderColor: 'var(--color-success)'}}>
+            <svg className="h-8 w-8 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
           </div>
-          <h1 className="text-3xl font-bold text-primary mb-4">Data Reset Complete</h1>
-          <p className="text-lg text-secondary mb-6">
-            Your data has been reset. You will be redirected to the home page shortly.
-          </p>
+          <PageHeader
+            title="Data Reset Complete"
+            subtitle="Your data has been reset. You will be redirected to the home page shortly."
+          />
         </div>
       </div>
     );
@@ -54,12 +54,13 @@ export default function ResetDataPage() {
 
   return (
     <div className="bg-surface h-full flex flex-col">
-      <div className="flex-1 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="bg-card rounded-lg shadow-md p-8">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-primary mb-2">Reset Data</h1>
-          </div>
+      <div className="flex-1 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+        <PageHeader
+          title="Reset Data"
+          emoji="⚠️"
+        />
 
+        <div className="bg-card rounded-lg shadow-md p-8">
           <div className="space-y-6">
             {/* Warning Section */}
             <div className="bg-warning border border-warning rounded-md p-4">
@@ -142,15 +143,7 @@ export default function ResetDataPage() {
           </div>
         </div>
 
-        {/* Back to Home - separate from card */}
-        <div className="mt-6 text-center">
-          <Link
-            href="/"
-            className="text-sm link-primary"
-          >
-            ← Back to Home
-          </Link>
-        </div>
+        <BackToHome />
       </div>
     </div>
   );

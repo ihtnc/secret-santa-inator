@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+import { PageHeader } from '@/app/components/PageHeader';
+import { BackToHome } from '@/app/components/BackToHome';
 
 export default function JoinPage() {
   const [groupGuid, setGroupGuid] = useState('');
@@ -56,18 +57,12 @@ export default function JoinPage() {
 
   return (
     <div className="bg-surface py-12 px-4 sm:px-6 lg:px-8 h-full">
-      <div className="max-w-md mx-auto">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-primary mb-2">
-            <span className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3">
-              <span className="text-4xl sm:text-3xl">🎅</span>
-              <span>Join Secret Santa Group</span>
-            </span>
-          </h1>
-          <p className="text-sm text-secondary">
-            Enter the group code to join a Secret Santa group
-          </p>
-        </div>
+      <div className="max-w-md mx-auto space-y-6">
+        <PageHeader 
+          title="Join Secret Santa Group"
+          subtitle="Enter the group code to join a Secret Santa group"
+          emoji="🎅"
+        />
 
         <div className="bg-card rounded-lg shadow-md p-6">
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -103,14 +98,7 @@ export default function JoinPage() {
           </form>
         </div>
 
-        <div className="mt-6 text-center">
-          <Link
-            href="/"
-            className="link-primary text-sm font-medium"
-          >
-            ← Back to Home
-          </Link>
-        </div>
+        <BackToHome />
       </div>
     </div>
   );

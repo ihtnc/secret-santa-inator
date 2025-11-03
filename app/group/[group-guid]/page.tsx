@@ -9,6 +9,8 @@ import CollapsibleSection from "@/app/components/CollapsibleSection";
 import MemberListItem from "@/app/components/MemberListItem";
 import { RoleBadge } from "@/app/components/Badge";
 import { Card } from "@/app/components/Card";
+import { PageHeader } from "@/app/components/PageHeader";
+import { BackToHome } from "@/app/components/BackToHome";
 import supabase from "@/utilities/supabase/browser";
 
 interface UserInfo {
@@ -243,18 +245,18 @@ export default function GroupPage() {
 
       <div className="py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md mx-auto space-y-6">
-          <div className="text-center">
-            <h1 className="text-3xl font-bold text-primary mb-2">
-              <span className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3">
-                <span className="text-4xl sm:text-3xl">🎁</span>
-                <span>Secret Santa Group</span>
-              </span>
-            </h1>
-            <p className="text-sm text-muted mb-2">Group Code: {groupGuid}</p>
-            {groupInfo?.description && (
-              <p className="text-lg text-secondary">{groupInfo.description}</p>
-            )}
-          </div>
+          <PageHeader 
+            title="Secret Santa Group"
+            subtitle={
+              <>
+                <span className="block text-sm text-muted">Group Code: {groupGuid}</span>
+                {groupInfo?.description && (
+                  <span className="block text-lg text-secondary mt-1">{groupInfo.description}</span>
+                )}
+              </>
+            }
+            emoji="🎁"
+          />
 
         {/* Status notification */}
         {statusMessage && (
@@ -388,11 +390,7 @@ export default function GroupPage() {
           </form>
         </Card>
 
-        <div className="text-center">
-          <Link href="/" className="text-sm link-primary">
-            ← Back to Home
-          </Link>
-        </div>
+        <BackToHome />
         </div>
       </div>
     </div>

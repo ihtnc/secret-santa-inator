@@ -7,6 +7,8 @@ import { joinGroup, getGroupInfo, checkMembership } from "./actions";
 import LiveIndicator from "@/app/components/LiveIndicator";
 import { StatusBadge } from "@/app/components/Badge";
 import { Card } from "@/app/components/Card";
+import { PageHeader } from "@/app/components/PageHeader";
+import { BackToHome } from "@/app/components/BackToHome";
 import supabase from "@/utilities/supabase/browser";
 
 interface GroupInfo {
@@ -221,17 +223,11 @@ export default function JoinGroupPage() {
 
       <div className="py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md mx-auto space-y-6">
-          <div className="text-center">
-            <h1 className="text-3xl font-bold text-primary mb-2">
-              <span className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3">
-                <span className="text-4xl sm:text-3xl">🎅</span>
-                <span>Join Secret Santa Group</span>
-              </span>
-            </h1>
-            <p className="text-sm text-secondary">
-              Enter your details to join this Secret Santa group!
-            </p>
-          </div>
+          <PageHeader
+            title="Join Secret Santa Group"
+            subtitle="Enter your details to join this Secret Santa group!"
+            emoji="🎅"
+          />
 
         {/* Status notification */}
         {statusMessage && (
@@ -299,7 +295,7 @@ export default function JoinGroupPage() {
                   <span>Password:</span>
                   <span className="font-medium">{groupInfo.password ? 'Required' : 'None'}</span>
                 </div>
-                <div className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg opacity-60">
+                <div className="flex items-center justify-between p-3 border border-primary rounded-lg opacity-60">
                   <span>Use code names instead of real names:</span>
                   <div className="relative">
                     <div
@@ -316,7 +312,7 @@ export default function JoinGroupPage() {
                   </div>
                 </div>
                 {groupInfo.use_code_names && (
-                  <div className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg opacity-60">
+                  <div className="flex items-center justify-between p-3 border border-primary rounded-lg opacity-60">
                     <span>Automatically assign code names (e.g., &quot;FuzzyPanda&quot;, &quot;MagicDragon&quot;):</span>
                     <div className="relative">
                       <div
@@ -338,7 +334,7 @@ export default function JoinGroupPage() {
           )}
         </div>
 
-        <Card 
+        <Card
           title="Join Group"
         >
 
@@ -425,11 +421,7 @@ export default function JoinGroupPage() {
             </form>
         </Card>
 
-        <div className="mt-6 text-center">
-          <Link href="/" className="text-sm link-primary">
-            ← Back to Home
-          </Link>
-        </div>
+        <BackToHome />
         </div>
       </div>
     </div>

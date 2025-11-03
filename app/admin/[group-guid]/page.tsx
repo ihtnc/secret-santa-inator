@@ -9,6 +9,8 @@ import CollapsibleSection from "@/app/components/CollapsibleSection";
 import MemberListItem from "@/app/components/MemberListItem";
 import { StatusBadge, RoleBadge } from "@/app/components/Badge";
 import { Card } from "@/app/components/Card";
+import { PageHeader } from "@/app/components/PageHeader";
+import { BackToHome } from "@/app/components/BackToHome";
 import supabase from "@/utilities/supabase/browser";
 
 interface GroupDetails {
@@ -449,17 +451,14 @@ export default function AdminPage() {
       <LiveIndicator isVisible={isRealtimeConnected} />
 
       <div className="py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md mx-auto">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-primary mb-2">
-              <span className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3">
-                <span className="text-4xl sm:text-3xl">🎅</span>
-                <span>Manage Group</span>
-              </span>
-            </h1>
-            <p className="text-sm text-secondary mb-4">
-              Update your Secret Santa group settings
-            </p>
+        <div className="max-w-md mx-auto space-y-6">
+          <PageHeader
+            title="Manage Group"
+            subtitle="Update your Secret Santa group settings"
+            emoji="🎅"
+          />
+
+          <div className="text-center">
             <button
               onClick={handleCopyGroupLink}
             className="btn-primary inline-flex items-center px-4 py-2 text-sm font-medium rounded-md focus-btn-primary transition-colors duration-200 cursor-pointer"
@@ -542,7 +541,7 @@ export default function AdminPage() {
                   Code Name Settings
                 </label>
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg opacity-60">
+                  <div className="flex items-center justify-between p-3 border border-primary rounded-lg opacity-60">
                     <label className="block text-sm font-medium text-secondary">
                       Use code names instead of real names
                     </label>
@@ -567,7 +566,7 @@ export default function AdminPage() {
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg opacity-60">
+                  <div className="flex items-center justify-between p-3 border border-primary rounded-lg opacity-60">
                     <label className="block text-sm font-medium text-secondary">
                       Automatically assign code names (e.g., &quot;FuzzyPanda&quot;, &quot;MagicDragon&quot;)
                     </label>
@@ -845,7 +844,7 @@ export default function AdminPage() {
         )}
 
         {/* Assign Santa Section - Non-collapsible */}
-        <Card 
+        <Card
           title="Assign Secret Santa"
           description="Ready to create the Secret Santa assignments? This will randomly pair all members and freeze the group."
           className="mt-6"
@@ -890,12 +889,7 @@ export default function AdminPage() {
           )}
         </Card>
 
-        {/* Back to Home Link */}
-        <div className="mt-6 text-center">
-          <Link href="/" className="text-sm link-primary">
-            ← Back to Home
-          </Link>
-        </div>
+        <BackToHome />
         </div>
       </div>
     </div>

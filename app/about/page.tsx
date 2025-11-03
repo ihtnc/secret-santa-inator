@@ -1,13 +1,18 @@
 'use client';
 
-import Link from 'next/link';
+import { PageHeader } from '@/app/components/PageHeader';
+import { BackToHome } from '@/app/components/BackToHome';
 
 export default function AboutPage() {
   return (
     <div className="bg-surface h-full flex flex-col">
-      <div className="flex-1 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="flex-1 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+        <PageHeader 
+          title="About Secret Santa-inator"
+          emoji="📖"
+        />
+        
         <div className="bg-card rounded-lg shadow-md p-8">
-          <h1 className="text-3xl font-bold text-primary mb-6">About Secret Santa-inator</h1>
 
           <div className="space-y-6 text-secondary">
             <section>
@@ -119,11 +124,7 @@ export default function AboutPage() {
           </div>
         </div>
 
-        <div className="mt-6 text-center">
-          <Link href="/" className="text-sm link-primary">
-            ← Back to Home
-          </Link>
-        </div>
+        <BackToHome />
       </div>
     </div>
   );
