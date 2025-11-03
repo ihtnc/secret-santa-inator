@@ -10,6 +10,7 @@ import { StatusBadge, RoleBadge } from "@/app/components/Badge";
 import { PageHeader } from "@/app/components/PageHeader";
 import { BackToHome } from "@/app/components/BackToHome";
 import { ErrorMessage } from "@/app/components/AlertMessage";
+import { Loading } from "@/app/components/Loading";
 
 interface GroupInfo {
   group_guid: string;
@@ -180,14 +181,7 @@ export default function MyGroupsPage() {
   };
 
   if (isLoading) {
-    return (
-      <div className="bg-surface flex items-center justify-center h-full">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500 mx-auto"></div>
-          <p className="mt-4 text-secondary">Loading your groups...</p>
-        </div>
-      </div>
-    );
+    return <Loading message="Loading your groups..." />;
   }
 
   if (error) {
@@ -212,7 +206,7 @@ export default function MyGroupsPage() {
       <LiveIndicator isVisible={groups.length > 0 && isRealtimeConnected} />
 
       <div className="max-w-md mx-auto space-y-6">
-        <PageHeader 
+        <PageHeader
           title="My Secret Santa Groups"
           subtitle="Your active Secret Santa groups"
           emoji="🎄"

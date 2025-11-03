@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { Loading } from '@/app/components/Loading';
 
 export default function GroupRedirectPage() {
   const router = useRouter();
@@ -12,12 +13,5 @@ export default function GroupRedirectPage() {
   }, [router]);
 
   // Show a loading state while redirecting
-  return (
-    <div className="bg-surface flex items-center justify-center h-full">
-      <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500 mx-auto"></div>
-        <p className="mt-4 text-secondary">Redirecting to your groups...</p>
-      </div>
-    </div>
-  );
+  return <Loading message="Redirecting to your groups..." />;
 }

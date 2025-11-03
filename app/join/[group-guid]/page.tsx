@@ -9,6 +9,7 @@ import { Card } from "@/app/components/Card";
 import { PageHeader } from "@/app/components/PageHeader";
 import { BackToHome } from "@/app/components/BackToHome";
 import { WarningMessage, ErrorMessage } from "@/app/components/AlertMessage";
+import { Loading } from "@/app/components/Loading";
 import supabase from "@/utilities/supabase/browser";
 
 interface GroupInfo {
@@ -172,14 +173,7 @@ export default function JoinGroupPage() {
   };
 
   if (isLoading) {
-    return (
-      <div className="bg-surface flex items-center justify-center py-24">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500 mx-auto"></div>
-          <p className="mt-4 text-secondary">Loading group information...</p>
-        </div>
-      </div>
-    );
+    return <Loading message="Loading group information..." />;
   }
 
   if (error) {

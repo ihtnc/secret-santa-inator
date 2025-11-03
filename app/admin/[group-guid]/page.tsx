@@ -12,6 +12,7 @@ import { Card } from "@/app/components/Card";
 import { PageHeader } from "@/app/components/PageHeader";
 import { BackToHome } from "@/app/components/BackToHome";
 import { WarningMessage, ErrorMessage } from "@/app/components/AlertMessage";
+import { Loading } from "@/app/components/Loading";
 import supabase from "@/utilities/supabase/browser";
 
 interface GroupDetails {
@@ -402,14 +403,7 @@ export default function AdminPage() {
   };
 
   if (loading) {
-    return (
-      <div className="bg-surface flex items-center justify-center h-full">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-error mx-auto mb-4"></div>
-          <p className="text-secondary">Loading group details...</p>
-        </div>
-      </div>
-    );
+    return <Loading message="Loading group details..." />;
   }
 
   if (error) {
