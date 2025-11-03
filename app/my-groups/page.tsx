@@ -9,6 +9,7 @@ import CollapsibleSection from "@/app/components/CollapsibleSection";
 import { StatusBadge, RoleBadge } from "@/app/components/Badge";
 import { PageHeader } from "@/app/components/PageHeader";
 import { BackToHome } from "@/app/components/BackToHome";
+import { ErrorMessage } from "@/app/components/AlertMessage";
 
 interface GroupInfo {
   group_guid: string;
@@ -191,22 +192,21 @@ export default function MyGroupsPage() {
 
   if (error) {
     return (
-      <div className="bg-surface flex items-center justify-center px-4 h-full">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-error mb-4">Error</h1>
-          <p className="text-secondary mb-4">{error}</p>
-          <Link
-            href="/"
-            className="inline-block btn-primary px-4 py-2 rounded-md transition-colors"
-          >
-            Go Home
-          </Link>
+      <div className="bg-surface h-full">
+        <div className="py-12 px-4 sm:px-6 lg:px-8">
+          <div className="max-w-md mx-auto space-y-6">
+            <PageHeader
+              title="My Groups"
+              subtitle="View and manage your Secret Santa groups"
+              emoji="🎁"
+            />
+            <ErrorMessage title="Error">{error}</ErrorMessage>
+            <BackToHome />
+          </div>
         </div>
       </div>
     );
-  }
-
-  return (
+  }  return (
     <div className="bg-surface py-12 px-4 sm:px-6 lg:px-8 h-full relative">
       {/* Live indicator in upper right margin */}
       <LiveIndicator isVisible={groups.length > 0 && isRealtimeConnected} />

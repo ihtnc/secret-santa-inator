@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { getUserInfo, getMySecretSanta, getGroupMembers, getGroupInfo, leaveGroup } from "./actions";
@@ -11,6 +10,7 @@ import { RoleBadge } from "@/app/components/Badge";
 import { Card } from "@/app/components/Card";
 import { PageHeader } from "@/app/components/PageHeader";
 import { BackToHome } from "@/app/components/BackToHome";
+import { WarningMessage, ErrorMessage } from "@/app/components/AlertMessage";
 import supabase from "@/utilities/supabase/browser";
 
 interface UserInfo {
@@ -223,29 +223,32 @@ export default function GroupPage() {
 
   if (error) {
     return (
-      <div className="bg-surface flex items-center justify-center px-4 h-full">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-error mb-4">Error</h1>
-          <p className="text-secondary mb-4">{error}</p>
-          <Link
-            href="/"
-            className="inline-block btn-primary px-4 py-2 rounded-md transition-colors"
-          >
-            Go Home
-          </Link>
+      <div className="bg-surface h-full">
+        <div className="py-12 px-4 sm:px-6 lg:px-8">
+          <div className="max-w-md mx-auto space-y-6">
+            <PageHeader
+              title="Secret Santa Group"
+              subtitle={
+                <>
+                  <span className="block text-sm text-muted">Group Code: {groupGuid}</span>
+                </>
+              }
+              emoji="🎁"
+            />
+            <ErrorMessage title="Error">{error}</ErrorMessage>
+            <BackToHome />
+          </div>
         </div>
       </div>
     );
-  }
-
-  return (
+  }  return (
     <div className="bg-surface h-full relative">
       {/* Live indicator in upper right margin */}
       <LiveIndicator isVisible={isRealtimeConnected} />
 
       <div className="py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md mx-auto space-y-6">
-          <PageHeader 
+          <PageHeader
             title="Secret Santa Group"
             subtitle={
               <>
@@ -271,11 +274,9 @@ export default function GroupPage() {
 
         {/* Group status alerts */}
         {groupInfo?.is_frozen && (
-          <div className="bg-warning border border-warning rounded-lg p-4">
-            <p className="text-sm text-warning">
-              <strong>🔒 Group Locked:</strong> Secret Santa assignments have been made! The group is now locked.
-            </p>
-          </div>
+          <WarningMessage>
+            <strong>🔒 Group Locked:</strong> Secret Santa assignments have been made! The group is now locked.
+          </WarningMessage>
         )}
 
         {!groupInfo?.is_open && (
