@@ -158,16 +158,22 @@ export default function JoinGroupPage() {
       setStatusMessage(null);
       setIsJoining(true);
 
-      await joinGroup(formData);
+      const result = await joinGroup(formData);
 
-      // If there's no error thrown, assume success
+      // If we get here, it means there was an error (successful calls redirect)
+      if (result && !result.success) {
+        showErrorMessage(result.error || 'Unknown error occurred');
+        return;
+      }
+
+      // This shouldn't be reached for successful calls since they redirect
       showSuccessMessage('Successfully joined the group!');
 
     } catch (err: unknown) {
       console.error('Failed to join group:', err);
 
       // Extract the actual error message from the server action
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+      const errorMessage = err instanceof Error ? err.message : 'Unexpected error occurred';
 
       // Use showErrorMessage for action errors (user can retry)
       showErrorMessage(errorMessage);

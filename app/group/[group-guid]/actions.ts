@@ -3,6 +3,12 @@
 import { getClient } from "@/utilities/supabase/server";
 import { redirect } from "next/navigation";
 
+// Common result type for server actions
+type ActionResult = {
+  success: boolean;
+  error?: string;
+};
+
 export async function getUserInfo(groupGuid: string, memberCode: string) {
   const supabase = await getClient();
 
@@ -95,7 +101,7 @@ export async function getGroupInfo(groupGuid: string) {
   }
 }
 
-export async function leaveGroup(formData: FormData) {
+export async function leaveGroup(formData: FormData): Promise<ActionResult | never> {
   const supabase = await getClient();
 
   // Extract form data
@@ -111,13 +117,14 @@ export async function leaveGroup(formData: FormData) {
 
     if (leaveError) {
       console.error("Error leaving group:", leaveError);
-      throw new Error(leaveError.message);
+      return { success: false, error: leaveError.message || "Failed to leave group" };
     }
 
-    // Redirect to home page after leaving
-    redirect("/");
   } catch (error) {
     console.error("Failed to leave group:", error);
-    throw error;
+    return { success: false, error: "An unexpected error occurred while leaving the group" };
   }
+
+  // Redirect to join page after leaving - redirect throws, so it's outside try-catch
+  redirect(`/join/${groupGuid}`);
 }

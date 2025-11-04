@@ -249,7 +249,12 @@ export default function AdminPage() {
         formData.append('newCustomCodeNames', JSON.stringify(validNewCustomNames));
       }
 
-      await updateGroup(formData);
+      const result = await updateGroup(formData);
+
+      if (!result.success) {
+        showErrorMessage(result.error || 'Failed to update group');
+        return;
+      }
 
       // Refresh the group details
       const updatedDetails = await getGroupDetails(groupGuid, creatorCode);
@@ -295,8 +300,8 @@ export default function AdminPage() {
         return;
       }
 
-      const success = await assignSecretSanta(groupGuid, creatorCode);
-      if (success) {
+      const result = await assignSecretSanta(groupGuid, creatorCode);
+      if (result.success) {
         // Show success message
         showSuccessMessage('Secret Santa assignments created successfully!');
 
@@ -306,7 +311,7 @@ export default function AdminPage() {
           setGroupDetails(updatedDetails);
         }
       } else {
-        showErrorMessage('Failed to assign Secret Santa pairs.');
+        showErrorMessage(result.error || 'Failed to assign Secret Santa pairs.');
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
@@ -328,8 +333,8 @@ export default function AdminPage() {
         return;
       }
 
-      const success = await unlockGroup(groupGuid, creatorCode);
-      if (success) {
+      const result = await unlockGroup(groupGuid, creatorCode);
+      if (result.success) {
         // Show success message
         showSuccessMessage('Group unlocked successfully! Secret Santa assignments have been reset.');
 
@@ -339,7 +344,7 @@ export default function AdminPage() {
           setGroupDetails(updatedDetails);
         }
       } else {
-        showErrorMessage('Failed to unlock group.');
+        showErrorMessage(result.error || 'Failed to unlock group.');
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
@@ -363,7 +368,7 @@ export default function AdminPage() {
 
       const codeName = formData.get('creatorCodeName') as string || null;
 
-      const success = await joinGroupAsCreator(
+      const result = await joinGroupAsCreator(
         groupGuid,
         creatorCode,
         groupDetails.creator_name,
@@ -371,14 +376,14 @@ export default function AdminPage() {
         codeName
       );
 
-      if (success) {
+      if (result.success) {
         // Show success message
         showSuccessMessage('Successfully joined the group!');
 
         // Update admin member status
         setIsCreatorMember(true);
       } else {
-        showErrorMessage('Failed to join group.');
+        showErrorMessage(result.error || 'Failed to join group.');
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
@@ -399,8 +404,8 @@ export default function AdminPage() {
         return;
       }
 
-      const success = await kickMember(groupGuid, creatorCode, memberName);
-      if (success) {
+      const result = await kickMember(groupGuid, creatorCode, memberName);
+      if (result.success) {
         // Show success message
         showSuccessMessage(`${memberName} has been removed from the group.`);
 
@@ -412,7 +417,7 @@ export default function AdminPage() {
           setIsCreatorMember(false);
         }
       } else {
-        showErrorMessage('Failed to remove member.');
+        showErrorMessage(result.error || 'Failed to remove member.');
         setMemberToKick(null);
       }
     } catch (err) {

@@ -42,13 +42,18 @@ export default function CreateGroupPage() {
       setStatusMessage(null);
       setIsSubmitting(true);
 
-      await createGroup(formData);
+      const result = await createGroup(formData);
 
-      // If there's no error thrown, the action should redirect
-      // This line shouldn't be reached unless there's an error
+      // If we get here, it means there was an error (successful calls redirect)
+      if (result && !result.success) {
+        showErrorMessage(result.error || 'Unknown error occurred', 5000);
+        return;
+      }
+
+      // This shouldn't be reached for successful calls since they redirect
     } catch (err: unknown) {
       console.error('Failed to create group:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+      const errorMessage = err instanceof Error ? err.message : 'Unexpected error occurred';
       showErrorMessage(errorMessage, 5000); // Show error for 5 seconds
     } finally {
       setIsSubmitting(false);

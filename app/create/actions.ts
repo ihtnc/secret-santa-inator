@@ -3,7 +3,13 @@
 import { getClient } from "@/utilities/supabase/server";
 import { redirect } from "next/navigation";
 
-export async function createGroup(formData: FormData) {
+// Common result type for server actions
+type ActionResult = {
+  success: boolean;
+  error?: string;
+};
+
+export async function createGroup(formData: FormData): Promise<ActionResult | never> {
   const supabase = await getClient();
 
   // Extract form data
@@ -34,20 +40,20 @@ export async function createGroup(formData: FormData) {
 
   // Validate required fields
   if (!creatorName || creatorName.trim().length === 0) {
-    throw new Error("Admin name is required");
+    return { success: false, error: "Admin name is required" };
   }
 
   if (!description || description.trim().length === 0) {
-    throw new Error("Description is required");
+    return { success: false, error: "Description is required" };
   }
 
   // Validate capacity
   if (isNaN(capacity) || capacity < 2) {
-    throw new Error("Capacity must be at least 2 members");
+    return { success: false, error: "Capacity must be at least 2 members" };
   }
 
   if (capacity > 100) {
-    throw new Error("Capacity cannot exceed 100 members");
+    return { success: false, error: "Capacity cannot exceed 100 members" };
   }
 
   // Validate expiry date
@@ -56,41 +62,43 @@ export async function createGroup(formData: FormData) {
     const now = new Date();
 
     if (isNaN(expiry.getTime())) {
-      throw new Error("Invalid expiry date format");
+      return { success: false, error: "Invalid expiry date format" };
     }
 
     if (expiry <= now) {
-      throw new Error("Expiry date must be in the future");
+      return { success: false, error: "Expiry date must be in the future" };
     }
 
     // Optional: Add maximum expiry date limit (e.g., 1 year from now)
     const oneYearFromNow = new Date();
     oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
     if (expiry > oneYearFromNow) {
-      throw new Error("Expiry date cannot be more than 1 year from now");
+      return { success: false, error: "Expiry date cannot be more than 1 year from now" };
     }
   }
 
   // Validate custom code names if enabled
   if (useCustomCodeNames) {
     if (customCodeNames.length === 0) {
-      throw new Error("Custom code names are required when 'Provide your own code names' is enabled");
+      return { success: false, error: "Custom code names are required when 'Provide your own code names' is enabled" };
     }
 
     if (customCodeNames.length < capacity) {
-      throw new Error(`You must provide at least ${capacity} custom code names to match the group capacity`);
+      return { success: false, error: `You must provide at least ${capacity} custom code names to match the group capacity` };
     }
 
     // Check for duplicate custom code names (case-insensitive)
     const uniqueNames = new Set(customCodeNames.map(name => name.toLowerCase()));
     if (uniqueNames.size !== customCodeNames.length) {
-      throw new Error("Custom code names must be unique. Please remove any duplicate names.");
+      return { success: false, error: "Custom code names must be unique. Please remove any duplicate names." };
     }
   }
 
+  let groupGuid: string;
+
   try {
     // Call the create_group function
-    const { data: groupGuid, error: createError } = await supabase.rpc("create_group", {
+    const { data, error: createError } = await supabase.rpc("create_group", {
       p_capacity: capacity,
       p_use_code_names: useCodeNames,
       p_auto_assign_code_names: autoAssignCodeNames,
@@ -105,8 +113,10 @@ export async function createGroup(formData: FormData) {
 
     if (createError) {
       console.error("Error creating group:", createError);
-      throw new Error(createError.message);
+      return { success: false, error: createError.message || "Failed to create group" };
     }
+
+    groupGuid = data;
 
     // If auto-join is enabled, join the group as a member
     if (autoJoinGroup) {
@@ -120,16 +130,17 @@ export async function createGroup(formData: FormData) {
 
       if (joinError) {
         console.error("Error auto-joining group:", joinError);
-        // Note: We don't throw here since the group was created successfully
+        // Note: We don't return error here since the group was created successfully
         // The admin can manually join later if needed
         console.warn("Group created successfully but auto-join failed. Admin can join manually.");
       }
     }
 
-    // Redirect to the admin page with the generated GUID
-    redirect(`/admin/${groupGuid}`);
   } catch (error) {
     console.error("Failed to create group:", error);
-    throw error;
+    return { success: false, error: "An unexpected error occurred while creating the group" };
   }
+
+  // Redirect to the admin page with the generated GUID - redirect throws, so it's outside try-catch
+  redirect(`/admin/${groupGuid}`);
 }

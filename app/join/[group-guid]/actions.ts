@@ -3,6 +3,12 @@
 import { getClient } from "@/utilities/supabase/server";
 import { redirect } from "next/navigation";
 
+// Common result type for server actions
+type ActionResult = {
+  success: boolean;
+  error?: string;
+};
+
 export async function checkMembership(groupGuid: string, memberCode: string) {
   const supabase = await getClient();
 
@@ -25,7 +31,7 @@ export async function checkMembership(groupGuid: string, memberCode: string) {
   }
 }
 
-export async function joinGroup(formData: FormData) {
+export async function joinGroup(formData: FormData): Promise<ActionResult | never> {
   const supabase = await getClient();
 
   // Extract form data
@@ -47,15 +53,16 @@ export async function joinGroup(formData: FormData) {
 
     if (joinError) {
       console.error("Error joining group:", joinError);
-      throw new Error(joinError.message);
+      return { success: false, error: joinError.message || "Failed to join group" };
     }
 
-    // Redirect to the group page (we'll use the group GUID for now)
-    redirect(`/group/${groupGuid}`);
   } catch (error) {
     console.error("Failed to join group:", error);
-    throw error;
+    return { success: false, error: "An unexpected error occurred while joining the group" };
   }
+
+  // Redirect to the group page - redirect throws, so it's outside try-catch
+  redirect(`/group/${groupGuid}`);
 }
 
 export async function getGroupInfo(groupGuid: string) {

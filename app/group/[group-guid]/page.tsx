@@ -141,14 +141,7 @@ export default function GroupPage() {
         console.log('Member left:', payload);
         const { name } = payload.payload;
         if (name && typeof name === 'string') {
-          // If the member who left is the current user, redirect to join page
-          if (userInfoRef.current && name === userInfoRef.current.name) {
-            console.log('Current user was removed from group, redirecting to join page');
-            router.push(`/join/${groupGuid}`);
-            return;
-          }
-
-          // Update members list if it's someone else
+          // Update members list (remove the member who left)
           setMembers(prevMembers => prevMembers.filter(member => member.name !== name));
         }
       })
@@ -202,13 +195,18 @@ export default function GroupPage() {
       setStatusMessage(null);
       setIsLeaving(true);
 
-      await leaveGroup(formData);
+      const result = await leaveGroup(formData);
 
-      // If we reach here, there was an error (since successful leave should redirect)
-      showErrorMessage('Failed to leave group. Please try again.');
+      // If we get here, it means there was an error (successful calls redirect)
+      if (result && !result.success) {
+        showErrorMessage(result.error || 'Failed to leave group. Please try again.');
+        return;
+      }
+
+      // This shouldn't be reached for successful calls since they redirect
     } catch (err: unknown) {
       console.error('Failed to leave group:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+      const errorMessage = err instanceof Error ? err.message : 'Unexpected error occurred';
       showErrorMessage(errorMessage);
     } finally {
       setIsLeaving(false);

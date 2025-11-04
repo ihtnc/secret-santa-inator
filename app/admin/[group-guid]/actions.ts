@@ -2,6 +2,12 @@
 
 import { getClient } from "@/utilities/supabase/server";
 
+// Common result type for server actions
+type ActionResult = {
+  success: boolean;
+  error?: string;
+};
+
 interface GroupDetails {
   group_guid: string;
   password: string | null;
@@ -80,7 +86,7 @@ export async function getGroupDetails(groupGuid: string, creatorCode: string): P
   }
 }
 
-export async function updateGroup(formData: FormData): Promise<boolean> {
+export async function updateGroup(formData: FormData): Promise<ActionResult> {
   const supabase = await getClient();
 
   try {
@@ -107,16 +113,16 @@ export async function updateGroup(formData: FormData): Promise<boolean> {
     // Get group details to check if it uses custom code names
     const groupDetails = await getGroupDetails(groupGuid, creatorCode);
     if (!groupDetails) {
-      throw new Error('Group not found or invalid credentials');
+      return { success: false, error: 'Group not found or invalid credentials' };
     }
 
     // Validate capacity
     if (isNaN(capacity) || capacity < 2) {
-      throw new Error("Capacity must be at least 2 members");
+      return { success: false, error: "Capacity must be at least 2 members" };
     }
 
     if (capacity > 100) {
-      throw new Error("Capacity cannot exceed 100 members");
+      return { success: false, error: "Capacity cannot exceed 100 members" };
     }
 
     // Validate expiry date
@@ -125,18 +131,18 @@ export async function updateGroup(formData: FormData): Promise<boolean> {
       const now = new Date();
 
       if (isNaN(expiry.getTime())) {
-        throw new Error("Invalid expiry date format");
+        return { success: false, error: "Invalid expiry date format" };
       }
 
       if (expiry <= now) {
-        throw new Error("Expiry date must be in the future");
+        return { success: false, error: "Expiry date must be in the future" };
       }
 
       // Optional: Add maximum expiry date limit (e.g., 1 year from now)
       const oneYearFromNow = new Date();
       oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
       if (expiry > oneYearFromNow) {
-        throw new Error("Expiry date cannot be more than 1 year from now");
+        return { success: false, error: "Expiry date cannot be more than 1 year from now" };
       }
     }
 
@@ -151,7 +157,7 @@ export async function updateGroup(formData: FormData): Promise<boolean> {
 
       // Always check that total custom names meet or exceed capacity
       if (totalCustomNames < capacity) {
-        throw new Error(`You need at least ${capacity} custom code names to match the group capacity. Currently you have ${existingCustomNames.length} existing names and ${validNewNames.length} new names (total: ${totalCustomNames}).`);
+        return { success: false, error: `You need at least ${capacity} custom code names to match the group capacity. Currently you have ${existingCustomNames.length} existing names and ${validNewNames.length} new names (total: ${totalCustomNames}).` };
       }
 
       // Check for uniqueness only when there are new names being added
@@ -159,7 +165,7 @@ export async function updateGroup(formData: FormData): Promise<boolean> {
         // Check for duplicate values in new names
         const uniqueNewNames = new Set(validNewNames.map(name => name.trim().toLowerCase()));
         if (uniqueNewNames.size !== validNewNames.length) {
-          throw new Error('New custom code names must be unique. Please remove any duplicate names.');
+          return { success: false, error: 'New custom code names must be unique. Please remove any duplicate names.' };
         }
 
         // Check for duplicates between existing and new names
@@ -167,7 +173,7 @@ export async function updateGroup(formData: FormData): Promise<boolean> {
         const newNamesLower = validNewNames.map(name => name.trim().toLowerCase());
         const duplicateExists = newNamesLower.some(newName => existingNamesLower.includes(newName));
         if (duplicateExists) {
-          throw new Error('Some new custom code names already exist. Please choose different names.');
+          return { success: false, error: 'Some new custom code names already exist. Please choose different names.' };
         }
 
         // Update newCustomCodeNames to only include valid names for the database call
@@ -188,13 +194,13 @@ export async function updateGroup(formData: FormData): Promise<boolean> {
 
     if (error) {
       console.error("Error updating group:", error);
-      throw new Error(error.message || 'Failed to update group');
+      return { success: false, error: error.message || 'Failed to update group' };
     }
 
-    return true;
+    return { success: true };
   } catch (error) {
     console.error("Failed to update group:", error);
-    throw error;
+    return { success: false, error: "An unexpected error occurred while updating the group" };
   }
 }
 
@@ -222,7 +228,7 @@ export async function getGroupMembers(groupGuid: string, creatorCode: string): P
   }
 }
 
-export async function assignSecretSanta(groupGuid: string, creatorCode: string): Promise<boolean> {
+export async function assignSecretSanta(groupGuid: string, creatorCode: string): Promise<ActionResult> {
   const supabase = await getClient();
 
   try {
@@ -234,17 +240,17 @@ export async function assignSecretSanta(groupGuid: string, creatorCode: string):
 
     if (error) {
       console.error('Error assigning Secret Santa:', error);
-      return false;
+      return { success: false, error: error.message || 'Failed to assign Secret Santa pairs' };
     }
 
-    return true;
+    return { success: true };
   } catch (error) {
     console.error('Failed to assign Secret Santa:', error);
-    return false;
+    return { success: false, error: "An unexpected error occurred while assigning Secret Santa pairs" };
   }
 }
 
-export async function joinGroupAsCreator(groupGuid: string, creatorCode: string, creatorName: string, password: string | null, codeName: string | null): Promise<boolean> {
+export async function joinGroupAsCreator(groupGuid: string, creatorCode: string, creatorName: string, password: string | null, codeName: string | null): Promise<ActionResult> {
   const supabase = await getClient();
 
   try {
@@ -259,17 +265,17 @@ export async function joinGroupAsCreator(groupGuid: string, creatorCode: string,
 
     if (error) {
       console.error('Error joining group as admin:', error);
-      return false;
+      return { success: false, error: error.message || 'Failed to join group' };
     }
 
-    return true;
+    return { success: true };
   } catch (error) {
     console.error('Failed to join group as admin:', error);
-    return false;
+    return { success: false, error: "An unexpected error occurred while joining the group" };
   }
 }
 
-export async function kickMember(groupGuid: string, creatorCode: string, memberName: string): Promise<boolean> {
+export async function kickMember(groupGuid: string, creatorCode: string, memberName: string): Promise<ActionResult> {
   const supabase = await getClient();
 
   try {
@@ -282,17 +288,17 @@ export async function kickMember(groupGuid: string, creatorCode: string, memberN
 
     if (error) {
       console.error('Error kicking member:', error);
-      return false;
+      return { success: false, error: error.message || 'Failed to remove member from group' };
     }
 
-    return true;
+    return { success: true };
   } catch (error) {
     console.error('Failed to kick member:', error);
-    return false;
+    return { success: false, error: "An unexpected error occurred while removing the member" };
   }
 }
 
-export async function unlockGroup(groupGuid: string, creatorCode: string): Promise<boolean> {
+export async function unlockGroup(groupGuid: string, creatorCode: string): Promise<ActionResult> {
   const supabase = await getClient();
 
   try {
@@ -304,13 +310,13 @@ export async function unlockGroup(groupGuid: string, creatorCode: string): Promi
 
     if (error) {
       console.error('Error unlocking group:', error);
-      return false;
+      return { success: false, error: error.message || 'Failed to unlock group' };
     }
 
-    return true;
+    return { success: true };
   } catch (error) {
     console.error('Failed to unlock group:', error);
-    return false;
+    return { success: false, error: "An unexpected error occurred while unlocking the group" };
   }
 }
 
