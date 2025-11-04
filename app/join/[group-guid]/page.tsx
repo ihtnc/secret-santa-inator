@@ -240,7 +240,7 @@ export default function JoinGroupPage() {
 
           {groupInfo?.is_frozen && (
             <WarningMessage>
-              <strong>🔒 Group Locked:</strong> This group is locked. You may not be able to join until it&apos;s unlocked by the creator.
+              <strong>🔒 Group Locked:</strong> This group is locked. You may not be able to join until it&apos;s unlocked by the admin.
             </WarningMessage>
           )}
 
@@ -278,7 +278,7 @@ export default function JoinGroupPage() {
                     <span className="font-medium">{groupGuid}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Creator Name:</span>
+                    <span>Admin Name:</span>
                     <span className="font-medium">{groupInfo.creator_name}</span>
                   </div>
                   <div className="flex justify-between">

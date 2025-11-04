@@ -321,7 +321,7 @@ export default function GroupPage() {
             ) : (
               // Show waiting message when group is not frozen
               <WarningMessage>
-                <strong>⏳ Waiting for Secret Santa Assignments:</strong> The group creator hasn&apos;t assigned Secret Santa pairs yet.
+                <strong>⏳ Waiting for Secret Santa Assignments:</strong> The group admin hasn&apos;t assigned Secret Santa pairs yet.
               </WarningMessage>
             )}
           </div>
@@ -346,7 +346,7 @@ export default function GroupPage() {
                         <RoleBadge role="you" />
                       )}
                       {member.name === groupInfo?.creator_name && (
-                        <RoleBadge role="creator" />
+                        <RoleBadge role="admin" />
                       )}
                     </>
                   }
@@ -357,6 +357,21 @@ export default function GroupPage() {
             <p className="text-sm text-muted italic">No members found.</p>
           )}
         </CollapsibleSection>
+
+        {/* Manage Group Section - Only visible to admin */}
+        {userInfo?.name === groupInfo?.creator_name && (
+          <Card
+            title="Manage Group"
+            description="You are the group admin. You can create Secret Santa assignments, manage group settings, manage members, and more."
+          >
+            <a
+              href={`/admin/${groupGuid}`}
+              className="w-full py-3 px-6 btn-primary text-sm font-medium rounded-md transition-colors duration-200 shadow-sm cursor-pointer text-center block"
+            >
+              Manage Group
+            </a>
+          </Card>
+        )}
 
         {/* Leave Group Section */}
         <Card

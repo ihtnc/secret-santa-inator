@@ -5,6 +5,7 @@ import { createGroup } from "./actions";
 import { Card, CardSection } from "@/app/components/Card";
 import { PageHeader } from "@/app/components/PageHeader";
 import { BackToHome } from "@/app/components/BackToHome";
+import { AlertMessage } from "@/app/components/AlertMessage";
 
 export default function CreateGroupPage() {
   // Get creator code from localStorage
@@ -13,15 +14,32 @@ export default function CreateGroupPage() {
   // State for conditional rendering
   const [useCodeNames, setUseCodeNames] = useState(false);
   const [autoAssignCodeNames, setAutoAssignCodeNames] = useState(false);
+  const [useCustomCodeNames, setUseCustomCodeNames] = useState(false);
+  const [customCodeNames, setCustomCodeNames] = useState<string[]>(['']);
   const [autoJoinGroup, setAutoJoinGroup] = useState(true);
 
+  // State for form fields
+  const [creatorName, setCreatorName] = useState('');
+  const [capacity, setCapacity] = useState('10');
+  const [description, setDescription] = useState('');
+  const [expiryDate, setExpiryDate] = useState('');
+
   // State for error handling
-  const [error, setError] = useState<string | null>(null);
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [statusType, setStatusType] = useState<'success' | 'error'>('success');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Helper function to handle error messages with scroll-to-top
+  const showErrorMessage = (message: string, duration: number = 3000) => {
+    setStatusType('error');
+    setStatusMessage(message);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setTimeout(() => setStatusMessage(null), duration);
+  };
 
   const handleSubmit = async (formData: FormData) => {
     try {
-      setError(null);
+      setStatusMessage(null);
       setIsSubmitting(true);
 
       await createGroup(formData);
@@ -31,7 +49,7 @@ export default function CreateGroupPage() {
     } catch (err: unknown) {
       console.error('Failed to create group:', err);
       const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
-      setError(errorMessage);
+      showErrorMessage(errorMessage, 5000); // Show error for 5 seconds
     } finally {
       setIsSubmitting(false);
     }
@@ -47,11 +65,11 @@ export default function CreateGroupPage() {
         />
 
         <Card>
-          {/* Error display */}
-          {error && (
-            <div className="mb-6 bg-red-50 dark:bg-red-900/50 border border-red-200 dark:border-red-800 rounded-lg p-4">
-              <p className="text-sm text-error">{error}</p>
-            </div>
+          {/* Status message display */}
+          {statusMessage && (
+            <AlertMessage variant={statusType} className="mb-6 animate-pulse">
+              {statusMessage}
+            </AlertMessage>
           )}
 
           <form action={handleSubmit} className="space-y-6">
@@ -60,6 +78,21 @@ export default function CreateGroupPage() {
               type="hidden"
               name="creatorCode"
               value={creatorCode}
+            />
+
+            {/* Hidden custom code names */}
+            {useCustomCodeNames && customCodeNames.map((name, index) => (
+              <input
+                key={index}
+                type="hidden"
+                name={`customCodeName_${index}`}
+                value={name}
+              />
+            ))}
+            <input
+              type="hidden"
+              name="customCodeNamesCount"
+              value={useCustomCodeNames ? customCodeNames.length : 0}
             />
 
             {/* Creator Information */}
@@ -74,6 +107,8 @@ export default function CreateGroupPage() {
                     id="creatorName"
                     name="creatorName"
                     required
+                    value={creatorName}
+                    onChange={(e) => setCreatorName(e.target.value)}
                     className="input-primary w-full px-3 py-2 rounded-md text-primary placeholder:text-muted"
                     placeholder="Enter your name"
                   />
@@ -96,7 +131,8 @@ export default function CreateGroupPage() {
                     required
                     min="2"
                     max="100"
-                    defaultValue="10"
+                    value={capacity}
+                    onChange={(e) => setCapacity(e.target.value)}
                     className="input-primary w-full px-3 py-2 rounded-md text-primary placeholder:text-muted"
                   />
                 </div>
@@ -126,6 +162,8 @@ export default function CreateGroupPage() {
                     name="description"
                     required
                     rows={3}
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
                     className="input-primary w-full px-3 py-2 rounded-md text-primary placeholder:text-muted"
                     placeholder="Describe your Secret Santa event..."
                   />
@@ -142,6 +180,8 @@ export default function CreateGroupPage() {
                     type="date"
                     id="expiryDate"
                     name="expiryDate"
+                    value={expiryDate}
+                    onChange={(e) => setExpiryDate(e.target.value)}
                     className="input-primary w-full px-3 py-2 rounded-md text-primary"
                   />
                   <p className="text-xs text-muted mt-1">
@@ -179,6 +219,7 @@ export default function CreateGroupPage() {
                         setUseCodeNames(newValue);
                         if (!newValue) {
                           setAutoAssignCodeNames(false);
+                          setUseCustomCodeNames(false);
                         }
                       }}
                       className={`w-12 h-6 rounded-full cursor-pointer transition-colors duration-200 flex items-center ${
@@ -204,12 +245,25 @@ export default function CreateGroupPage() {
                       id="autoAssignCodeNames"
                       name="autoAssignCodeNames"
                       checked={autoAssignCodeNames}
-                      onChange={(e) => setAutoAssignCodeNames(e.target.checked)}
+                      onChange={(e) => {
+                        setAutoAssignCodeNames(e.target.checked);
+                        if (!e.target.checked) {
+                          setUseCustomCodeNames(false);
+                        }
+                      }}
                       disabled={!useCodeNames}
                       className="sr-only"
                     />
                     <div
-                      onClick={() => useCodeNames && setAutoAssignCodeNames(!autoAssignCodeNames)}
+                      onClick={() => {
+                        if (useCodeNames) {
+                          const newValue = !autoAssignCodeNames;
+                          setAutoAssignCodeNames(newValue);
+                          if (!newValue) {
+                            setUseCustomCodeNames(false);
+                          }
+                        }
+                      }}
                       className={`w-12 h-6 rounded-full transition-colors duration-200 flex items-center ${
                         !useCodeNames ? 'bg-gray-200 cursor-not-allowed' :
                         autoAssignCodeNames ? 'bg-toggle-active cursor-pointer' : 'bg-toggle-inactive cursor-pointer'
@@ -223,6 +277,92 @@ export default function CreateGroupPage() {
                     </div>
                   </div>
                 </div>
+
+                <div className="flex items-center justify-between p-3 border border-primary rounded-lg">
+                  <label htmlFor="useCustomCodeNames" className={`block text-sm font-medium ${!autoAssignCodeNames ? 'text-muted' : 'text-label'}`}>
+                    Provide your own code names
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="checkbox"
+                      id="useCustomCodeNames"
+                      name="useCustomCodeNames"
+                      checked={useCustomCodeNames}
+                      onChange={(e) => setUseCustomCodeNames(e.target.checked)}
+                      disabled={!autoAssignCodeNames}
+                      className="sr-only"
+                    />
+                    <div
+                      onClick={() => autoAssignCodeNames && setUseCustomCodeNames(!useCustomCodeNames)}
+                      className={`w-12 h-6 rounded-full transition-colors duration-200 flex items-center ${
+                        !autoAssignCodeNames ? 'bg-gray-200 cursor-not-allowed' :
+                        useCustomCodeNames ? 'bg-toggle-active cursor-pointer' : 'bg-toggle-inactive cursor-pointer'
+                      }`}
+                    >
+                      <div
+                        className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-200 ${
+                          useCustomCodeNames ? 'translate-x-6' : 'translate-x-0.5'
+                        }`}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Custom code names input section */}
+                {useCustomCodeNames && (
+                  <div className="space-y-3 p-4 border border-primary rounded-lg bg-surface/50">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-sm font-medium text-label">
+                        Custom Code Names
+                      </h3>
+                      <button
+                        type="button"
+                        onClick={() => setCustomCodeNames([...customCodeNames, ''])}
+                        className="text-xs link-primary font-medium cursor-pointer px-2 py-1 rounded transition-colors duration-200"
+                      >
+                        + Add Name
+                      </button>
+                    </div>
+
+                    <div className="space-y-2">
+                      {customCodeNames.map((name, index) => (
+                        <div key={index} className="relative">
+                          <input
+                            type="text"
+                            value={name}
+                            onChange={(e) => {
+                              const newNames = [...customCodeNames];
+                              newNames[index] = e.target.value;
+                              setCustomCodeNames(newNames);
+                            }}
+                            placeholder={`Code name ${index + 1} (e.g., MysteriousElf)`}
+                            className={`input-primary w-full px-3 py-2 rounded-md text-primary placeholder:text-muted text-sm ${
+                              customCodeNames.length > 1 && index < customCodeNames.length - 1 ? 'pr-10' : ''
+                            }`}
+                          />
+                          {customCodeNames.length > 1 && index < customCodeNames.length - 1 && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newNames = customCodeNames.filter((_, i) => i !== index);
+                                setCustomCodeNames(newNames);
+                              }}
+                              className="absolute right-2 top-1/2 transform -translate-y-1/2 action-destructive p-1 rounded-md transition-colors duration-200 cursor-pointer"
+                            >
+                              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+
+                    <p className="text-xs text-muted">
+                      Add custom code names for your group. You should provide at least as many names as your maximum member count.
+                    </p>
+                  </div>
+                )}
 
                 <p className="text-xs text-muted">
                   Code names add fun and mystery to your Secret Santa! If auto-assign is disabled,

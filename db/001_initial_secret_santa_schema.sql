@@ -13,6 +13,7 @@ CREATE TABLE groups (
     capacity INTEGER NOT NULL,
     use_code_names BOOLEAN NOT NULL,
     auto_assign_code_names BOOLEAN NOT NULL,
+    use_custom_code_names BOOLEAN NOT NULL,
     creator_name TEXT NOT NULL,
     creator_code TEXT NOT NULL,
     created_date TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
@@ -33,6 +34,7 @@ CREATE TABLE members (
     name TEXT NOT NULL,
     code TEXT NOT NULL,
     code_name TEXT,
+    custom_code_name_id INTEGER REFERENCES custom_code_names(id) ON DELETE SET NULL,
     created_date TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
@@ -40,6 +42,7 @@ CREATE TABLE members (
 ALTER TABLE members ENABLE ROW LEVEL SECURITY;
 CREATE UNIQUE INDEX idx_members_group_name_unique ON members (group_id, name);
 CREATE UNIQUE INDEX idx_members_group_code_name_unique ON members (group_id, code_name) WHERE code_name IS NOT NULL;
+CREATE UNIQUE INDEX idx_members_group_custom_code_name_unique ON members (group_id, custom_code_name_id) WHERE custom_code_name_id IS NOT NULL;
 
 -- Santas table (Secret Santa assignments)
 CREATE TABLE santas (
@@ -78,6 +81,18 @@ CREATE TABLE code_nouns (
 -- Enable RLS and create unique index
 ALTER TABLE code_nouns ENABLE ROW LEVEL SECURITY;
 CREATE UNIQUE INDEX idx_code_nouns_value_unique ON code_nouns (value);
+
+-- Custom code names table
+CREATE TABLE custom_code_names (
+    id SERIAL PRIMARY KEY,
+    group_id INTEGER NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
+    name TEXT NOT NULL,
+    created_date TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Enable RLS and create unique index
+ALTER TABLE custom_code_names ENABLE ROW LEVEL SECURITY;
+CREATE UNIQUE INDEX idx_custom_code_names_group_name_unique ON custom_code_names (group_id, name);
 
 -- App schema and outbox table
 CREATE SCHEMA IF NOT EXISTS app;
@@ -182,6 +197,33 @@ BEGIN
 END;
 $$;
 
+-- Function to get available custom code name from group
+CREATE OR REPLACE FUNCTION get_custom_code_name(p_group_id INTEGER)
+RETURNS TABLE(id INTEGER, name TEXT)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    -- Get random custom code name that is not already assigned to a member
+    RETURN QUERY
+    SELECT ccn.id, ccn.name
+    FROM custom_code_names ccn
+    WHERE ccn.group_id = p_group_id
+    AND ccn.id NOT IN (
+        SELECT m.custom_code_name_id
+        FROM members m
+        WHERE m.group_id = p_group_id
+        AND m.custom_code_name_id IS NOT NULL
+    )
+    ORDER BY RANDOM()
+    LIMIT 1;
+
+    -- Check if we found an available name
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'No available custom code names for this group';
+    END IF;
+END;
+$$;
+
 -- Function to validate if creator code matches group's creator
 CREATE OR REPLACE FUNCTION is_creator(
     p_group_guid TEXT,
@@ -256,6 +298,7 @@ RETURNS TABLE(
     expiry_date TIMESTAMP WITH TIME ZONE,
     use_code_names BOOLEAN,
     auto_assign_code_names BOOLEAN,
+    use_custom_code_names BOOLEAN,
     creator_name TEXT,
     is_frozen BOOLEAN,
     member_count INTEGER
@@ -285,6 +328,7 @@ BEGIN
         g.expiry_date,
         g.use_code_names,
         g.auto_assign_code_names,
+        g.use_custom_code_names,
         g.creator_name,
         g.is_frozen,
         COALESCE((
@@ -310,6 +354,7 @@ RETURNS TABLE(
     expiry_date TIMESTAMP WITH TIME ZONE,
     use_code_names BOOLEAN,
     auto_assign_code_names BOOLEAN,
+    use_custom_code_names BOOLEAN,
     creator_name TEXT,
     is_frozen BOOLEAN,
     is_creator BOOLEAN,
@@ -330,10 +375,11 @@ BEGIN
         g.expiry_date,
         g.use_code_names,
         g.auto_assign_code_names,
+        g.use_custom_code_names,
         g.creator_name,
         g.is_frozen,
         (g.creator_code = p_member_code) AS is_creator,
-        CASE 
+        CASE
             WHEN m.code IS NOT NULL AND g.use_code_names = false THEN m.name
             WHEN m.code IS NOT NULL AND g.use_code_names = true THEN m.code_name
             ELSE g.creator_name
@@ -364,17 +410,21 @@ CREATE OR REPLACE FUNCTION create_group(
     p_capacity INTEGER,
     p_use_code_names BOOLEAN,
     p_auto_assign_code_names BOOLEAN,
+    p_use_custom_code_names BOOLEAN,
     p_creator_name TEXT,
     p_creator_code TEXT,
     p_description TEXT,
     p_password TEXT DEFAULT NULL,
-    p_expiry_date TIMESTAMP WITH TIME ZONE DEFAULT NULL
+    p_expiry_date TIMESTAMP WITH TIME ZONE DEFAULT NULL,
+    p_custom_code_names TEXT[] DEFAULT NULL
 )
 RETURNS TEXT
 LANGUAGE plpgsql
 AS $$
 DECLARE
     generated_guid TEXT;
+    new_group_id INTEGER;
+    custom_name TEXT;
 BEGIN
     -- Validate that description is provided
     IF p_description IS NULL OR LENGTH(TRIM(p_description)) = 0 THEN
@@ -384,6 +434,17 @@ BEGIN
     -- Validate that expiry date is in the future (if provided)
     IF p_expiry_date IS NOT NULL AND p_expiry_date <= NOW() THEN
         RAISE EXCEPTION 'Expiry date must be in the future';
+    END IF;
+
+    -- Validate custom code names if use_custom_code_names is true
+    IF p_use_custom_code_names THEN
+            IF p_custom_code_names IS NULL OR array_length(p_custom_code_names, 1) IS NULL THEN
+                RAISE EXCEPTION 'Custom code names are required';
+            END IF;
+
+            IF array_length(p_custom_code_names, 1) < p_capacity THEN
+                RAISE EXCEPTION 'The number of custom code names should not be less than the group''s capacity';
+            END IF;
     END IF;
 
     -- Generate a new GUID
@@ -396,6 +457,7 @@ BEGIN
         capacity,
         use_code_names,
         auto_assign_code_names,
+        use_custom_code_names,
         creator_name,
         creator_code,
         description,
@@ -408,12 +470,23 @@ BEGIN
         p_capacity,
         p_use_code_names,
         p_auto_assign_code_names,
+        p_use_custom_code_names,
         p_creator_name,
         p_creator_code,
         p_description,
         TRUE, -- Always open for new groups
         COALESCE(p_expiry_date, NOW() + INTERVAL '1 month')
-    );
+    )
+    RETURNING id INTO new_group_id;
+
+    -- Insert custom code names if provided
+    IF p_use_custom_code_names AND p_custom_code_names IS NOT NULL THEN
+        FOREACH custom_name IN ARRAY p_custom_code_names
+        LOOP
+            INSERT INTO custom_code_names (group_id, name)
+            VALUES (new_group_id, custom_name);
+        END LOOP;
+    END IF;
 
     -- Return only the generated GUID
     RETURN generated_guid;
@@ -427,7 +500,8 @@ CREATE OR REPLACE FUNCTION update_group(
     p_capacity INTEGER,
     p_is_open BOOLEAN,
     p_expiry_date TIMESTAMP WITH TIME ZONE,
-    p_creator_code TEXT
+    p_creator_code TEXT,
+    p_additional_custom_code_names TEXT[] DEFAULT NULL
 )
 RETURNS VOID
 LANGUAGE plpgsql
@@ -435,6 +509,9 @@ AS $$
 DECLARE
     group_record RECORD;
     current_member_count INTEGER;
+    current_custom_names_count INTEGER;
+    total_custom_names_count INTEGER;
+    custom_name TEXT;
 BEGIN
     -- Validate that expiry date is in the future (if provided)
     IF p_expiry_date IS NOT NULL AND p_expiry_date <= NOW() THEN
@@ -442,7 +519,7 @@ BEGIN
     END IF;
 
     -- Check if a matching record exists with the provided credentials, is not frozen, and is not expired
-    SELECT id, capacity
+    SELECT id, capacity, use_custom_code_names
     INTO group_record
     FROM groups
     WHERE group_guid = p_group_guid
@@ -463,6 +540,44 @@ BEGIN
     -- Validate that new capacity is not lower than current member count
     IF p_capacity < current_member_count THEN
         RAISE EXCEPTION 'Cannot set capacity to % as there are already % members in the group', p_capacity, current_member_count;
+    END IF;
+
+    -- If additional custom code names are provided and group uses custom code names, validate them
+    IF p_additional_custom_code_names IS NOT NULL AND group_record.use_custom_code_names THEN
+        -- Get current count of custom code names for this group
+        SELECT COUNT(*) INTO current_custom_names_count
+        FROM custom_code_names
+        WHERE group_id = group_record.id;
+
+        -- Calculate total count including additional names
+        total_custom_names_count := current_custom_names_count + array_length(p_additional_custom_code_names, 1);
+
+        -- Validate that total custom code names is not less than capacity
+        IF total_custom_names_count < p_capacity THEN
+            RAISE EXCEPTION 'Total custom code names (% existing + % additional = %) cannot be less than capacity (%)',
+                current_custom_names_count,
+                array_length(p_additional_custom_code_names, 1),
+                total_custom_names_count,
+                p_capacity;
+        END IF;
+
+        -- Validate that none of the additional custom code names already exist
+        FOREACH custom_name IN ARRAY p_additional_custom_code_names
+        LOOP
+            IF EXISTS(
+                SELECT 1 FROM custom_code_names
+                WHERE group_id = group_record.id AND name = custom_name
+            ) THEN
+                RAISE EXCEPTION 'Custom code name "%" already exists in this group', custom_name;
+            END IF;
+        END LOOP;
+
+        -- Insert the additional custom code names
+        FOREACH custom_name IN ARRAY p_additional_custom_code_names
+        LOOP
+            INSERT INTO custom_code_names (group_id, name)
+            VALUES (group_record.id, custom_name);
+        END LOOP;
     END IF;
 
     -- Update the group with all provided fields
@@ -505,6 +620,9 @@ BEGIN
     -- Delete all members for this group
     DELETE FROM members WHERE group_id = group_id_found;
 
+    -- Delete all custom code names for this group
+    DELETE FROM custom_code_names WHERE group_id = group_id_found;
+
     -- Delete the group
     DELETE FROM groups
     WHERE group_guid = p_group_guid
@@ -532,7 +650,7 @@ DECLARE
     attempt_count INTEGER := 0;
 BEGIN
     -- Validate group exists with correct password, is not frozen, and is not expired
-    SELECT id, group_guid, use_code_names, auto_assign_code_names, capacity, creator_name, creator_code
+    SELECT id, group_guid, use_code_names, auto_assign_code_names, use_custom_code_names, capacity, creator_name, creator_code
     INTO group_record
     FROM groups
     WHERE group_guid = p_group_guid
@@ -578,33 +696,54 @@ BEGIN
         RAISE EXCEPTION 'Code name is required for this group';
     END IF;
 
-    -- Determine final code name
+    -- Determine final code name and custom code name assignment
     IF group_record.auto_assign_code_names THEN
-        -- Auto-assign code name, retry if duplicate found
-        LOOP
-            attempt_count := attempt_count + 1;
+        IF group_record.use_custom_code_names THEN
+            -- Auto-assign custom code name
+            DECLARE
+                custom_code_record RECORD;
+            BEGIN
+                SELECT * INTO custom_code_record FROM get_custom_code_name(group_record.id);
 
-            IF attempt_count > max_attempts THEN
-                RAISE EXCEPTION 'Unable to generate unique code name after % attempts', max_attempts;
-            END IF;
+                -- Insert the new member with custom code name
+                INSERT INTO members (group_id, name, code, code_name, custom_code_name_id)
+                VALUES (group_record.id, p_name, p_code, custom_code_record.name, custom_code_record.id);
+            END;
+        ELSE
+            -- Auto-assign regular code name, retry if duplicate found
+            LOOP
+                attempt_count := attempt_count + 1;
 
-            -- Generate new code name
-            final_code_name := get_code_name();
+                IF attempt_count > max_attempts THEN
+                    RAISE EXCEPTION 'Unable to generate unique code name after % attempts', max_attempts;
+                END IF;
 
-            -- Check if this code name already exists in the group
-            SELECT EXISTS(
-                SELECT 1 FROM members
-                WHERE group_id = group_record.id AND code_name = final_code_name
-            ) INTO code_name_exists;
+                -- Generate new code name
+                final_code_name := get_code_name();
 
-            -- Exit loop if we found a unique code name
-            IF NOT code_name_exists THEN
-                EXIT;
-            END IF;
-        END LOOP;
+                -- Check if this code name already exists in the group
+                SELECT EXISTS(
+                    SELECT 1 FROM members
+                    WHERE group_id = group_record.id AND code_name = final_code_name
+                ) INTO code_name_exists;
+
+                -- Exit loop if we found a unique code name
+                IF NOT code_name_exists THEN
+                    EXIT;
+                END IF;
+            END LOOP;
+
+            -- Insert the new member with regular code name
+            INSERT INTO members (group_id, name, code, code_name)
+            VALUES (group_record.id, p_name, p_code, final_code_name);
+        END IF;
     ELSE
-        -- Use provided code name (can be NULL if use_code_names is false)
-        final_code_name := p_code_name;
+        -- Use provided code name or assign name if use_code_names is false
+        IF group_record.use_code_names THEN
+            final_code_name := p_code_name;
+        ELSE
+            final_code_name := p_name;
+        END IF;
 
         -- If code name is provided, check for duplicates
         IF final_code_name IS NOT NULL THEN
@@ -617,11 +756,11 @@ BEGIN
                 RAISE EXCEPTION 'Code name already exists in this group';
             END IF;
         END IF;
-    END IF;
 
-    -- Insert the new member
-    INSERT INTO members (group_id, name, code, code_name)
-    VALUES (group_record.id, p_name, p_code, final_code_name);
+        -- Insert the new member with provided code name
+        INSERT INTO members (group_id, name, code, code_name)
+        VALUES (group_record.id, p_name, p_code, final_code_name);
+    END IF;
 END;
 $$;
 
@@ -852,13 +991,12 @@ RETURNS TEXT
 LANGUAGE plpgsql
 AS $$
 DECLARE
-    group_record RECORD;
+    group_id_var INTEGER;
     my_member_id INTEGER;
-    recipient_member_record RECORD;
+    recipient_code_name TEXT;
 BEGIN
     -- Validate group exists and is not expired
-    SELECT id, use_code_names
-    INTO group_record
+    SELECT id INTO group_id_var
     FROM groups
     WHERE group_guid = p_group_guid
       AND (expiry_date IS NULL OR expiry_date > NOW());
@@ -870,31 +1008,26 @@ BEGIN
     -- Find my member ID using only code
     SELECT id INTO my_member_id
     FROM members
-    WHERE group_id = group_record.id
+    WHERE group_id = group_id_var
       AND code = p_code;
 
     IF NOT FOUND THEN
         RAISE EXCEPTION 'Member not found in this group or invalid credentials';
     END IF;
 
-    -- Find who I'm giving a gift to (where I am the santa)
-    SELECT m.name, m.code_name
-    INTO recipient_member_record
+    -- Find who I'm giving a gift to (where I am the santa) and get their code_name
+    SELECT m.code_name INTO recipient_code_name
     FROM santas s
     JOIN members m ON m.id = s.member_id
-    WHERE s.group_id = group_record.id
+    WHERE s.group_id = group_id_var
       AND s.santa_id = my_member_id;
 
     IF NOT FOUND THEN
         RAISE EXCEPTION 'Secret Santa assignments have not been made yet';
     END IF;
 
-    -- Return code_name if group uses code names, otherwise return name
-    IF group_record.use_code_names THEN
-        RETURN recipient_member_record.code_name;
-    ELSE
-        RETURN recipient_member_record.name;
-    END IF;
+    -- Return the code_name directly
+    RETURN recipient_code_name;
 END;
 $$;
 

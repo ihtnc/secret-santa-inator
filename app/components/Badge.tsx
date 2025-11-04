@@ -65,11 +65,11 @@ export function RoleBadge({
   role, 
   className = "" 
 }: { 
-  role: 'creator' | 'you'; 
+  role: 'admin' | 'you'; 
   className?: string;
 }) {
   const roleConfig = {
-    creator: { variant: 'success' as const, text: 'Creator' },
+    admin: { variant: 'success' as const, text: 'Admin' },
     you: { variant: 'info' as const, text: 'You' },
   };
 

@@ -9,24 +9,28 @@ A modern, real-time web application for organizing Secret Santa gift exchanges w
 ## ✨ Features
 
 ### Core Functionality
+
 - **Easy Group Creation**: Create Secret Santa groups with customizable settings
 - **Simple Joining**: Join groups using a shareable link or group code
 - **Smart Assignments**: Automatic Secret Santa pairing when groups are ready
 - **Real-time Updates**: Live notifications when members join, leave, or when assignments are made
 
 ### Group Management
+
 - **Member Capacity**: Set maximum number of participants
 - **Group Privacy**: Optional password protection for groups
 - **Flexible Timing**: Set expiry dates for group participation
 - **Group Status Control**: Open/close groups for new members, freeze for assignments
 
 ### User Experience
+
 - **Code Names**: Optional anonymous participation with auto-generated or custom code names
 - **Live Indicators**: Real-time connection status across all pages
 - **Responsive Design**: Works seamlessly on desktop and mobile devices
 - **Intuitive UI**: Clean, festive design with clear navigation
 
 ### Admin Features
+
 - **Group Administration**: Manage members, settings, and group status
 - **Member Removal**: Remove participants when necessary
 - **Assignment Control**: Lock/unlock Secret Santa assignments
@@ -35,6 +39,7 @@ A modern, real-time web application for organizing Secret Santa gift exchanges w
 ## 🚀 Getting Started
 
 ### Prerequisites
+
 - Node.js (v18 or higher)
 - npm or yarn
 - Supabase account (for database and real-time features)
@@ -42,18 +47,21 @@ A modern, real-time web application for organizing Secret Santa gift exchanges w
 ### Installation
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/ihtnc/secret-santa-inator.git
    cd secret-santa-inator
    ```
 
 2. **Install dependencies**
+
    ```bash
    npm install
    ```
 
 3. **Set up environment variables**
    Create a `.env.local` file in the root directory:
+
    ```env
    NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your_supabase_anon_public_key
@@ -67,11 +75,13 @@ A modern, real-time web application for organizing Secret Santa gift exchanges w
 
 4. **Set up the database**
    Run the SQL migration file in your Supabase database:
+
    ```bash
    # Execute the contents of db/001_initial_secret_santa_schema.sql in your Supabase SQL editor
    ```
 
 5. **Start the development server**
+
    ```bash
    npm run dev
    ```
@@ -90,12 +100,14 @@ A modern, real-time web application for organizing Secret Santa gift exchanges w
 ## 📱 How It Works
 
 ### For Participants
+
 1. **Join a Group**: Click a shared link or enter a group code
 2. **Enter Your Details**: Provide your name and optional code name
 3. **Wait for Assignment**: Get notified when Secret Santa assignments are made
 4. **View Your Assignment**: See who you're buying a gift for
 
 ### For Organizers
+
 1. **Create a Group**: Set up a new Secret Santa group with your preferences
 2. **Share the Link**: Send the group link to participants
 3. **Manage Members**: Add/remove participants as needed
@@ -105,6 +117,7 @@ A modern, real-time web application for organizing Secret Santa gift exchanges w
 ## 🔧 Development
 
 ### Scripts
+
 - `npm run dev` - Start development server
 - `npm run build` - Build for production
 - `npm run start` - Start production server
@@ -112,7 +125,8 @@ A modern, real-time web application for organizing Secret Santa gift exchanges w
 - `npm run debug` - Start with debugging enabled
 
 ### Project Structure
-```
+
+```text
 secret-santa-inator/
 ├── app/                    # Next.js App Router pages
 │   ├── admin/             # Admin group management
@@ -140,6 +154,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 🎁 Support
 
 If you encounter any issues or have questions:
+
 - Open an issue on GitHub
 - Check the existing issues for solutions
 - Review the database schema in `db/001_initial_secret_santa_schema.sql`

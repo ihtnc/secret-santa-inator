@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { getGroupDetails, updateGroup, getGroupMembers, assignSecretSanta, joinGroupAsCreator, kickMember, unlockGroup } from "./actions";
+import { getGroupDetails, updateGroup, getGroupMembers, assignSecretSanta, joinGroupAsCreator, kickMember, unlockGroup, getCustomCodeNames } from "./actions";
 import LiveIndicator from "@/app/components/LiveIndicator";
 import CollapsibleSection from "@/app/components/CollapsibleSection";
 import MemberListItem from "@/app/components/MemberListItem";
@@ -21,6 +21,7 @@ interface GroupDetails {
   capacity: number;
   use_code_names: boolean;
   auto_assign_code_names: boolean;
+  use_custom_code_names: boolean;
   creator_name: string;
   description: string | null;
   is_open: boolean;
@@ -68,6 +69,12 @@ export default function AdminPage() {
   const [isCreatorMember, setIsCreatorMember] = useState(false);
   const [memberToKick, setMemberToKick] = useState<string | null>(null);
   const [isGroupOpen, setIsGroupOpen] = useState(false);
+  const [existingCustomCodeNames, setExistingCustomCodeNames] = useState<string[]>([]);
+  const [newCustomCodeNames, setNewCustomCodeNames] = useState<string[]>([]);
+  const [loadingCustomNames, setLoadingCustomNames] = useState(false);
+  const [isExistingCustomNamesExpanded, setIsExistingCustomNamesExpanded] = useState(false);
+  const [capacity, setCapacity] = useState<number>(10);
+  const [expiryDate, setExpiryDate] = useState<string>('');
 
   useEffect(() => {
     async function fetchGroupDetails() {
@@ -75,7 +82,7 @@ export default function AdminPage() {
         setLoading(true);
         const creatorCode = localStorage.getItem('creatorCode');
         if (!creatorCode) {
-          setError('Creator code not found. Please return to the home page.');
+          setError('Admin code not found. Please return to the home page.');
           return;
         }
 
@@ -90,18 +97,35 @@ export default function AdminPage() {
         // Initialize the group open state
         setIsGroupOpen(details.is_open);
 
+        // Initialize capacity and expiry date state
+        setCapacity(details.capacity);
+        setExpiryDate(details.expiry_date ? new Date(details.expiry_date).toISOString().split('T')[0] : '');
+
         // Fetch group members
         try {
           setLoadingMembers(true);
           const members = await getGroupMembers(groupGuid, creatorCode);
           setGroupMembers(members);
 
-          // Check if creator is already a member
+          // Check if admin is already a member
           setIsCreatorMember(members.includes(details.creator_name));
         } catch (err) {
           console.error('Failed to fetch group members:', err);
         } finally {
           setLoadingMembers(false);
+        }
+
+        // Fetch custom code names if group uses them
+        if (details.use_custom_code_names) {
+          try {
+            setLoadingCustomNames(true);
+            const customNames = await getCustomCodeNames(groupGuid, creatorCode);
+            setExistingCustomCodeNames(customNames);
+          } catch (err) {
+            console.error('Failed to fetch custom code names:', err);
+          } finally {
+            setLoadingCustomNames(false);
+          }
         }
       } catch (err) {
         setError('Failed to load group details.');
@@ -136,7 +160,7 @@ export default function AdminPage() {
 
               const updatedMembers = [...prevMembers, name].sort();
 
-              // Update creator member status if needed
+              // Update admin member status if needed
               if (groupDetails && name === groupDetails.creator_name) {
                 setIsCreatorMember(true);
               }
@@ -158,7 +182,7 @@ export default function AdminPage() {
               setStatusMessage(`${name} left the group`);
               setTimeout(() => setStatusMessage(null), 3000);
 
-              // Update creator member status if needed
+              // Update admin member status if needed
               if (groupDetails && name === groupDetails.creator_name) {
                 setIsCreatorMember(false);
               }
@@ -211,30 +235,46 @@ export default function AdminPage() {
       setSaving(true);
       const creatorCode = localStorage.getItem('creatorCode');
       if (!creatorCode) {
-        showErrorMessage('Creator code not found.');
+        showErrorMessage('Admin code not found.');
         return;
       }
 
       formData.append('groupGuid', groupGuid);
       formData.append('creatorCode', creatorCode);
 
-      const success = await updateGroup(formData);
-      if (success) {
-        // Refresh the group details
-        const updatedDetails = await getGroupDetails(groupGuid, creatorCode);
-        if (updatedDetails) {
-          setGroupDetails(updatedDetails);
-        }
+      // Add new custom code names to form data (filter out empty ones)
+      const validNewCustomNames = newCustomCodeNames.filter(name => name.trim() !== '');
 
-        // Collapse group details and expand member list
-        setIsGroupDetailsExpanded(false);
-        setIsMemberListExpanded(true);
-
-        // Show success message using realtime status
-        showSuccessMessage('Group settings saved successfully!');
-      } else {
-        showErrorMessage('Failed to update group.');
+      if (validNewCustomNames.length > 0) {
+        formData.append('newCustomCodeNames', JSON.stringify(validNewCustomNames));
       }
+
+      await updateGroup(formData);
+
+      // Refresh the group details
+      const updatedDetails = await getGroupDetails(groupGuid, creatorCode);
+      if (updatedDetails) {
+        setGroupDetails(updatedDetails);
+      }
+
+      // Refresh custom code names if group uses them
+      if (groupDetails.use_custom_code_names) {
+        try {
+          const customNames = await getCustomCodeNames(groupGuid, creatorCode);
+          setExistingCustomCodeNames(customNames);
+          // Clear new custom code names after successful save
+          setNewCustomCodeNames([]);
+        } catch (err) {
+          console.error('Failed to refresh custom code names:', err);
+        }
+      }
+
+      // Collapse group details and expand member list
+      setIsGroupDetailsExpanded(false);
+      setIsMemberListExpanded(true);
+
+      // Show success message using realtime status
+      showSuccessMessage('Group settings saved successfully!');
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
       showErrorMessage(errorMessage);
@@ -251,7 +291,7 @@ export default function AdminPage() {
       setAssigning(true);
       const creatorCode = localStorage.getItem('creatorCode');
       if (!creatorCode) {
-        showErrorMessage('Creator code not found.');
+        showErrorMessage('Admin code not found.');
         return;
       }
 
@@ -284,7 +324,7 @@ export default function AdminPage() {
       setUnlocking(true);
       const creatorCode = localStorage.getItem('creatorCode');
       if (!creatorCode) {
-        showErrorMessage('Creator code not found.');
+        showErrorMessage('Admin code not found.');
         return;
       }
 
@@ -317,7 +357,7 @@ export default function AdminPage() {
       setJoining(true);
       const creatorCode = localStorage.getItem('creatorCode');
       if (!creatorCode) {
-        showErrorMessage('Creator code not found.');
+        showErrorMessage('Admin code not found.');
         return;
       }
 
@@ -335,7 +375,7 @@ export default function AdminPage() {
         // Show success message
         showSuccessMessage('Successfully joined the group!');
 
-        // Update creator member status
+        // Update admin member status
         setIsCreatorMember(true);
       } else {
         showErrorMessage('Failed to join group.');
@@ -355,7 +395,7 @@ export default function AdminPage() {
     try {
       const creatorCode = localStorage.getItem('creatorCode');
       if (!creatorCode) {
-        showErrorMessage('Creator code not found.');
+        showErrorMessage('Admin code not found.');
         return;
       }
 
@@ -367,7 +407,7 @@ export default function AdminPage() {
         // Reset confirmation state
         setMemberToKick(null);
 
-        // Update creator member status if needed
+        // Update admin member status if needed
         if (memberName === groupDetails?.creator_name) {
           setIsCreatorMember(false);
         }
@@ -504,28 +544,22 @@ export default function AdminPage() {
               <h3 className="text-md font-medium text-primary mb-4">Group Details</h3>
 
               <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-label mb-1">
+                <div className="flex items-center justify-between p-3 border border-primary rounded-lg opacity-60">
+                  <label className="block text-sm font-medium text-secondary">
                     Group Code
                   </label>
-                  <input
-                    type="text"
-                    value={groupDetails.group_guid}
-                    disabled
-                    className="input-primary w-full px-3 py-2 rounded-md text-primary"
-                  />
+                  <span className="text-sm text-secondary font-mono">
+                    {groupDetails.group_guid}
+                  </span>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-label mb-1">
-                    Creator Name
+                <div className="flex items-center justify-between p-3 border border-primary rounded-lg opacity-60">
+                  <label className="block text-sm font-medium text-secondary">
+                    Admin Name
                   </label>
-                  <input
-                    type="text"
-                    value={groupDetails.creator_name}
-                    disabled
-                    className="input-primary w-full px-3 py-2 rounded-md text-primary"
-                  />
+                  <span className="text-sm text-secondary">
+                    {groupDetails.creator_name}
+                  </span>
                 </div>
 
               <div>
@@ -582,8 +616,138 @@ export default function AdminPage() {
                       </div>
                     </div>
                   </div>
+
+                  <div className="flex items-center justify-between p-3 border border-primary rounded-lg opacity-60">
+                    <label className="block text-sm font-medium text-secondary">
+                      Provide your own code names
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="checkbox"
+                        checked={groupDetails.use_custom_code_names}
+                        disabled
+                        className="sr-only"
+                      />
+                      <div
+                        className={`w-12 h-6 rounded-full cursor-not-allowed transition-colors duration-200 flex items-center ${
+                          groupDetails.use_custom_code_names ? 'bg-toggle-active' : 'bg-toggle-inactive'
+                        }`}
+                      >
+                        <div
+                          className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-200 ${
+                            groupDetails.use_custom_code_names ? 'translate-x-6' : 'translate-x-0.5'
+                          }`}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Custom Code Names Section */}
+                  {groupDetails.use_custom_code_names && (
+                    <div className="space-y-3 p-4 border border-primary rounded-lg bg-surface/50">
+                      <h4 className="text-sm font-medium text-label">
+                        Custom Code Names
+                      </h4>
+
+                      {/* Existing Custom Code Names */}
+                      {loadingCustomNames ? (
+                        <div className="flex items-center justify-center py-4">
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
+                          <span className="ml-2 text-xs text-secondary">Loading custom names...</span>
+                        </div>
+                      ) : existingCustomCodeNames.length > 0 ? (
+                        <div className="space-y-2">
+                          <button
+                            type="button"
+                            onClick={() => setIsExistingCustomNamesExpanded(!isExistingCustomNamesExpanded)}
+                            className="flex items-center justify-between w-full text-left"
+                          >
+                            <p className="text-xs text-secondary">Existing custom code names ({existingCustomCodeNames.length})</p>
+                            <svg
+                              className={`w-4 h-4 text-secondary transform transition-transform duration-200 cursor-pointer ${
+                                isExistingCustomNamesExpanded ? 'rotate-180' : ''
+                              }`}
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                          </button>
+                          {isExistingCustomNamesExpanded && (
+                            <div className="grid grid-cols-2 gap-2">
+                              {existingCustomCodeNames.map((name, index) => (
+                                <div
+                                  key={index}
+                                  className="px-3 py-2 border border-primary rounded-md bg-white text-secondary text-sm"
+                                >
+                                  {name}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <p className="text-xs text-muted">No custom code names defined yet.</p>
+                      )}
+
+                      {/* New Custom Code Names (only when not frozen) */}
+                      {!groupDetails.is_frozen && (
+                        <div className="space-y-3 pt-3 border-t border-accent">
+                          <div className="flex items-center justify-between">
+                            <p className="text-xs font-medium text-label">
+                              Add New Custom Code Names
+                            </p>
+                            <button
+                              type="button"
+                              onClick={() => setNewCustomCodeNames([...newCustomCodeNames, ''])}
+                              className="text-xs link-primary font-medium cursor-pointer px-2 py-1 rounded transition-colors duration-200"
+                            >
+                              + Add Name
+                            </button>
+                          </div>
+
+                          {newCustomCodeNames.length > 0 && (
+                            <div className="space-y-2">
+                              {newCustomCodeNames.map((name, index) => (
+                                <div key={index} className="relative">
+                                  <input
+                                    type="text"
+                                    value={name}
+                                    onChange={(e) => {
+                                      const updatedNames = [...newCustomCodeNames];
+                                      updatedNames[index] = e.target.value;
+                                      setNewCustomCodeNames(updatedNames);
+                                    }}
+                                    placeholder={`New code name ${index + 1} (e.g., SecretReindeer)`}
+                                    className="input-primary w-full px-3 py-2 rounded-md text-primary placeholder:text-muted text-sm pr-10"
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const updatedNames = newCustomCodeNames.filter((_, i) => i !== index);
+                                      setNewCustomCodeNames(updatedNames);
+                                    }}
+                                    className="absolute right-2 top-1/2 transform -translate-y-1/2 action-destructive p-1 rounded-md transition-colors duration-200 cursor-pointer"
+                                  >
+                                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                      </svg>
+                                    </button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          <p className="text-xs text-muted">
+                            Add new custom code names to your group. These will be available for new members.
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
-                </div>
+              </div>
               </div>
             </div>
 
@@ -603,7 +767,8 @@ export default function AdminPage() {
                     required
                     min="2"
                     max="100"
-                    defaultValue={groupDetails.capacity}
+                    value={capacity}
+                    onChange={(e) => setCapacity(parseInt(e.target.value) || 0)}
                     className="input-primary w-full px-3 py-2 rounded-md text-primary placeholder:text-muted"
                   />
                   <p className="text-xs text-muted mt-1">
@@ -625,20 +790,13 @@ export default function AdminPage() {
                   />
                 </div>
 
-                <div>
-                  <label htmlFor="description" className="block text-sm font-medium text-label mb-1">
+                <div className="flex items-center justify-between p-3 border border-primary rounded-lg opacity-60">
+                  <label className="block text-sm font-medium text-secondary">
                     Description
                   </label>
-                  <textarea
-                    value={groupDetails.description || ''}
-                    disabled
-                    rows={3}
-                    className="input-primary w-full px-3 py-2 rounded-md text-primary"
-                    placeholder="Description cannot be updated"
-                  />
-                  <p className="text-xs text-muted mt-1">
-                    Description can only be set when creating the group
-                  </p>
+                  <span className="text-sm text-secondary text-right max-w-xs">
+                    {groupDetails.description || 'No description'}
+                  </span>
                 </div>
 
                 <div>
@@ -649,7 +807,8 @@ export default function AdminPage() {
                     type="date"
                     id="expiryDate"
                     name="expiryDate"
-                    defaultValue={groupDetails.expiry_date ? new Date(groupDetails.expiry_date).toISOString().split('T')[0] : ''}
+                    value={expiryDate}
+                    onChange={(e) => setExpiryDate(e.target.value)}
                     className="input-primary w-full px-3 py-2 rounded-md text-primary"
                   />
                 </div>
@@ -725,7 +884,7 @@ export default function AdminPage() {
                   name={memberName}
                   badges={
                     memberName === groupDetails?.creator_name && (
-                      <RoleBadge role="creator" />
+                      <RoleBadge role="admin" />
                     )
                   }
                   actions={
@@ -748,9 +907,7 @@ export default function AdminPage() {
                             className="text-secondary hover:text-primary p-1 rounded-md transition-colors duration-200 cursor-pointer"
                             title="Cancel"
                           >
-                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                            </svg>
+                            ✕
                           </button>
                         </>
                       ) : (

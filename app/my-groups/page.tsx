@@ -250,7 +250,7 @@ export default function MyGroupsPage() {
                             {group.name}
                           </span>
                           {isUserCreator(group) && (
-                            <RoleBadge role="creator" />
+                            <RoleBadge role="admin" />
                           )}
                         </div>
                         <p className="text-xs text-muted mt-1">
@@ -278,7 +278,7 @@ export default function MyGroupsPage() {
                   {group.description}
                 </div>
 
-                {/* Action Button - Only for creators */}
+                {/* Action Button - Only for admins */}
                 {isUserCreator(group) && (
                   <Link
                     href={`/admin/${group.group_guid}`}

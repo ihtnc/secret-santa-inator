@@ -41,7 +41,7 @@ export default function AboutPage() {
                 </div>
                 <div className="flex items-start space-x-3">
                   <span className="shrink-0 w-6 h-6 bg-green-600 text-white rounded-full flex items-center justify-center text-sm font-bold">4</span>
-                  <p className="leading-relaxed"><strong>Draw Names:</strong> When everyone has joined, the group creator can randomly assign Secret Santa pairs.</p>
+                  <p className="leading-relaxed"><strong>Draw Names:</strong> When everyone has joined, the group admin can randomly assign Secret Santa pairs.</p>
                 </div>
                 <div className="flex items-start space-x-3">
                   <span className="shrink-0 w-6 h-6 bg-green-600 text-white rounded-full flex items-center justify-center text-sm font-bold">5</span>
@@ -74,7 +74,7 @@ export default function AboutPage() {
                   </ul>
                 </div>
                 <div className="space-y-2">
-                  <h3 className="font-medium text-primary">For Group Creators:</h3>
+                  <h3 className="font-medium text-primary">For Group Admins:</h3>
                   <ul className="space-y-1 text-sm list-disc list-inside ml-4">
                     <li>Create and manage groups</li>
                     <li>View all group members</li>
