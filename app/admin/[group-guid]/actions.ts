@@ -365,3 +365,25 @@ export async function getCustomCodeNames(groupGuid: string, creatorCode: string)
     return [];
   }
 }
+
+export async function deleteGroup(groupGuid: string, creatorCode: string): Promise<ActionResult> {
+  const supabase = await getClient();
+
+  try {
+    // Call the delete_group function
+    const { error } = await supabase.rpc('delete_group', {
+      p_group_guid: groupGuid,
+      p_creator_code: creatorCode
+    });
+
+    if (error) {
+      console.error('Error deleting group:', error);
+      return { success: false, error: error.message || 'Failed to delete group' };
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error('Failed to delete group:', error);
+    return { success: false, error: "An unexpected error occurred while deleting the group" };
+  }
+}

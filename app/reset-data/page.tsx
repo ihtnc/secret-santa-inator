@@ -105,14 +105,18 @@ export default function ResetDataPage() {
               </div>
               <div className="flex items-start space-x-3">
                 <span className="shrink-0 w-6 h-6 bg-success-solid text-white rounded-full flex items-center justify-center text-sm font-bold">3</span>
-                <p className="leading-relaxed text-secondary"><strong>Inform group members</strong> - Let others know you&apos;re leaving</p>
+                <p className="leading-relaxed text-secondary"><strong>Delete empty groups</strong> - Remove any groups you created that have no members</p>
               </div>
               <div className="flex items-start space-x-3">
                 <span className="shrink-0 w-6 h-6 bg-success-solid text-white rounded-full flex items-center justify-center text-sm font-bold">4</span>
-                <p className="leading-relaxed text-secondary"><strong>Export any important information</strong> - Save any details you need</p>
+                <p className="leading-relaxed text-secondary"><strong>Inform group members</strong> - Let others know you&apos;re leaving</p>
               </div>
               <div className="flex items-start space-x-3">
                 <span className="shrink-0 w-6 h-6 bg-success-solid text-white rounded-full flex items-center justify-center text-sm font-bold">5</span>
+                <p className="leading-relaxed text-secondary"><strong>Export any important information</strong> - Save any details you need</p>
+              </div>
+              <div className="flex items-start space-x-3">
+                <span className="shrink-0 w-6 h-6 bg-success-solid text-white rounded-full flex items-center justify-center text-sm font-bold">6</span>
                 <p className="leading-relaxed text-secondary"><strong>Go to My Groups</strong> to manage your groups first</p>
               </div>
             </div>

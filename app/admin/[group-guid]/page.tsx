@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { getGroupDetails, updateGroup, getGroupMembers, assignSecretSanta, joinGroupAsCreator, kickMember, unlockGroup, getCustomCodeNames } from "./actions";
+import { getGroupDetails, updateGroup, getGroupMembers, assignSecretSanta, joinGroupAsCreator, kickMember, unlockGroup, getCustomCodeNames, deleteGroup } from "./actions";
 import LiveIndicator from "@/app/components/LiveIndicator";
 import CollapsibleSection from "@/app/components/CollapsibleSection";
 import MemberListItem from "@/app/components/MemberListItem";
@@ -77,6 +77,8 @@ export default function AdminPage() {
   const [capacity, setCapacity] = useState<number>(10);
   const [expiryDate, setExpiryDate] = useState<string>('');
   const [description, setDescription] = useState<string>('');
+  const [deleting, setDeleting] = useState(false);
+  const [deleteConfirmationText, setDeleteConfirmationText] = useState('');
 
   useEffect(() => {
     async function fetchGroupDetails() {
@@ -447,6 +449,40 @@ export default function AdminPage() {
     } catch (err) {
       console.error('Failed to copy link:', err);
       showPersistentError('Failed to copy link to clipboard');
+    }
+  };
+
+  const handleDeleteGroup = async () => {
+    if (!groupDetails) return;
+
+    try {
+      setDeleting(true);
+      const creatorCode = localStorage.getItem('creatorCode');
+      if (!creatorCode) {
+        showErrorMessage('Admin code not found.');
+        return;
+      }
+
+      const result = await deleteGroup(groupGuid, creatorCode);
+      if (result.success) {
+        // Show success message briefly before redirecting
+        showSuccessMessage('Group deleted successfully!');
+
+        // Redirect to home page after a short delay
+        setTimeout(() => {
+          window.location.href = '/';
+        }, 1500);
+      } else {
+        showErrorMessage(result.error || 'Failed to delete group.');
+        setDeleteConfirmationText('');
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+      showErrorMessage(errorMessage);
+      setDeleteConfirmationText('');
+      console.error(err);
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -1087,6 +1123,39 @@ export default function AdminPage() {
             </div>
           )}
         </Card>
+
+        {/* Delete Group Section - Only show if no members */}
+        {groupDetails && groupMembers.length === 0 && (
+          <Card
+            title="Delete Group"
+            description="Only empty groups can be deleted."
+            className="mt-6"
+          >
+            <ErrorMessage className="mb-4">
+              <strong>⚠️ Warning:</strong> This will permanently delete the group and all its settings. This action cannot be undone.
+            </ErrorMessage>
+
+            <p className="text-sm font-medium text-label mb-2">
+              Type <strong>&quot;DELETE&quot;</strong> to confirm this action:
+            </p>
+
+            <input
+              type="text"
+              value={deleteConfirmationText}
+              onChange={(e) => setDeleteConfirmationText(e.target.value)}
+              placeholder="DELETE"
+              className="input-primary w-full px-3 py-2 rounded-md text-primary placeholder:text-muted mb-4"
+            />
+
+            <button
+              onClick={handleDeleteGroup}
+              disabled={deleting || deleteConfirmationText.toUpperCase() !== 'DELETE'}
+              className="w-full py-3 px-6 btn-primary text-sm font-medium rounded-md transition-colors duration-200 shadow-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {deleting ? 'Deleting...' : 'Delete Group'}
+            </button>
+          </Card>
+        )}
 
         <BackToHome />
         </div>

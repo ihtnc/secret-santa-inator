@@ -84,19 +84,22 @@ export default function Home() {
 
           {/* Create and View Groups Section */}
           <div className="space-y-4">
-            <Link
-              href="/create"
-              className="inline-block btn-primary px-6 py-3 rounded-lg font-medium transition-colors"
-            >
-              Create New Group
-            </Link>
-            <br />
-            <Link
-              href="/my-groups"
-              className="inline-block btn-primary px-6 py-3 rounded-lg font-medium transition-colors"
-            >
-              View My Groups
-            </Link>
+            <div>
+              <Link
+                href="/create"
+                className="inline-block btn-primary px-6 py-3 rounded-lg font-medium transition-colors w-3/4 sm:w-1/2 text-center"
+              >
+                Create New Group
+              </Link>
+            </div>
+            <div>
+              <Link
+                href="/my-groups"
+                className="inline-block btn-primary px-6 py-3 rounded-lg font-medium transition-colors w-3/4 sm:w-1/2 text-center"
+              >
+                View My Groups
+              </Link>
+            </div>
           </div>
         </div>
       </div>
