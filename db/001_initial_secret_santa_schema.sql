@@ -1,11 +1,11 @@
--- Secret Santa Database Schema
--- Complete migration script for all tables, functions, triggers, and permissions
+-- Secret Santa Database Schema - MINIMAL PERMISSIONS VERSION
+-- Complete migration script with only absolutely necessary permissions
 
 -- ============================================================================
 -- TABLES
 -- ============================================================================
 
--- Groups table
+-- Groups table (no dependencies)
 CREATE TABLE groups (
     id SERIAL PRIMARY KEY,
     group_guid TEXT NOT NULL,
@@ -23,11 +23,23 @@ CREATE TABLE groups (
     is_frozen BOOLEAN NOT NULL DEFAULT FALSE
 );
 
--- Enable RLS and create unique index
+-- Enable RLS but NO POLICIES - only SECURITY DEFINER functions can access
 ALTER TABLE groups ENABLE ROW LEVEL SECURITY;
 CREATE UNIQUE INDEX idx_group_guid_unique ON groups (group_guid);
 
--- Members table
+-- Custom code names table (depends on groups)
+CREATE TABLE custom_code_names (
+    id SERIAL PRIMARY KEY,
+    group_id INTEGER NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
+    name TEXT NOT NULL,
+    created_date TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Enable RLS but NO POLICIES - only SECURITY DEFINER functions can access
+ALTER TABLE custom_code_names ENABLE ROW LEVEL SECURITY;
+CREATE UNIQUE INDEX idx_custom_code_names_group_name_unique ON custom_code_names (group_id, name);
+
+-- Members table (depends on groups and custom_code_names)
 CREATE TABLE members (
     id SERIAL PRIMARY KEY,
     group_id INTEGER NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
@@ -38,7 +50,7 @@ CREATE TABLE members (
     created_date TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Enable RLS and create unique indexes
+-- Enable RLS but NO POLICIES - only SECURITY DEFINER functions can access
 ALTER TABLE members ENABLE ROW LEVEL SECURITY;
 CREATE UNIQUE INDEX idx_members_group_name_unique ON members (group_id, name);
 CREATE UNIQUE INDEX idx_members_group_code_name_unique ON members (group_id, code_name) WHERE code_name IS NOT NULL;
@@ -53,7 +65,7 @@ CREATE TABLE santas (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Enable RLS and create indexes
+-- Enable RLS but NO POLICIES - only SECURITY DEFINER functions can access
 ALTER TABLE santas ENABLE ROW LEVEL SECURITY;
 CREATE UNIQUE INDEX idx_santas_group_santa_unique ON santas (group_id, santa_id);
 CREATE INDEX idx_santas_member_id ON santas (member_id);
@@ -66,7 +78,7 @@ CREATE TABLE code_adjectives (
     created_date TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Enable RLS and create unique index
+-- Enable RLS but NO POLICIES - only SECURITY DEFINER functions can access
 ALTER TABLE code_adjectives ENABLE ROW LEVEL SECURITY;
 CREATE UNIQUE INDEX idx_code_adjectives_value_unique ON code_adjectives (value);
 
@@ -78,23 +90,11 @@ CREATE TABLE code_nouns (
     created_date TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Enable RLS and create unique index
+-- Enable RLS but NO POLICIES - only SECURITY DEFINER functions can access
 ALTER TABLE code_nouns ENABLE ROW LEVEL SECURITY;
 CREATE UNIQUE INDEX idx_code_nouns_value_unique ON code_nouns (value);
 
--- Custom code names table
-CREATE TABLE custom_code_names (
-    id SERIAL PRIMARY KEY,
-    group_id INTEGER NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
-    name TEXT NOT NULL,
-    created_date TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- Enable RLS and create unique index
-ALTER TABLE custom_code_names ENABLE ROW LEVEL SECURITY;
-CREATE UNIQUE INDEX idx_custom_code_names_group_name_unique ON custom_code_names (group_id, name);
-
--- App schema and outbox table
+-- App schema and outbox table for realtime events
 CREATE SCHEMA IF NOT EXISTS app;
 
 CREATE TABLE app.outbox (
@@ -105,7 +105,7 @@ CREATE TABLE app.outbox (
     created_date TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Enable RLS
+-- Enable RLS with minimal policy for realtime subscriptions
 ALTER TABLE app.outbox ENABLE ROW LEVEL SECURITY;
 
 -- ============================================================================
@@ -113,7 +113,7 @@ ALTER TABLE app.outbox ENABLE ROW LEVEL SECURITY;
 -- ============================================================================
 
 -- Insert adjectives (descriptive words)
-INSERT INTO code_adjectives (value) VALUES
+INSERT INTO public.code_adjectives (value) VALUES
 ('Fuzzy'), ('Fluffy'), ('Bumpy'), ('Lumpy'), ('Wiggly'), ('Jiggly'), ('Bouncy'), ('Springy'), ('Stretchy'), ('Squishy'),
 ('Tiny'), ('Mini'), ('Micro'), ('Giant'), ('Mega'), ('Super'), ('Ultra'), ('Hyper'), ('Turbo'), ('Rocket'),
 ('Happy'), ('Jolly'), ('Merry'), ('Glad'), ('Joyful'), ('Cheerful'), ('Bright'), ('Sunny'), ('Warm'), ('Kind'),
@@ -131,7 +131,7 @@ INSERT INTO code_adjectives (value) VALUES
 ('Shimmery'), ('Glowing'), ('Radiant'), ('Brilliant'), ('Dazzling'), ('Gleaming'), ('Twinkling'), ('Beaming'), ('Luminous'), ('Cosmic');
 
 -- Insert nouns (animals, objects, nature, etc.)
-INSERT INTO code_nouns (value) VALUES
+INSERT INTO public.code_nouns (value) VALUES
 ('Bear'), ('Cat'), ('Dog'), ('Fox'), ('Owl'), ('Bee'), ('Ant'), ('Pig'), ('Cow'), ('Duck'),
 ('Goat'), ('Fish'), ('Bird'), ('Frog'), ('Seal'), ('Deer'), ('Lamb'), ('Pup'), ('Cub'), ('Kit'),
 ('Bunny'), ('Chick'), ('Kitten'), ('Puppy'), ('Piglet'), ('Duckling'), ('Calf'), ('Foal'), ('Joey'), ('Fawn'),
@@ -154,13 +154,15 @@ INSERT INTO code_nouns (value) VALUES
 ('Compass'), ('Anchor'), ('Sword'), ('Shield'), ('Bow'), ('Arrow'), ('Spear'), ('Staff'), ('Wand'), ('Orb');
 
 -- ============================================================================
--- FUNCTIONS
+-- FUNCTIONS (All SECURITY DEFINER - handle their own permissions)
 -- ============================================================================
 
 -- Function to generate code names (adjective + noun)
 CREATE OR REPLACE FUNCTION get_code_name()
 RETURNS TEXT
 LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
 AS $$
 DECLARE
     adjective_word TEXT;
@@ -169,14 +171,14 @@ DECLARE
 BEGIN
     -- Get random adjective
     SELECT value INTO adjective_word
-    FROM code_adjectives
+    FROM public.code_adjectives
     WHERE enabled = TRUE
     ORDER BY RANDOM()
     LIMIT 1;
 
     -- Get random noun
     SELECT value INTO noun_word
-    FROM code_nouns
+    FROM public.code_nouns
     WHERE enabled = TRUE
     ORDER BY RANDOM()
     LIMIT 1;
@@ -201,16 +203,18 @@ $$;
 CREATE OR REPLACE FUNCTION get_custom_code_name(p_group_id INTEGER)
 RETURNS TABLE(id INTEGER, name TEXT)
 LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
 AS $$
 BEGIN
     -- Get random custom code name that is not already assigned to a member
     RETURN QUERY
     SELECT ccn.id, ccn.name
-    FROM custom_code_names ccn
+    FROM public.custom_code_names ccn
     WHERE ccn.group_id = p_group_id
     AND ccn.id NOT IN (
         SELECT m.custom_code_name_id
-        FROM members m
+        FROM public.members m
         WHERE m.group_id = p_group_id
         AND m.custom_code_name_id IS NOT NULL
     )
@@ -224,6 +228,45 @@ BEGIN
 END;
 $$;
 
+-- Function to get all custom code names for a group
+CREATE OR REPLACE FUNCTION get_custom_code_names(
+    p_group_guid TEXT,
+    p_creator_code TEXT
+)
+RETURNS TABLE(name TEXT)
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+DECLARE
+    group_id_found INTEGER;
+    use_custom_names BOOLEAN;
+BEGIN
+    -- Check if group exists with correct creator credentials, is not expired, and get the group ID and custom names setting
+    SELECT g.id, g.use_custom_code_names INTO group_id_found, use_custom_names
+    FROM public.groups g
+    WHERE g.group_guid = p_group_guid
+      AND g.creator_code = p_creator_code
+      AND (g.expiry_date IS NULL OR g.expiry_date > NOW());
+
+    IF group_id_found IS NULL THEN
+        RAISE EXCEPTION 'Group not found, invalid creator credentials, or group has expired';
+    END IF;
+
+    -- Check if the group uses custom code names
+    IF NOT use_custom_names THEN
+        RAISE EXCEPTION 'Group does not use custom code names';
+    END IF;
+
+    -- Return all custom code names for this group
+    RETURN QUERY
+    SELECT ccn.name
+    FROM public.custom_code_names ccn
+    WHERE ccn.group_id = group_id_found
+    ORDER BY ccn.name;
+END;
+$$;
+
 -- Function to validate if creator code matches group's creator
 CREATE OR REPLACE FUNCTION is_creator(
     p_group_guid TEXT,
@@ -232,12 +275,13 @@ CREATE OR REPLACE FUNCTION is_creator(
 RETURNS BOOLEAN
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = ''
 AS $$
 BEGIN
     -- Check if the provided creator_code matches the group's creator_code
     RETURN EXISTS (
         SELECT 1
-        FROM groups
+        FROM public.groups
         WHERE group_guid = p_group_guid
         AND creator_code = p_creator_code
     );
@@ -252,13 +296,14 @@ CREATE OR REPLACE FUNCTION get_member(
 RETURNS TABLE(name TEXT, code_name TEXT)
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = ''
 AS $$
 BEGIN
     -- Return member information if the provided member_code exists in the members table for this group
     RETURN QUERY
     SELECT m.name, m.code_name
-    FROM members m
-    JOIN groups g ON g.id = m.group_id
+    FROM public.members m
+    JOIN public.groups g ON g.id = m.group_id
     WHERE g.group_guid = p_group_guid
     AND m.code = p_member_code;
 END;
@@ -272,13 +317,14 @@ CREATE OR REPLACE FUNCTION is_member(
 RETURNS BOOLEAN
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = ''
 AS $$
 BEGIN
     -- Return true if the provided member_code exists in the members table for this group and group is not expired
     RETURN EXISTS (
         SELECT 1
-        FROM members m
-        JOIN groups g ON g.id = m.group_id
+        FROM public.members m
+        JOIN public.groups g ON g.id = m.group_id
         WHERE g.group_guid = p_group_guid
         AND m.code = p_member_code
         AND (g.expiry_date IS NULL OR g.expiry_date > NOW())
@@ -304,13 +350,15 @@ RETURNS TABLE(
     member_count INTEGER
 )
 LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
 AS $$
 DECLARE
     group_id_var INTEGER;
 BEGIN
     -- Check if group exists and get its ID
     SELECT id INTO group_id_var
-    FROM groups
+    FROM public.groups
     WHERE group_guid = p_group_guid;
 
     -- If group doesn't exist, throw exception
@@ -333,10 +381,10 @@ BEGIN
         g.is_frozen,
         COALESCE((
             SELECT COUNT(*)::INTEGER
-            FROM members m
+            FROM public.members m
             WHERE m.group_id = g.id
         ), 0) AS member_count
-    FROM groups g
+    FROM public.groups g
     WHERE g.id = group_id_var;
 END;
 $$;
@@ -362,6 +410,8 @@ RETURNS TABLE(
     member_count INTEGER
 )
 LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
 AS $$
 BEGIN
     -- Return non-expired groups where user is either a member or the creator
@@ -386,11 +436,11 @@ BEGIN
         END AS name,
         COALESCE((
             SELECT COUNT(*)::INTEGER
-            FROM members m2
+            FROM public.members m2
             WHERE m2.group_id = g.id
         ), 0) AS member_count
-    FROM groups g
-    LEFT JOIN members m ON g.id = m.group_id AND m.code = p_member_code
+    FROM public.groups g
+    LEFT JOIN public.members m ON g.id = m.group_id AND m.code = p_member_code
     WHERE
         -- Group is not expired
         (g.expiry_date IS NULL OR g.expiry_date > NOW())
@@ -420,6 +470,8 @@ CREATE OR REPLACE FUNCTION create_group(
 )
 RETURNS TEXT
 LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
 AS $$
 DECLARE
     generated_guid TEXT;
@@ -451,7 +503,7 @@ BEGIN
     generated_guid := gen_random_uuid()::text;
 
     -- Insert the new group
-    INSERT INTO groups (
+    INSERT INTO public.groups (
         group_guid,
         password,
         capacity,
@@ -483,7 +535,7 @@ BEGIN
     IF p_use_custom_code_names AND p_custom_code_names IS NOT NULL THEN
         FOREACH custom_name IN ARRAY p_custom_code_names
         LOOP
-            INSERT INTO custom_code_names (group_id, name)
+            INSERT INTO public.custom_code_names (group_id, name)
             VALUES (new_group_id, custom_name);
         END LOOP;
     END IF;
@@ -505,6 +557,8 @@ CREATE OR REPLACE FUNCTION update_group(
 )
 RETURNS VOID
 LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
 AS $$
 DECLARE
     group_record RECORD;
@@ -521,7 +575,7 @@ BEGIN
     -- Check if a matching record exists with the provided credentials, is not frozen, and is not expired
     SELECT id, capacity, use_custom_code_names
     INTO group_record
-    FROM groups
+    FROM public.groups
     WHERE group_guid = p_group_guid
       AND creator_code = p_creator_code
       AND is_frozen = FALSE
@@ -534,7 +588,7 @@ BEGIN
 
     -- Get current member count
     SELECT COUNT(*) INTO current_member_count
-    FROM members
+    FROM public.members
     WHERE group_id = group_record.id;
 
     -- Validate that new capacity is not lower than current member count
@@ -546,7 +600,7 @@ BEGIN
     IF p_additional_custom_code_names IS NOT NULL AND group_record.use_custom_code_names THEN
         -- Get current count of custom code names for this group
         SELECT COUNT(*) INTO current_custom_names_count
-        FROM custom_code_names
+        FROM public.custom_code_names
         WHERE group_id = group_record.id;
 
         -- Calculate total count including additional names
@@ -565,7 +619,7 @@ BEGIN
         FOREACH custom_name IN ARRAY p_additional_custom_code_names
         LOOP
             IF EXISTS(
-                SELECT 1 FROM custom_code_names
+                SELECT 1 FROM public.custom_code_names
                 WHERE group_id = group_record.id AND name = custom_name
             ) THEN
                 RAISE EXCEPTION 'Custom code name "%" already exists in this group', custom_name;
@@ -575,13 +629,13 @@ BEGIN
         -- Insert the additional custom code names
         FOREACH custom_name IN ARRAY p_additional_custom_code_names
         LOOP
-            INSERT INTO custom_code_names (group_id, name)
+            INSERT INTO public.custom_code_names (group_id, name)
             VALUES (group_record.id, custom_name);
         END LOOP;
     END IF;
 
     -- Update the group with all provided fields
-    UPDATE groups
+    UPDATE public.groups
     SET
         password = p_password,
         capacity = p_capacity,
@@ -599,13 +653,15 @@ CREATE OR REPLACE FUNCTION delete_group(
 )
 RETURNS VOID
 LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
 AS $$
 DECLARE
     group_id_found INTEGER;
 BEGIN
     -- Check if group exists with correct creator credentials and get the group ID
     SELECT id INTO group_id_found
-    FROM groups
+    FROM public.groups
     WHERE group_guid = p_group_guid
       AND creator_code = p_creator_code;
 
@@ -615,16 +671,16 @@ BEGIN
     END IF;
 
     -- Delete all Secret Santa assignments for this group
-    DELETE FROM santas WHERE group_id = group_id_found;
+    DELETE FROM public.santas WHERE group_id = group_id_found;
 
     -- Delete all members for this group
-    DELETE FROM members WHERE group_id = group_id_found;
+    DELETE FROM public.members WHERE group_id = group_id_found;
 
     -- Delete all custom code names for this group
-    DELETE FROM custom_code_names WHERE group_id = group_id_found;
+    DELETE FROM public.custom_code_names WHERE group_id = group_id_found;
 
     -- Delete the group
-    DELETE FROM groups
+    DELETE FROM public.groups
     WHERE group_guid = p_group_guid
       AND creator_code = p_creator_code;
 END;
@@ -640,6 +696,8 @@ CREATE OR REPLACE FUNCTION join_group(
 )
 RETURNS VOID
 LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
 AS $$
 DECLARE
     group_record RECORD;
@@ -652,7 +710,7 @@ BEGIN
     -- Validate group exists with correct password, is not frozen, and is not expired
     SELECT id, group_guid, use_code_names, auto_assign_code_names, use_custom_code_names, capacity, creator_name, creator_code
     INTO group_record
-    FROM groups
+    FROM public.groups
     WHERE group_guid = p_group_guid
       AND (
           (p_password IS NOT NULL AND password = p_password) OR
@@ -672,18 +730,18 @@ BEGIN
     END IF;
 
     -- Check if user is already a member of this group
-    IF EXISTS(SELECT 1 FROM members WHERE group_id = group_record.id AND code = p_code) THEN
+    IF EXISTS(SELECT 1 FROM public.members WHERE group_id = group_record.id AND code = p_code) THEN
         RAISE EXCEPTION 'You are already a member of this group';
     END IF;
 
     -- Check if group is at capacity
-    IF (SELECT COUNT(*) FROM members WHERE group_id = group_record.id) >= group_record.capacity THEN
+    IF (SELECT COUNT(*) FROM public.members WHERE group_id = group_record.id) >= group_record.capacity THEN
         RAISE EXCEPTION 'Group is at full capacity';
     END IF;
 
     -- Check if name already exists in the group
     SELECT EXISTS(
-        SELECT 1 FROM members
+        SELECT 1 FROM public.members
         WHERE group_id = group_record.id AND name = p_name
     ) INTO name_exists;
 
@@ -703,10 +761,10 @@ BEGIN
             DECLARE
                 custom_code_record RECORD;
             BEGIN
-                SELECT * INTO custom_code_record FROM get_custom_code_name(group_record.id);
+                SELECT * INTO custom_code_record FROM public.get_custom_code_name(group_record.id);
 
                 -- Insert the new member with custom code name
-                INSERT INTO members (group_id, name, code, code_name, custom_code_name_id)
+                INSERT INTO public.members (group_id, name, code, code_name, custom_code_name_id)
                 VALUES (group_record.id, p_name, p_code, custom_code_record.name, custom_code_record.id);
             END;
         ELSE
@@ -719,11 +777,11 @@ BEGIN
                 END IF;
 
                 -- Generate new code name
-                final_code_name := get_code_name();
+                final_code_name := public.get_code_name();
 
                 -- Check if this code name already exists in the group
                 SELECT EXISTS(
-                    SELECT 1 FROM members
+                    SELECT 1 FROM public.members
                     WHERE group_id = group_record.id AND code_name = final_code_name
                 ) INTO code_name_exists;
 
@@ -734,7 +792,7 @@ BEGIN
             END LOOP;
 
             -- Insert the new member with regular code name
-            INSERT INTO members (group_id, name, code, code_name)
+            INSERT INTO public.members (group_id, name, code, code_name)
             VALUES (group_record.id, p_name, p_code, final_code_name);
         END IF;
     ELSE
@@ -748,7 +806,7 @@ BEGIN
         -- If code name is provided, check for duplicates
         IF final_code_name IS NOT NULL THEN
             SELECT EXISTS(
-                SELECT 1 FROM members
+                SELECT 1 FROM public.members
                 WHERE group_id = group_record.id AND code_name = final_code_name
             ) INTO code_name_exists;
 
@@ -758,7 +816,7 @@ BEGIN
         END IF;
 
         -- Insert the new member with provided code name
-        INSERT INTO members (group_id, name, code, code_name)
+        INSERT INTO public.members (group_id, name, code, code_name)
         VALUES (group_record.id, p_name, p_code, final_code_name);
     END IF;
 END;
@@ -771,6 +829,8 @@ CREATE OR REPLACE FUNCTION leave_group(
 )
 RETURNS VOID
 LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
 AS $$
 DECLARE
     group_id_found INTEGER;
@@ -778,7 +838,7 @@ DECLARE
 BEGIN
     -- Validate group exists, is not frozen, and is not expired
     SELECT id INTO group_id_found
-    FROM groups
+    FROM public.groups
     WHERE group_guid = p_group_guid
       AND is_frozen = FALSE
       AND (expiry_date IS NULL OR expiry_date > NOW());
@@ -789,7 +849,7 @@ BEGIN
 
     -- Check if member exists in the group with matching code
     SELECT EXISTS(
-        SELECT 1 FROM members
+        SELECT 1 FROM public.members
         WHERE group_id = group_id_found
           AND code = p_code
     ) INTO member_exists;
@@ -799,7 +859,7 @@ BEGIN
     END IF;
 
     -- Delete the member record
-    DELETE FROM members
+    DELETE FROM public.members
     WHERE group_id = group_id_found
       AND code = p_code;
 END;
@@ -812,6 +872,8 @@ CREATE OR REPLACE FUNCTION assign_santa(
 )
 RETURNS VOID
 LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
 AS $$
 DECLARE
     group_record RECORD;
@@ -825,7 +887,7 @@ BEGIN
     -- Validate group exists with correct credentials, creator, is not expired, and is not already frozen
     SELECT id, capacity
     INTO group_record
-    FROM groups
+    FROM public.groups
     WHERE group_guid = p_group_guid
       AND creator_code = p_creator_code
       AND (expiry_date IS NULL OR expiry_date > NOW())
@@ -837,7 +899,7 @@ BEGIN
 
     -- Get all member IDs for this group
     SELECT array_agg(id ORDER BY id) INTO member_ids
-    FROM members
+    FROM public.members
     WHERE group_id = group_record.id;
 
     -- Check if there are enough members (need at least 2)
@@ -847,7 +909,7 @@ BEGIN
     END IF;
 
     -- Clear any existing assignments for this group
-    DELETE FROM santas WHERE group_id = group_record.id;
+    DELETE FROM public.santas WHERE group_id = group_record.id;
 
     -- Create a shuffled copy of member IDs
     shuffled_ids := member_ids;
@@ -892,12 +954,12 @@ BEGIN
         santa_id := member_ids[i];           -- Who is the Santa
         member_id := shuffled_ids[i];        -- Who they are giving to
 
-        INSERT INTO santas (group_id, santa_id, member_id)
+        INSERT INTO public.santas (group_id, santa_id, member_id)
         VALUES (group_record.id, santa_id, member_id);
     END LOOP;
 
     -- Freeze the group after successful assignment
-    UPDATE groups
+    UPDATE public.groups
     SET is_frozen = TRUE
     WHERE id = group_record.id;
 END;
@@ -910,6 +972,8 @@ CREATE OR REPLACE FUNCTION unlock_group(
 )
 RETURNS VOID
 LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
 AS $$
 DECLARE
     group_id_found INTEGER;
@@ -917,7 +981,7 @@ DECLARE
 BEGIN
     -- Check if group exists with correct creator credentials, is not expired, is frozen, and get the group ID
     SELECT id INTO group_id_found
-    FROM groups
+    FROM public.groups
     WHERE group_guid = p_group_guid
       AND creator_code = p_creator_code
       AND (expiry_date IS NULL OR expiry_date > NOW())
@@ -928,10 +992,10 @@ BEGIN
     END IF;
 
     -- Delete all Secret Santa assignments for this group
-    DELETE FROM santas WHERE group_id = group_id_found;
+    DELETE FROM public.santas WHERE group_id = group_id_found;
 
     -- Unfreeze the group
-    UPDATE groups
+    UPDATE public.groups
     SET is_frozen = FALSE
     WHERE group_guid = p_group_guid
       AND creator_code = p_creator_code;
@@ -946,6 +1010,8 @@ CREATE OR REPLACE FUNCTION kick_member(
 )
 RETURNS VOID
 LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
 AS $$
 DECLARE
     group_record RECORD;
@@ -954,7 +1020,7 @@ BEGIN
     -- Validate group exists with correct creator, is not frozen, and is not expired
     SELECT id, creator_code
     INTO group_record
-    FROM groups
+    FROM public.groups
     WHERE group_guid = p_group_guid
       AND creator_code = p_creator_code
       AND is_frozen = FALSE
@@ -966,7 +1032,7 @@ BEGIN
 
     -- Check if member exists in the group with the given name
     SELECT EXISTS(
-        SELECT 1 FROM members
+        SELECT 1 FROM public.members
         WHERE group_id = group_record.id
           AND name = p_member_name
     ) INTO member_exists;
@@ -976,7 +1042,7 @@ BEGIN
     END IF;
 
     -- Delete the member record
-    DELETE FROM members
+    DELETE FROM public.members
     WHERE group_id = group_record.id
       AND name = p_member_name;
 END;
@@ -989,6 +1055,8 @@ CREATE OR REPLACE FUNCTION get_my_secret_santa(
 )
 RETURNS TEXT
 LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
 AS $$
 DECLARE
     group_id_var INTEGER;
@@ -997,7 +1065,7 @@ DECLARE
 BEGIN
     -- Validate group exists and is not expired
     SELECT id INTO group_id_var
-    FROM groups
+    FROM public.groups
     WHERE group_guid = p_group_guid
       AND (expiry_date IS NULL OR expiry_date > NOW());
 
@@ -1007,7 +1075,7 @@ BEGIN
 
     -- Find my member ID using only code
     SELECT id INTO my_member_id
-    FROM members
+    FROM public.members
     WHERE group_id = group_id_var
       AND code = p_code;
 
@@ -1017,8 +1085,8 @@ BEGIN
 
     -- Find who I'm giving a gift to (where I am the santa) and get their code_name
     SELECT m.code_name INTO recipient_code_name
-    FROM santas s
-    JOIN members m ON m.id = s.member_id
+    FROM public.santas s
+    JOIN public.members m ON m.id = s.member_id
     WHERE s.group_id = group_id_var
       AND s.santa_id = my_member_id;
 
@@ -1038,6 +1106,8 @@ CREATE OR REPLACE FUNCTION get_members(
 )
 RETURNS TABLE(name TEXT)
 LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
 AS $$
 DECLARE
     group_id_found INTEGER;
@@ -1046,7 +1116,7 @@ DECLARE
 BEGIN
     -- Find the group ID and validate it's not expired
     SELECT id INTO group_id_found
-    FROM groups
+    FROM public.groups
     WHERE group_guid = p_group_guid
       AND (expiry_date IS NULL OR expiry_date > NOW());
 
@@ -1057,14 +1127,14 @@ BEGIN
     -- Check if member_code is the creator_code
     SELECT EXISTS(
         SELECT 1
-        FROM groups
+        FROM public.groups
         WHERE id = group_id_found
         AND creator_code = p_member_code
     ) INTO is_creator;
 
     -- Validate that the member exists in this group OR is the creator
     SELECT EXISTS(
-        SELECT 1 FROM members
+        SELECT 1 FROM public.members
         WHERE group_id = group_id_found
           AND code = p_member_code
     ) INTO member_exists;
@@ -1076,20 +1146,89 @@ BEGIN
     -- Return all member names for this group
     RETURN QUERY
     SELECT m.name
-    FROM members m
+    FROM public.members m
     WHERE m.group_id = group_id_found
     ORDER BY m.name;
 END;
 $$;
 
+-- Function to purge expired data
+CREATE OR REPLACE FUNCTION app.purge_data(
+    delete_all BOOLEAN DEFAULT FALSE
+)
+RETURNS TABLE(
+    deleted_santas INTEGER,
+    deleted_members INTEGER,
+    deleted_groups INTEGER,
+    deleted_outbox_messages INTEGER
+)
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+DECLARE
+    santas_deleted INTEGER := 0;
+    members_deleted INTEGER := 0;
+    groups_deleted INTEGER := 0;
+    outbox_deleted INTEGER := 0;
+    target_group_ids INTEGER[];
+BEGIN
+    IF delete_all THEN
+        -- Get all group IDs when delete_all is true
+        SELECT array_agg(id) INTO target_group_ids
+        FROM public.groups;
+    ELSE
+        -- Get IDs of expired groups only
+        SELECT array_agg(id) INTO target_group_ids
+        FROM public.groups
+        WHERE expiry_date IS NOT NULL
+        AND expiry_date <= NOW();
+    END IF;
+
+    -- Only proceed if there are groups to delete
+    IF target_group_ids IS NOT NULL AND array_length(target_group_ids, 1) > 0 THEN
+        -- Delete santa assignments for target groups (step 1)
+        DELETE FROM public.santas
+        WHERE group_id = ANY(target_group_ids);
+        GET DIAGNOSTICS santas_deleted = ROW_COUNT;
+
+        -- Delete members from target groups (step 2)
+        DELETE FROM public.members
+        WHERE group_id = ANY(target_group_ids);
+        GET DIAGNOSTICS members_deleted = ROW_COUNT;
+
+        -- Delete target groups (step 3)
+        DELETE FROM public.groups
+        WHERE id = ANY(target_group_ids);
+        GET DIAGNOSTICS groups_deleted = ROW_COUNT;
+    END IF;
+
+    IF delete_all THEN
+        -- Delete all outbox messages when delete_all is true
+        DELETE FROM app.outbox;
+        GET DIAGNOSTICS outbox_deleted = ROW_COUNT;
+    ELSE
+        -- Delete outbox messages older than 1 hour
+        DELETE FROM app.outbox
+        WHERE created_date <= NOW() - INTERVAL '1 hour';
+        GET DIAGNOSTICS outbox_deleted = ROW_COUNT;
+    END IF;
+
+    -- Return counts
+    RETURN QUERY SELECT santas_deleted, members_deleted, groups_deleted, outbox_deleted;
+END;
+$$;
+
 -- ============================================================================
--- TRIGGER FUNCTIONS
+-- TRIGGER FUNCTIONS (SECURITY DEFINER to access tables)
 -- ============================================================================
 
 -- Function to handle outbox changes and send realtime events
 CREATE OR REPLACE FUNCTION app.handle_outbox_changes()
 RETURNS TRIGGER
 LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
 AS $$
 BEGIN
     -- Send realtime notification with the event data
@@ -1108,13 +1247,15 @@ $$;
 CREATE OR REPLACE FUNCTION app.handle_member_joined()
 RETURNS TRIGGER
 LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
 AS $$
 DECLARE
     group_guid_value TEXT;
 BEGIN
     -- Get the group_guid for the group this member joined
     SELECT group_guid INTO group_guid_value
-    FROM groups
+    FROM public.groups
     WHERE id = NEW.group_id;
 
     -- Insert outbox event for member joined
@@ -1136,13 +1277,15 @@ $$;
 CREATE OR REPLACE FUNCTION app.handle_member_left()
 RETURNS TRIGGER
 LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
 AS $$
 DECLARE
     group_guid_value TEXT;
 BEGIN
     -- Get the group_guid for the group this member left
     SELECT group_guid INTO group_guid_value
-    FROM groups
+    FROM public.groups
     WHERE id = OLD.group_id;
 
     -- Insert outbox event for member left
@@ -1164,6 +1307,8 @@ $$;
 CREATE OR REPLACE FUNCTION app.handle_group_lock_unlock()
 RETURNS TRIGGER
 LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
 AS $$
 BEGIN
     -- Check if is_frozen column changed
@@ -1220,72 +1365,6 @@ BEGIN
 END;
 $$;
 
--- Function to purge expired data
-CREATE OR REPLACE FUNCTION app.purge_data(
-    delete_all BOOLEAN DEFAULT FALSE
-)
-RETURNS TABLE(
-    deleted_santas INTEGER,
-    deleted_members INTEGER,
-    deleted_groups INTEGER,
-    deleted_outbox_messages INTEGER
-)
-LANGUAGE plpgsql
-SECURITY DEFINER
-AS $$
-DECLARE
-    santas_deleted INTEGER := 0;
-    members_deleted INTEGER := 0;
-    groups_deleted INTEGER := 0;
-    outbox_deleted INTEGER := 0;
-    target_group_ids INTEGER[];
-BEGIN
-    IF delete_all THEN
-        -- Get all group IDs when delete_all is true
-        SELECT array_agg(id) INTO target_group_ids
-        FROM groups;
-    ELSE
-        -- Get IDs of expired groups only
-        SELECT array_agg(id) INTO target_group_ids
-        FROM groups
-        WHERE expiry_date IS NOT NULL
-        AND expiry_date <= NOW();
-    END IF;
-
-    -- Only proceed if there are groups to delete
-    IF target_group_ids IS NOT NULL AND array_length(target_group_ids, 1) > 0 THEN
-        -- Delete santa assignments for target groups (step 1)
-        DELETE FROM santas
-        WHERE group_id = ANY(target_group_ids);
-        GET DIAGNOSTICS santas_deleted = ROW_COUNT;
-
-        -- Delete members from target groups (step 2)
-        DELETE FROM members
-        WHERE group_id = ANY(target_group_ids);
-        GET DIAGNOSTICS members_deleted = ROW_COUNT;
-
-        -- Delete target groups (step 3)
-        DELETE FROM groups
-        WHERE id = ANY(target_group_ids);
-        GET DIAGNOSTICS groups_deleted = ROW_COUNT;
-    END IF;
-
-    IF delete_all THEN
-        -- Delete all outbox messages when delete_all is true
-        DELETE FROM app.outbox;
-        GET DIAGNOSTICS outbox_deleted = ROW_COUNT;
-    ELSE
-        -- Delete outbox messages older than 1 hour
-        DELETE FROM app.outbox
-        WHERE created_date <= NOW() - INTERVAL '1 hour';
-        GET DIAGNOSTICS outbox_deleted = ROW_COUNT;
-    END IF;
-
-    -- Return counts
-    RETURN QUERY SELECT santas_deleted, members_deleted, groups_deleted, outbox_deleted;
-END;
-$$;
-
 -- Enable pg_cron extension for scheduled jobs
 CREATE EXTENSION IF NOT EXISTS pg_cron;
 
@@ -1330,55 +1409,75 @@ CREATE TRIGGER groups_lock_unlock_trigger
     EXECUTE FUNCTION app.handle_group_lock_unlock();
 
 -- ============================================================================
--- PERMISSIONS AND SECURITY
+-- MINIMAL PERMISSIONS - ONLY WHAT'S ABSOLUTELY NECESSARY
 -- ============================================================================
 
--- Grant schema usage permissions
+-- Grant schema usage permissions for accessing functions
+GRANT USAGE ON SCHEMA public TO anon, authenticated;
 GRANT USAGE ON SCHEMA app TO anon, authenticated;
 
--- Grant schema usage permissions to PUBLIC (includes all roles)
-GRANT USAGE ON SCHEMA app TO PUBLIC;
+-- Grant EXECUTE permissions ONLY on the specific functions that the frontend calls
+GRANT EXECUTE ON FUNCTION public.create_group(INTEGER, BOOLEAN, BOOLEAN, BOOLEAN, TEXT, TEXT, TEXT, TEXT, TIMESTAMP WITH TIME ZONE, TEXT[]) TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.get_group(TEXT) TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.get_my_groups(TEXT) TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.join_group(TEXT, TEXT, TEXT, TEXT, TEXT) TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.leave_group(TEXT, TEXT) TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.update_group(TEXT, TEXT, INTEGER, BOOLEAN, TIMESTAMP WITH TIME ZONE, TEXT, TEXT[]) TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.assign_santa(TEXT, TEXT) TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.unlock_group(TEXT, TEXT) TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.kick_member(TEXT, TEXT, TEXT) TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.get_my_secret_santa(TEXT, TEXT) TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.get_members(TEXT, TEXT) TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.is_creator(TEXT, TEXT) TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.is_member(TEXT, TEXT) TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.get_member(TEXT, TEXT) TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.get_custom_code_names(TEXT, TEXT) TO anon, authenticated;
 
--- Grant table permissions on app.outbox to PUBLIC so trigger functions can insert/select
-GRANT INSERT ON TABLE app.outbox TO PUBLIC;
-GRANT SELECT ON TABLE app.outbox TO PUBLIC;
+-- Grant minimal permissions for realtime subscriptions
+-- Only SELECT on outbox table for realtime to read events
+GRANT SELECT ON TABLE app.outbox TO anon, authenticated;
 
--- Grant sequence permissions for auto-incrementing id column
-GRANT USAGE, SELECT ON SEQUENCE app.outbox_id_seq TO PUBLIC;
+-- Grant INSERT on outbox table for trigger functions to write events
+-- (Trigger functions run as SECURITY DEFINER so they bypass RLS)
+GRANT INSERT ON TABLE app.outbox TO anon, authenticated;
 
--- Grant execute permissions on trigger functions (called automatically by triggers)
-GRANT EXECUTE ON FUNCTION app.handle_outbox_changes() TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION app.handle_member_joined() TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION app.handle_member_left() TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION app.handle_group_lock_unlock() TO anon, authenticated;
+-- Grant USAGE on sequences (needed even for SECURITY DEFINER functions)
+GRANT USAGE ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated;
+GRANT USAGE ON ALL SEQUENCES IN SCHEMA app TO anon, authenticated;
+
+-- Grant EXECUTE on gen_random_uuid (extension function)
+GRANT EXECUTE ON FUNCTION gen_random_uuid() TO anon, authenticated;
+
+-- Grant permissions to service_role (for server-side operations)
+GRANT USAGE, CREATE ON SCHEMA public TO service_role;
+GRANT USAGE, CREATE ON SCHEMA app TO service_role;
+GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO service_role;
+GRANT USAGE ON ALL SEQUENCES IN SCHEMA public TO service_role;
+GRANT USAGE ON ALL SEQUENCES IN SCHEMA app TO service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA app TO service_role;
 
 -- ============================================================================
--- REALTIME SETUP
+-- REALTIME SETUP - MINIMAL PERMISSIONS
 -- ============================================================================
 
 -- Enable realtime for outbox table
 ALTER PUBLICATION supabase_realtime_messages_publication ADD TABLE app.outbox;
 
--- Allow anonymous access to realtime messages for subscriptions
-CREATE POLICY "Allow anonymous access to realtime messages"
-ON realtime.messages
-FOR SELECT
-TO anon
-USING (true);
-
--- Allow anonymous access to app.outbox for sending subscription events
-CREATE POLICY "Allow anon to select access outbox"
+-- Minimal RLS policy for realtime subscriptions on outbox table
+-- Allow reading outbox messages for realtime subscriptions
+CREATE POLICY "Allow realtime subscription access to outbox"
 ON app.outbox
 FOR SELECT
-TO anon
+TO anon, authenticated
 USING (true);
 
-CREATE POLICY "Allow anon to insert access outbox"
+-- Allow triggers to insert outbox messages (they run as SECURITY DEFINER)
+CREATE POLICY "Allow triggers to insert outbox messages"
 ON app.outbox
 FOR INSERT
-TO anon
+TO anon, authenticated
 WITH CHECK (true);
-
 
 -- ============================================================================
 -- COMPLETION MESSAGE
@@ -1387,29 +1486,39 @@ WITH CHECK (true);
 DO $$
 BEGIN
     RAISE NOTICE '==============================================';
-    RAISE NOTICE 'Secret Santa Database Schema Created Successfully!';
+    RAISE NOTICE 'Secret Santa Database Schema with MINIMAL PERMISSIONS Created Successfully!';
     RAISE NOTICE '==============================================';
-    RAISE NOTICE 'Tables: groups, members, santas, code_adjectives, code_nouns, app.outbox';
-    RAISE NOTICE 'Functions: % functions created', (
+    RAISE NOTICE 'Security Model:';
+    RAISE NOTICE '- All tables have RLS enabled with NO direct access policies';
+    RAISE NOTICE '- All data access goes through SECURITY DEFINER functions';
+    RAISE NOTICE '- Frontend can only execute specific RPC functions';
+    RAISE NOTICE '- Realtime subscriptions work through minimal outbox permissions';
+    RAISE NOTICE '';
+    RAISE NOTICE 'Permissions granted to anon/authenticated:';
+    RAISE NOTICE '- EXECUTE on % frontend-facing functions', (
         SELECT COUNT(*) FROM pg_proc
-        WHERE pronamespace IN (
-            SELECT oid FROM pg_namespace WHERE nspname IN ('public', 'app')
-        ) AND proname IN (
-            'create_group', 'update_group', 'delete_group', 'join_group',
-            'leave_group', 'assign_santa', 'unlock_group', 'kick_member',
-            'get_my_secret_santa', 'get_members', 'get_code_name', 'get_group'
+        WHERE pronamespace = (SELECT oid FROM pg_namespace WHERE nspname = 'public')
+        AND proname IN (
+            'create_group', 'get_group', 'get_my_groups', 'join_group',
+            'leave_group', 'update_group', 'assign_santa', 'unlock_group',
+            'kick_member', 'get_my_secret_santa', 'get_members', 'is_creator',
+            'is_member', 'get_member', 'get_custom_code_names'
         )
     );
-    RAISE NOTICE 'Triggers: % triggers created', (
+    RAISE NOTICE '- SELECT/INSERT on app.outbox for realtime only';
+    RAISE NOTICE '- NO direct table access permissions';
+    RAISE NOTICE '';
+    RAISE NOTICE 'Tables: % with RLS enabled, no direct access', (
+        SELECT COUNT(*) FROM pg_tables
+        WHERE schemaname = 'public'
+        AND tablename IN ('groups', 'members', 'santas', 'code_adjectives', 'code_nouns', 'custom_code_names')
+    );
+    RAISE NOTICE 'Triggers: % for realtime events', (
         SELECT COUNT(*) FROM pg_trigger
-        WHERE tgname IN (
-            'outbox_realtime_trigger', 'members_joined_trigger',
-            'members_left_trigger', 'groups_lock_unlock_trigger'
-        )
+        WHERE tgname LIKE '%trigger'
     );
     RAISE NOTICE 'Seed Data: % adjectives, % nouns',
-        (SELECT COUNT(*) FROM code_adjectives),
-        (SELECT COUNT(*) FROM code_nouns);
-    RAISE NOTICE 'Realtime: Enabled for outbox events';
+        (SELECT COUNT(*) FROM public.code_adjectives),
+        (SELECT COUNT(*) FROM public.code_nouns);
     RAISE NOTICE '==============================================';
 END $$;
