@@ -12,7 +12,7 @@ interface BadgeProps {
 
 const variantStyles = {
   success: 'bg-success text-success',
-  error: 'bg-error text-error', 
+  error: 'bg-error text-error',
   warning: 'bg-warning text-warning',
   info: 'bg-info text-info',
 };
@@ -22,26 +22,26 @@ const sizeStyles = {
   md: 'text-sm px-3 py-1.5',
 };
 
-export default function Badge({ 
-  children, 
-  variant, 
-  size = 'sm', 
-  className = "" 
+export default function Badge({
+  children,
+  variant,
+  size = 'sm',
+  className = ""
 }: BadgeProps) {
   return (
-    <span className={`${variantStyles[variant]} ${sizeStyles[size]} rounded-full ${className}`}>
+    <span className={`${variantStyles[variant]} ${sizeStyles[size]} rounded-full shrink-0 ${className}`}>
       {children}
     </span>
   );
 }
 
 // Convenience components for common badge types
-export function StatusBadge({ 
-  status, 
-  showText = true, 
-  className = "" 
-}: { 
-  status: 'open' | 'closed' | 'locked'; 
+export function StatusBadge({
+  status,
+  showText = true,
+  className = ""
+}: {
+  status: 'open' | 'closed' | 'locked';
   showText?: boolean;
   className?: string;
 }) {
@@ -61,16 +61,17 @@ export function StatusBadge({
   );
 }
 
-export function RoleBadge({ 
-  role, 
-  className = "" 
-}: { 
-  role: 'admin' | 'you'; 
+export function RoleBadge({
+  role,
+  className = ""
+}: {
+  role: 'admin' | 'you' | 'non-member';
   className?: string;
 }) {
   const roleConfig = {
     admin: { variant: 'success' as const, text: 'Admin' },
     you: { variant: 'info' as const, text: 'You' },
+    'non-member': { variant: 'success' as const, text: 'Not a member' },
   };
 
   const config = roleConfig[role];

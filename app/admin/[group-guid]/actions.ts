@@ -10,6 +10,7 @@ type ActionResult = {
 
 interface GroupDetails {
   group_guid: string;
+  name: string;
   password: string | null;
   capacity: number;
   use_code_names: boolean;
@@ -23,6 +24,7 @@ interface GroupDetails {
 }
 
 interface GetGroupResult {
+  name: string;
   password: string | null;
   capacity: number;
   description: string | null;
@@ -69,6 +71,7 @@ export async function getGroupDetails(groupGuid: string, creatorCode: string): P
 
     return {
       group_guid: groupGuid,
+      name: typedGroupDetails.name,
       password: typedGroupDetails.password,
       capacity: typedGroupDetails.capacity,
       use_code_names: typedGroupDetails.use_code_names,
@@ -93,6 +96,7 @@ export async function updateGroup(formData: FormData): Promise<ActionResult> {
     // Extract form data
     const groupGuid = formData.get("groupGuid") as string;
     const creatorCode = formData.get("creatorCode") as string;
+    const description = formData.get("description") as string || null;
     const capacity = parseInt(formData.get("capacity") as string);
     const password = formData.get("password") as string || null;
     const expiryDate = formData.get("expiryDate") as string || null;
@@ -123,6 +127,11 @@ export async function updateGroup(formData: FormData): Promise<ActionResult> {
 
     if (capacity > 100) {
       return { success: false, error: "Capacity cannot exceed 100 members" };
+    }
+
+    // Validate character limits
+    if (description && description.trim().length > 500) {
+      return { success: false, error: "Description cannot exceed 500 characters" };
     }
 
     // Validate expiry date
@@ -162,6 +171,13 @@ export async function updateGroup(formData: FormData): Promise<ActionResult> {
 
       // Check for uniqueness only when there are new names being added
       if (validNewNames.length > 0) {
+        // Validate character limits for custom code names
+        for (const name of validNewNames) {
+          if (name.trim().length > 30) {
+            return { success: false, error: "Custom code names cannot exceed 30 characters" };
+          }
+        }
+
         // Check for duplicate values in new names
         const uniqueNewNames = new Set(validNewNames.map(name => name.trim().toLowerCase()));
         if (uniqueNewNames.size !== validNewNames.length) {
@@ -184,6 +200,7 @@ export async function updateGroup(formData: FormData): Promise<ActionResult> {
     // Call the update_group function
     const { error } = await supabase.rpc("update_group", {
       p_group_guid: groupGuid,
+      p_description: description,
       p_password: password,
       p_capacity: capacity,
       p_is_open: isOpen,
@@ -254,6 +271,11 @@ export async function joinGroupAsCreator(groupGuid: string, creatorCode: string,
   const supabase = await getClient();
 
   try {
+    // Validate character limits
+    if (codeName && codeName.trim().length > 30) {
+      return { success: false, error: "Code name cannot exceed 30 characters" };
+    }
+
     // Call the join_group function
     const { error } = await supabase.rpc('join_group', {
       p_group_guid: groupGuid,

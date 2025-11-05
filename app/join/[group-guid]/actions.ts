@@ -41,6 +41,20 @@ export async function joinGroup(formData: FormData): Promise<ActionResult | neve
   const name = formData.get("name") as string;
   const codeName = formData.get("codeName") as string || null;
 
+  // Validate required fields
+  if (!name || name.trim().length === 0) {
+    return { success: false, error: "Name is required" };
+  }
+
+  // Validate character limits
+  if (name.trim().length > 30) {
+    return { success: false, error: "Name cannot exceed 30 characters" };
+  }
+
+  if (codeName && codeName.trim().length > 30) {
+    return { success: false, error: "Code name cannot exceed 30 characters" };
+  }
+
   try {
     // Call the join_group function
     const { error: joinError } = await supabase.rpc("join_group", {

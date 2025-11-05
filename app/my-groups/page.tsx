@@ -14,17 +14,17 @@ import { Loading } from "@/app/components/Loading";
 
 interface GroupInfo {
   group_guid: string;
-  password_required: boolean;
+  name: string;
   capacity: number;
   description: string;
   is_open: boolean;
-  expiry_date: string;
   use_code_names: boolean;
   auto_assign_code_names: boolean;
-  creator_name: string;
+  admin_name: string;
   is_frozen: boolean;
-  is_creator: boolean;
-  name: string;
+  is_admin: boolean;
+  is_member: boolean;
+  code_name: string;
   member_count: number;
 }
 
@@ -170,16 +170,6 @@ export default function MyGroupsPage() {
     setExpandedGroups(newExpanded);
   };
 
-  // Function to shorten GUID for mobile display
-  const formatGroupGuid = (guid: string) => {
-    if (guid.length <= 16) return guid;
-    return `${guid.slice(0, 8)}...${guid.slice(-12)}`;
-  };
-
-  const isUserCreator = (group: GroupInfo) => {
-    return group.is_creator;
-  };
-
   if (isLoading) {
     return <Loading message="Loading your groups..." />;
   }
@@ -231,32 +221,43 @@ export default function MyGroupsPage() {
                 key={group.group_guid}
                 title={
                   <div className="flex items-start justify-between w-full flex-1">
-                    <div className="flex items-start space-x-4 flex-1">
-                      <div className="flex flex-col items-center">
+                    <div className="flex items-center space-x-4 flex-1">
+                      <div className="flex flex-col items-center justify-center">
                         <Link
                           href={`/group/${group.group_guid}`}
-                          className="text-sm link-primary transition-colors pt-1 flex flex-col items-center"
+                          className="text-sm link-primary transition-colors flex flex-col items-center"
                           onClick={(e) => e.stopPropagation()}
                         >
                           <span className="text-lg">🎁</span>
                           <span className="text-xs">View</span>
                         </Link>
-                        <span className="text-xs font-medium text-secondary mt-1">{group.member_count} / {group.capacity}</span>
+                        <span className="text-xs font-medium text-secondary mt-1 whitespace-nowrap">{group.member_count} / {group.capacity}</span>
                       </div>
                       <div className="flex flex-col">
-                        <p className="text-xs text-muted mb-1">Your code name in this group:</p>
-                        <div className="flex items-center space-x-2">
-                          <span className="text-lg font-medium text-primary">
-                            {group.name}
-                          </span>
-                          {isUserCreator(group) && (
-                            <RoleBadge role="admin" />
-                          )}
+                        <div className="flex items-center space-x-2 mb-1">
+                          <h3 className="text-lg font-semibold text-primary">{group.name}</h3>
                         </div>
-                        <p className="text-xs text-muted mt-1">
-                          <span className="sm:hidden">{formatGroupGuid(group.group_guid)}</span>
-                          <span className="hidden sm:inline">{group.group_guid}</span>
+                        <p className="text-xs text-muted mb-1">
+                          {group.is_member ? "Your code name in this group:" : "You are the admin in this group"}
                         </p>
+                        {group.is_member && (
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="text-sm font-medium text-secondary">
+                              {group.code_name}
+                            </span>
+                            <div className="flex items-center gap-2">
+                              {group.is_admin && (
+                                <RoleBadge role="admin" />
+                              )}
+                            </div>
+                          </div>
+                        )}
+                        {!group.is_member && (
+                          <div className="flex items-center gap-2">
+                            <RoleBadge role="admin" />
+                            <RoleBadge role="non-member" />
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -274,18 +275,33 @@ export default function MyGroupsPage() {
                   </div>
                 }
               >
-                <div className="text-sm text-secondary mb-4">
-                  {group.description}
+                <div className="space-y-3 text-sm text-secondary">
+                  <div className="flex flex-col sm:flex-row sm:gap-2">
+                    <span className="font-medium text-primary">Group Code:</span>
+                    <span>{group.group_guid}</span>
+                  </div>
+                  <div className="flex flex-col sm:flex-row sm:gap-2">
+                    <span className="font-medium text-primary">Admin Name:</span>
+                    <span>{group.admin_name}</span>
+                  </div>
+                  {group.description && (
+                    <div>
+                      <span className="font-medium text-primary">Description:</span>
+                      <div className="mt-1">{group.description}</div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Action Button - Only for admins */}
-                {isUserCreator(group) && (
-                  <Link
-                    href={`/admin/${group.group_guid}`}
-                    className="w-full inline-block text-center py-3 px-6 btn-primary text-sm font-medium rounded-md transition-colors duration-200"
-                  >
-                    Manage Group
-                  </Link>
+                {group.is_admin && (
+                  <div className="mt-6">
+                    <Link
+                      href={`/admin/${group.group_guid}`}
+                      className="w-full inline-block text-center py-3 px-6 btn-primary text-sm font-medium rounded-md transition-colors duration-200"
+                    >
+                      Manage Group
+                    </Link>
+                  </div>
                 )}
               </CollapsibleSection>
             ))}

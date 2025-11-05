@@ -17,6 +17,7 @@ import supabase from "@/utilities/supabase/browser";
 
 interface GroupDetails {
   group_guid: string;
+  name: string;
   password: string | null;
   capacity: number;
   use_code_names: boolean;
@@ -75,6 +76,7 @@ export default function AdminPage() {
   const [isExistingCustomNamesExpanded, setIsExistingCustomNamesExpanded] = useState(false);
   const [capacity, setCapacity] = useState<number>(10);
   const [expiryDate, setExpiryDate] = useState<string>('');
+  const [description, setDescription] = useState<string>('');
 
   useEffect(() => {
     async function fetchGroupDetails() {
@@ -100,6 +102,7 @@ export default function AdminPage() {
         // Initialize capacity and expiry date state
         setCapacity(details.capacity);
         setExpiryDate(details.expiry_date ? new Date(details.expiry_date).toISOString().split('T')[0] : '');
+        setDescription(details.description || '');
 
         // Fetch group members
         try {
@@ -546,31 +549,175 @@ export default function AdminPage() {
             <fieldset disabled={groupDetails.is_frozen}>
             {/* Group Info */}
             <div className="border-b border-accent pb-6">
+              <h3 className="text-md font-medium text-primary mb-4">Overview</h3>
+
+              <div className="space-y-4">
+                <div>
+                  <label htmlFor="groupCode" className="block text-sm font-medium text-label mb-1">
+                    Group Code
+                  </label>
+                  <input
+                    type="text"
+                    id="groupCode"
+                    name="groupCode"
+                    value={groupDetails.group_guid}
+                    readOnly
+                    className="input-primary w-full px-3 py-2 rounded-md text-primary placeholder:text-muted opacity-60 font-mono"
+                  />
+                  <p className="text-xs text-muted mt-1">
+                    Unique identifier for your group
+                  </p>
+                </div>
+
+                <div>
+                  <label htmlFor="groupName" className="block text-sm font-medium text-label mb-1">
+                    Group Name
+                  </label>
+                  <input
+                    type="text"
+                    id="groupName"
+                    name="groupName"
+                    value={groupDetails.name}
+                    readOnly
+                    className="input-primary w-full px-3 py-2 rounded-md text-primary placeholder:text-muted opacity-60"
+                  />
+                  <p className="text-xs text-muted mt-1">
+                    Name cannot be changed after group creation
+                  </p>
+                </div>
+
+                <div>
+                  <label htmlFor="adminName" className="block text-sm font-medium text-label mb-1">
+                    Admin Name
+                  </label>
+                  <input
+                    type="text"
+                    id="adminName"
+                    name="adminName"
+                    value={groupDetails.creator_name}
+                    readOnly
+                    className="input-primary w-full px-3 py-2 rounded-md text-primary placeholder:text-muted opacity-60"
+                  />
+                  <p className="text-xs text-muted mt-1">
+                    Name of the group administrator
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Editable Settings */}
+            <div className="border-b border-accent pb-6 pt-6">
               <h3 className="text-md font-medium text-primary mb-4">Group Details</h3>
 
               <div className="space-y-4">
-                <div className="flex items-center justify-between p-3 border border-primary rounded-lg opacity-60">
-                  <label className="block text-sm font-medium text-secondary">
-                    Group Code
+                <div className={`flex items-center justify-between p-3 border border-gray-200 rounded-lg ${groupDetails.is_frozen ? 'opacity-60' : ''}`}>
+                  <label htmlFor="isOpen" className={`block text-sm font-medium ${groupDetails.is_frozen ? 'text-muted' : 'text-label'}`}>
+                    Group is open for new members
                   </label>
-                  <span className="text-sm text-secondary font-mono">
-                    {groupDetails.group_guid}
-                  </span>
+                  <div className="relative">
+                    <input
+                      type="checkbox"
+                      id="isOpen"
+                      name="isOpen"
+                      checked={isGroupOpen}
+                      onChange={(e) => setIsGroupOpen(e.target.checked)}
+                      disabled={groupDetails.is_frozen}
+                      className="sr-only"
+                    />
+                    <div
+                      onClick={() => !groupDetails.is_frozen && setIsGroupOpen(!isGroupOpen)}
+                      className={`w-12 h-6 rounded-full transition-colors duration-200 flex items-center ${
+                        groupDetails.is_frozen
+                          ? 'cursor-not-allowed'
+                          : 'cursor-pointer'
+                      } ${isGroupOpen ? 'bg-toggle-active' : 'bg-toggle-inactive'}`}
+                    >
+                      <div
+                        className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-200 ${
+                          isGroupOpen ? 'translate-x-6' : 'translate-x-0.5'
+                        }`}
+                      />
+                    </div>
+                  </div>
                 </div>
 
-                <div className="flex items-center justify-between p-3 border border-primary rounded-lg opacity-60">
-                  <label className="block text-sm font-medium text-secondary">
-                    Admin Name
+                <div>
+                  <label htmlFor="capacity" className="block text-sm font-medium text-label mb-1">
+                    Maximum Members *
                   </label>
-                  <span className="text-sm text-secondary">
-                    {groupDetails.creator_name}
-                  </span>
+                  <input
+                    type="number"
+                    id="capacity"
+                    name="capacity"
+                    required
+                    min="2"
+                    max="100"
+                    value={capacity}
+                    onChange={(e) => setCapacity(parseInt(e.target.value) || 0)}
+                    className="input-primary w-full px-3 py-2 rounded-md text-primary placeholder:text-muted"
+                  />
+                  <p className="text-xs text-muted mt-1">
+                    Minimum 2 members, maximum 100 members
+                  </p>
                 </div>
 
-              <div>
-                <label className="block text-sm font-medium text-label mb-3">
-                  Code Name Settings
-                </label>
+                <div>
+                  <label htmlFor="password" className="block text-sm font-medium text-label mb-1">
+                    Group Password
+                  </label>
+                  <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    defaultValue={groupDetails.password || ''}
+                    className="input-primary w-full px-3 py-2 rounded-md text-primary placeholder:text-muted"
+                    placeholder="Leave blank for no password"
+                  />
+                </div>
+
+                <div>
+                  <div className="flex justify-between items-center mb-1">
+                    <label htmlFor="description" className="block text-sm font-medium text-label">
+                      Description
+                    </label>
+                    <span className="text-xs text-muted">
+                      {description.length}/500
+                    </span>
+                  </div>
+                  <textarea
+                    id="description"
+                    name="description"
+                    rows={3}
+                    maxLength={500}
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    className="input-primary w-full px-3 py-2 rounded-md text-primary placeholder:text-muted resize-none"
+                    placeholder="Optional description for your group"
+                  />
+                  <p className="text-xs text-muted mt-1">
+                    Optional field to describe your group
+                  </p>
+                </div>
+
+                <div>
+                  <label htmlFor="expiryDate" className="block text-sm font-medium text-label mb-1">
+                    Expiry Date
+                  </label>
+                  <input
+                    type="date"
+                    id="expiryDate"
+                    name="expiryDate"
+                    value={expiryDate}
+                    onChange={(e) => setExpiryDate(e.target.value)}
+                    className="input-primary w-full px-3 py-2 rounded-md text-primary"
+                  />
+                </div>
+              </div>
+            </div>
+
+              {/* Code Name Settings */}
+              <div className="border-b border-accent pb-6 pt-6">
+                <h3 className="text-md font-medium text-primary mb-4">Code Name Settings</h3>
                 <div className="space-y-3">
                   <div className="flex items-center justify-between p-3 border border-primary rounded-lg opacity-60">
                     <label className="block text-sm font-medium text-secondary">
@@ -718,6 +865,7 @@ export default function AdminPage() {
                                 <div key={index} className="relative">
                                   <input
                                     type="text"
+                                    maxLength={30}
                                     value={name}
                                     onChange={(e) => {
                                       const updatedNames = [...newCustomCodeNames];
@@ -745,7 +893,7 @@ export default function AdminPage() {
                           )}
 
                           <p className="text-xs text-muted">
-                            Add new custom code names to your group. These will be available for new members.
+                            Add new custom code names to your group (max 30 characters each). These will be available for new members.
                           </p>
                         </div>
                       )}
@@ -753,103 +901,6 @@ export default function AdminPage() {
                   )}
                 </div>
               </div>
-              </div>
-            </div>
-
-            {/* Editable Settings */}
-            <div className="border-b border-accent pb-6 pt-6">
-              <h3 className="text-md font-medium text-primary mb-4">Group Settings</h3>
-
-              <div className="space-y-4">
-                <div>
-                  <label htmlFor="capacity" className="block text-sm font-medium text-label mb-1">
-                    Maximum Members *
-                  </label>
-                  <input
-                    type="number"
-                    id="capacity"
-                    name="capacity"
-                    required
-                    min="2"
-                    max="100"
-                    value={capacity}
-                    onChange={(e) => setCapacity(parseInt(e.target.value) || 0)}
-                    className="input-primary w-full px-3 py-2 rounded-md text-primary placeholder:text-muted"
-                  />
-                  <p className="text-xs text-muted mt-1">
-                    Minimum 2 members, maximum 100 members
-                  </p>
-                </div>
-
-                <div>
-                  <label htmlFor="password" className="block text-sm font-medium text-label mb-1">
-                    Group Password
-                  </label>
-                  <input
-                    type="password"
-                    id="password"
-                    name="password"
-                    defaultValue={groupDetails.password || ''}
-                    className="input-primary w-full px-3 py-2 rounded-md text-primary placeholder:text-muted"
-                    placeholder="Leave blank for no password"
-                  />
-                </div>
-
-                <div className="flex items-center justify-between p-3 border border-primary rounded-lg opacity-60">
-                  <label className="block text-sm font-medium text-secondary">
-                    Description
-                  </label>
-                  <span className="text-sm text-secondary text-right max-w-xs">
-                    {groupDetails.description || 'No description'}
-                  </span>
-                </div>
-
-                <div>
-                  <label htmlFor="expiryDate" className="block text-sm font-medium text-label mb-1">
-                    Expiry Date
-                  </label>
-                  <input
-                    type="date"
-                    id="expiryDate"
-                    name="expiryDate"
-                    value={expiryDate}
-                    onChange={(e) => setExpiryDate(e.target.value)}
-                    className="input-primary w-full px-3 py-2 rounded-md text-primary"
-                  />
-                </div>
-
-                <div className={`flex items-center justify-between p-3 border border-gray-200 rounded-lg ${groupDetails.is_frozen ? 'opacity-60' : ''}`}>
-                  <label htmlFor="isOpen" className={`block text-sm font-medium ${groupDetails.is_frozen ? 'text-muted' : 'text-label'}`}>
-                    Group is open for new members
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="checkbox"
-                      id="isOpen"
-                      name="isOpen"
-                      checked={isGroupOpen}
-                      onChange={(e) => setIsGroupOpen(e.target.checked)}
-                      disabled={groupDetails.is_frozen}
-                      className="sr-only"
-                    />
-                    <div
-                      onClick={() => !groupDetails.is_frozen && setIsGroupOpen(!isGroupOpen)}
-                      className={`w-12 h-6 rounded-full transition-colors duration-200 flex items-center ${
-                        groupDetails.is_frozen
-                          ? 'cursor-not-allowed'
-                          : 'cursor-pointer'
-                      } ${isGroupOpen ? 'bg-toggle-active' : 'bg-toggle-inactive'}`}
-                    >
-                      <div
-                        className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-200 ${
-                          isGroupOpen ? 'translate-x-6' : 'translate-x-0.5'
-                        }`}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
 
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-3">
@@ -935,68 +986,65 @@ export default function AdminPage() {
           )}
         </CollapsibleSection>
 
-        {/* Join Group Section or View Group Link */}
-        {groupDetails && (
-          (!groupDetails.is_frozen && groupDetails.is_open) ||
-          (groupDetails.is_frozen && isCreatorMember)
-        ) && (
+        {/* Join Group Section */}
+        {groupDetails && !groupDetails.is_frozen && groupDetails.is_open && !isCreatorMember && (
           <Card className="mt-6">
-            {!isCreatorMember ? (
-              <>
-                <h2 className="text-lg font-medium text-primary mb-2">
-                  Join Group as Member
-                </h2>
-                <p className="text-sm text-secondary mb-6">
-                  Join your own group as a member to participate in the Secret Santa exchange.
-                </p>
+            <h2 className="text-lg font-medium text-primary mb-2">
+              Join Group as Member
+            </h2>
+            <p className="text-sm text-secondary mb-6">
+              Join your own group as a member to participate in the Secret Santa exchange.
+            </p>
 
-                <form action={handleJoinGroup} className="space-y-4">
-                  {/* Show code name input if group uses code names and auto-assign is disabled */}
-                  {groupDetails.use_code_names && !groupDetails.auto_assign_code_names && (
-                    <div>
-                      <label htmlFor="creatorCodeName" className="block text-sm font-medium text-label mb-1">
-                        Your Code Name *
-                      </label>
-                      <input
-                        type="text"
-                        id="creatorCodeName"
-                        name="creatorCodeName"
-                        required
-                        className="input-primary w-full px-3 py-2 rounded-md text-primary placeholder:text-muted"
-                        placeholder="Enter your code name (e.g., MysteriousElf)"
-                      />
-                      <p className="text-xs text-muted mt-1">
-                        Code name is required for this group
-                      </p>
-                    </div>
-                  )}
+            <form action={handleJoinGroup} className="space-y-4">
+              {/* Show code name input if group uses code names and auto-assign is disabled */}
+              {groupDetails.use_code_names && !groupDetails.auto_assign_code_names && (
+                <div>
+                  <label htmlFor="creatorCodeName" className="block text-sm font-medium text-label mb-1">
+                    Your Code Name *
+                  </label>
+                  <input
+                    type="text"
+                    id="creatorCodeName"
+                    name="creatorCodeName"
+                    required
+                    maxLength={30}
+                    className="input-primary w-full px-3 py-2 rounded-md text-primary placeholder:text-muted"
+                    placeholder="Enter your code name (e.g., MysteriousElf)"
+                  />
+                  <p className="text-xs text-muted mt-1">
+                    Code name is required for this group (max 30 characters)
+                  </p>
+                </div>
+              )}
 
-                  <button
-                    type="submit"
-                    disabled={joining}
-                    className="w-full py-3 px-6 btn-primary text-sm font-medium rounded-md transition-colors duration-200 shadow-sm cursor-pointer"
-                  >
-                    {joining ? 'Joining...' : 'Join Group'}
-                  </button>
-                </form>
-              </>
-            ) : (
-              <>
-                <h2 className="text-lg font-medium text-primary mb-2">
-                  View Group Details
-                </h2>
-                <p className="text-sm text-secondary mb-6">
-                  You are a member of this group. View the group page to see member details and your Secret Santa assignment{groupDetails.is_frozen ? '' : ' (when available)'}.
-                </p>
+              <button
+                type="submit"
+                disabled={joining}
+                className="w-full py-3 px-6 btn-primary text-sm font-medium rounded-md transition-colors duration-200 shadow-sm cursor-pointer"
+              >
+                {joining ? 'Joining...' : 'Join Group'}
+              </button>
+            </form>
+          </Card>
+        )}
 
-                <Link
-                  href={`/group/${groupGuid}`}
-                  className="inline-block w-full py-3 px-6 btn-primary text-sm font-medium rounded-md transition-colors duration-200 shadow-sm text-center"
-                >
-                  View Group
-                </Link>
-              </>
-            )}
+        {/* View Group Details Section */}
+        {groupDetails && isCreatorMember && (
+          <Card className="mt-6">
+            <h2 className="text-lg font-medium text-primary mb-2">
+              View Group Details
+            </h2>
+            <p className="text-sm text-secondary mb-6">
+              You are a member of this group. View the group page to see member details and your Secret Santa assignment{groupDetails.is_frozen ? '' : ' (when available)'}.
+            </p>
+
+            <Link
+              href={`/group/${groupGuid}`}
+              className="inline-block w-full py-3 px-6 btn-primary text-sm font-medium rounded-md transition-colors duration-200 shadow-sm text-center"
+            >
+              View Group
+            </Link>
           </Card>
         )}
 

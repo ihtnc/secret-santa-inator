@@ -282,9 +282,8 @@ export default function GroupPage() {
         {/* Secret Santa Assignment Section - Always show */}
         <div className="bg-success border border-success rounded-lg shadow-md">
           <div className="px-6 py-6">
-            <h2 className="text-lg font-medium text-primary mb-4 flex flex-col sm:flex-row items-center justify-center sm:justify-start gap-2 sm:gap-3">
-              <span className="text-xl sm:text-lg">🎁</span>
-              <span>Your Secret Santa Assignment</span>
+            <h2 className="text-lg font-medium text-primary mb-4">
+              Your Secret Santa Assignment
             </h2>
 
             {/* User Information */}

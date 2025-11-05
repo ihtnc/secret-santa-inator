@@ -9,6 +9,7 @@
 CREATE TABLE groups (
     id SERIAL PRIMARY KEY,
     group_guid TEXT NOT NULL,
+    name TEXT NOT NULL,
     password TEXT,
     capacity INTEGER NOT NULL,
     use_code_names BOOLEAN NOT NULL,
@@ -17,7 +18,7 @@ CREATE TABLE groups (
     creator_name TEXT NOT NULL,
     creator_code TEXT NOT NULL,
     created_date TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    description TEXT NOT NULL,
+    description TEXT,
     is_open BOOLEAN NOT NULL DEFAULT TRUE,
     expiry_date TIMESTAMP WITH TIME ZONE DEFAULT (NOW() + INTERVAL '1 month'),
     is_frozen BOOLEAN NOT NULL DEFAULT FALSE
@@ -62,7 +63,7 @@ CREATE TABLE santas (
     group_id INTEGER NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
     santa_id INTEGER NOT NULL REFERENCES members(id) ON DELETE CASCADE,
     member_id INTEGER NOT NULL REFERENCES members(id) ON DELETE CASCADE,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    created_date TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- Enable RLS but NO POLICIES - only SECURITY DEFINER functions can access
@@ -337,6 +338,7 @@ CREATE OR REPLACE FUNCTION get_group(
     p_group_guid TEXT
 )
 RETURNS TABLE(
+    name TEXT,
     password TEXT,
     capacity INTEGER,
     description TEXT,
@@ -363,12 +365,13 @@ BEGIN
 
     -- If group doesn't exist, throw exception
     IF group_id_var IS NULL THEN
-        RAISE EXCEPTION 'Group with GUID % does not exist', p_group_guid;
+        RAISE EXCEPTION 'Group not found';
     END IF;
 
-    -- Return group details including member count
+    -- Return group details
     RETURN QUERY
     SELECT
+        g.name,
         g.password,
         g.capacity,
         g.description,
@@ -379,13 +382,17 @@ BEGIN
         g.use_custom_code_names,
         g.creator_name,
         g.is_frozen,
-        COALESCE((
-            SELECT COUNT(*)::INTEGER
-            FROM public.members m
-            WHERE m.group_id = g.id
-        ), 0) AS member_count
+        COALESCE(member_count_result.count, 0)::INTEGER AS member_count
     FROM public.groups g
-    WHERE g.id = group_id_var;
+    LEFT JOIN (
+        SELECT
+            group_id,
+            COUNT(*)::INTEGER AS count
+        FROM public.members
+        WHERE group_id = group_id_var
+        GROUP BY group_id
+    ) member_count_result ON g.id = member_count_result.group_id
+    WHERE g.group_guid = p_group_guid;
 END;
 $$;
 
@@ -395,18 +402,17 @@ CREATE OR REPLACE FUNCTION get_my_groups(
 )
 RETURNS TABLE(
     group_guid TEXT,
-    password_required BOOLEAN,
+    name TEXT,
     capacity INTEGER,
     description TEXT,
     is_open BOOLEAN,
-    expiry_date TIMESTAMP WITH TIME ZONE,
     use_code_names BOOLEAN,
     auto_assign_code_names BOOLEAN,
-    use_custom_code_names BOOLEAN,
-    creator_name TEXT,
+    admin_name TEXT,
     is_frozen BOOLEAN,
-    is_creator BOOLEAN,
-    name TEXT,
+    is_admin BOOLEAN,
+    is_member BOOLEAN,
+    code_name TEXT,
     member_count INTEGER
 )
 LANGUAGE plpgsql
@@ -418,52 +424,43 @@ BEGIN
     RETURN QUERY
     SELECT
         g.group_guid,
-        (g.password IS NOT NULL) AS password_required,
+        g.name,
         g.capacity,
         g.description,
         g.is_open,
-        g.expiry_date,
         g.use_code_names,
         g.auto_assign_code_names,
-        g.use_custom_code_names,
-        g.creator_name,
+        g.creator_name AS admin_name,
         g.is_frozen,
-        (g.creator_code = p_member_code) AS is_creator,
-        CASE
-            WHEN m.code IS NOT NULL AND g.use_code_names = false THEN m.name
-            WHEN m.code IS NOT NULL AND g.use_code_names = true THEN m.code_name
-            ELSE g.creator_name
-        END AS name,
-        COALESCE((
-            SELECT COUNT(*)::INTEGER
-            FROM public.members m2
-            WHERE m2.group_id = g.id
-        ), 0) AS member_count
+        (g.creator_code = p_member_code) AS is_admin,
+        (m.code IS NOT NULL) AS is_member,
+        COALESCE(m.code_name, m.name) AS code_name,
+        COALESCE(member_count_result.count, 0)::INTEGER AS member_count
     FROM public.groups g
     LEFT JOIN public.members m ON g.id = m.group_id AND m.code = p_member_code
-    WHERE
-        -- Group is not expired
-        (g.expiry_date IS NULL OR g.expiry_date > NOW())
-        AND (
-            -- User is a member of this group
-            m.code IS NOT NULL
-            OR
-            -- User is the creator of this group
-            g.creator_code = p_member_code
-        )
+    LEFT JOIN (
+        SELECT
+            group_id,
+            COUNT(*)::INTEGER AS count
+        FROM public.members
+        GROUP BY group_id
+    ) member_count_result ON g.id = member_count_result.group_id
+    WHERE (g.creator_code = p_member_code OR m.code IS NOT NULL)
+      AND (g.expiry_date IS NULL OR g.expiry_date > NOW())
     ORDER BY g.created_date DESC;
 END;
 $$;
 
 -- Function to create a new group
 CREATE OR REPLACE FUNCTION create_group(
+    p_name TEXT,
     p_capacity INTEGER,
     p_use_code_names BOOLEAN,
     p_auto_assign_code_names BOOLEAN,
     p_use_custom_code_names BOOLEAN,
     p_creator_name TEXT,
     p_creator_code TEXT,
-    p_description TEXT,
+    p_description TEXT DEFAULT NULL,
     p_password TEXT DEFAULT NULL,
     p_expiry_date TIMESTAMP WITH TIME ZONE DEFAULT NULL,
     p_custom_code_names TEXT[] DEFAULT NULL
@@ -478,9 +475,9 @@ DECLARE
     new_group_id INTEGER;
     custom_name TEXT;
 BEGIN
-    -- Validate that description is provided
-    IF p_description IS NULL OR LENGTH(TRIM(p_description)) = 0 THEN
-        RAISE EXCEPTION 'Description is required';
+    -- Validate that name is provided
+    IF p_name IS NULL OR LENGTH(TRIM(p_name)) = 0 THEN
+        RAISE EXCEPTION 'Group name is required';
     END IF;
 
     -- Validate that expiry date is in the future (if provided)
@@ -505,6 +502,7 @@ BEGIN
     -- Insert the new group
     INSERT INTO public.groups (
         group_guid,
+        name,
         password,
         capacity,
         use_code_names,
@@ -518,6 +516,7 @@ BEGIN
     )
     VALUES (
         generated_guid,
+        p_name,
         p_password,
         p_capacity,
         p_use_code_names,
@@ -548,6 +547,7 @@ $$;
 -- Function to update group settings
 CREATE OR REPLACE FUNCTION update_group(
     p_group_guid TEXT,
+    p_description TEXT,
     p_password TEXT,
     p_capacity INTEGER,
     p_is_open BOOLEAN,
@@ -634,9 +634,10 @@ BEGIN
         END LOOP;
     END IF;
 
-    -- Update the group with all provided fields
+    -- Update the group with all provided fields (excluding name)
     UPDATE public.groups
     SET
+        description = p_description,
         password = p_password,
         capacity = p_capacity,
         is_open = p_is_open,
@@ -1417,12 +1418,12 @@ GRANT USAGE ON SCHEMA public TO anon, authenticated;
 GRANT USAGE ON SCHEMA app TO anon, authenticated;
 
 -- Grant EXECUTE permissions ONLY on the specific functions that the frontend calls
-GRANT EXECUTE ON FUNCTION public.create_group(INTEGER, BOOLEAN, BOOLEAN, BOOLEAN, TEXT, TEXT, TEXT, TEXT, TIMESTAMP WITH TIME ZONE, TEXT[]) TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.create_group(TEXT, INTEGER, BOOLEAN, BOOLEAN, BOOLEAN, TEXT, TEXT, TEXT, TEXT, TIMESTAMP WITH TIME ZONE, TEXT[]) TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.get_group(TEXT) TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.get_my_groups(TEXT) TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.join_group(TEXT, TEXT, TEXT, TEXT, TEXT) TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.leave_group(TEXT, TEXT) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION public.update_group(TEXT, TEXT, INTEGER, BOOLEAN, TIMESTAMP WITH TIME ZONE, TEXT, TEXT[]) TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.update_group(TEXT, TEXT, TEXT, INTEGER, BOOLEAN, TIMESTAMP WITH TIME ZONE, TEXT, TEXT[]) TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.assign_santa(TEXT, TEXT) TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.unlock_group(TEXT, TEXT) TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.kick_member(TEXT, TEXT, TEXT) TO anon, authenticated;

@@ -13,6 +13,7 @@ export async function createGroup(formData: FormData): Promise<ActionResult | ne
   const supabase = await getClient();
 
   // Extract form data
+  const groupName = formData.get("groupName") as string;
   const capacity = parseInt(formData.get("capacity") as string);
   const useCodeNames = formData.get("useCodeNames") === "on";
   const autoAssignCodeNames = formData.get("autoAssignCodeNames") === "on";
@@ -39,12 +40,29 @@ export async function createGroup(formData: FormData): Promise<ActionResult | ne
   }
 
   // Validate required fields
+  if (!groupName || groupName.trim().length === 0) {
+    return { success: false, error: "Group name is required" };
+  }
+
   if (!creatorName || creatorName.trim().length === 0) {
     return { success: false, error: "Admin name is required" };
   }
 
-  if (!description || description.trim().length === 0) {
-    return { success: false, error: "Description is required" };
+  // Validate character limits
+  if (groupName.trim().length > 30) {
+    return { success: false, error: "Group name cannot exceed 30 characters" };
+  }
+
+  if (creatorName.trim().length > 30) {
+    return { success: false, error: "Admin name cannot exceed 30 characters" };
+  }
+
+  if (description && description.trim().length > 500) {
+    return { success: false, error: "Description cannot exceed 500 characters" };
+  }
+
+  if (creatorCodeName && creatorCodeName.trim().length > 30) {
+    return { success: false, error: "Code name cannot exceed 30 characters" };
   }
 
   // Validate capacity
@@ -87,6 +105,13 @@ export async function createGroup(formData: FormData): Promise<ActionResult | ne
       return { success: false, error: `You must provide at least ${capacity} custom code names to match the group capacity` };
     }
 
+    // Validate character limits for custom code names
+    for (const name of customCodeNames) {
+      if (name.trim().length > 30) {
+        return { success: false, error: "Custom code names cannot exceed 30 characters" };
+      }
+    }
+
     // Check for duplicate custom code names (case-insensitive)
     const uniqueNames = new Set(customCodeNames.map(name => name.toLowerCase()));
     if (uniqueNames.size !== customCodeNames.length) {
@@ -99,6 +124,7 @@ export async function createGroup(formData: FormData): Promise<ActionResult | ne
   try {
     // Call the create_group function
     const { data, error: createError } = await supabase.rpc("create_group", {
+      p_name: groupName,
       p_capacity: capacity,
       p_use_code_names: useCodeNames,
       p_auto_assign_code_names: autoAssignCodeNames,

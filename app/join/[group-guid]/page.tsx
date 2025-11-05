@@ -361,9 +361,13 @@ export default function JoinGroupPage() {
                     id="name"
                     name="name"
                     required
+                    maxLength={30}
                     className="input-primary w-full px-3 py-2 rounded-md text-primary placeholder:text-muted"
                     placeholder="Enter your name"
                   />
+                  <p className="text-xs text-muted mt-1">
+                    Maximum 30 characters
+                  </p>
                 </div>
 
                 {/* Password field - only show if group has a password */}
@@ -397,11 +401,12 @@ export default function JoinGroupPage() {
                       id="codeName"
                       name="codeName"
                       required
+                      maxLength={30}
                       className="input-primary w-full px-3 py-2 rounded-md text-primary placeholder:text-muted"
                       placeholder="Enter your code name (e.g., MysteriousElf)"
                     />
                     <p className="text-xs text-muted mt-1">
-                      This is how other members will see you during the Secret Santa
+                      This is how other members will see you during the Secret Santa (max 30 characters)
                     </p>
                   </div>
                 )}

@@ -20,6 +20,7 @@ export default function CreateGroupPage() {
 
   // State for form fields
   const [creatorName, setCreatorName] = useState('');
+  const [groupName, setGroupName] = useState('');
   const [capacity, setCapacity] = useState('10');
   const [description, setDescription] = useState('');
   const [expiryDate, setExpiryDate] = useState('');
@@ -100,31 +101,30 @@ export default function CreateGroupPage() {
               value={useCustomCodeNames ? customCodeNames.length : 0}
             />
 
-            {/* Creator Information */}
-            <CardSection title="Your Information" titleVariant="h2">
-              <div className="space-y-4">
-                <div>
-                  <label htmlFor="creatorName" className="block text-sm font-medium text-label mb-1">
-                    Your Name *
-                  </label>
-                  <input
-                    type="text"
-                    id="creatorName"
-                    name="creatorName"
-                    required
-                    value={creatorName}
-                    onChange={(e) => setCreatorName(e.target.value)}
-                    className="input-primary w-full px-3 py-2 rounded-md text-primary placeholder:text-muted"
-                    placeholder="Enter your name"
-                  />
-                </div>
-              </div>
-            </CardSection>
-
             {/* Group Settings */}
             <CardSection title="Group Settings" titleVariant="h2">
 
               <div className="space-y-4">
+                <div>
+                  <label htmlFor="groupName" className="block text-sm font-medium text-label mb-1">
+                    Group Name *
+                  </label>
+                  <input
+                    type="text"
+                    id="groupName"
+                    name="groupName"
+                    required
+                    maxLength={30}
+                    value={groupName}
+                    onChange={(e) => setGroupName(e.target.value)}
+                    className="input-primary w-full px-3 py-2 rounded-md text-primary placeholder:text-muted"
+                    placeholder="Enter a name for your group"
+                  />
+                  <p className="text-xs text-muted mt-1">
+                    Maximum 30 characters
+                  </p>
+                </div>
+
                 <div>
                   <label htmlFor="capacity" className="block text-sm font-medium text-label mb-1">
                     Maximum Members *
@@ -159,21 +159,26 @@ export default function CreateGroupPage() {
                 </div>
 
                 <div>
-                  <label htmlFor="description" className="block text-sm font-medium text-label mb-1">
-                    Description *
-                  </label>
+                  <div className="flex justify-between items-center mb-1">
+                    <label htmlFor="description" className="block text-sm font-medium text-label">
+                      Description (Optional)
+                    </label>
+                    <span className="text-xs text-muted">
+                      {description.length}/500
+                    </span>
+                  </div>
                   <textarea
                     id="description"
                     name="description"
-                    required
                     rows={3}
+                    maxLength={500}
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    className="input-primary w-full px-3 py-2 rounded-md text-primary placeholder:text-muted"
+                    className="input-primary w-full px-3 py-2 rounded-md text-primary placeholder:text-muted resize-none"
                     placeholder="Describe your Secret Santa event..."
                   />
                   <p className="text-xs text-muted mt-1">
-                    Provide a meaningful description for your Secret Santa group
+                    Provide additional details about your Secret Santa group
                   </p>
                 </div>
 
@@ -334,6 +339,7 @@ export default function CreateGroupPage() {
                         <div key={index} className="relative">
                           <input
                             type="text"
+                            maxLength={30}
                             value={name}
                             onChange={(e) => {
                               const newNames = [...customCodeNames];
@@ -364,7 +370,7 @@ export default function CreateGroupPage() {
                     </div>
 
                     <p className="text-xs text-muted">
-                      Add custom code names for your group. You should provide at least as many names as your maximum member count.
+                      Add custom code names for your group (max 30 characters each). You should provide at least as many names as your maximum member count.
                     </p>
                   </div>
                 )}
@@ -373,6 +379,31 @@ export default function CreateGroupPage() {
                   Code names add fun and mystery to your Secret Santa! If auto-assign is disabled,
                   you must provide a code name when joining.
                 </p>
+              </div>
+            </CardSection>
+
+            {/* Creator Information */}
+            <CardSection title="Your Information" titleVariant="h2">
+              <div className="space-y-4">
+                <div>
+                  <label htmlFor="creatorName" className="block text-sm font-medium text-label mb-1">
+                    Your Name *
+                  </label>
+                  <input
+                    type="text"
+                    id="creatorName"
+                    name="creatorName"
+                    required
+                    maxLength={30}
+                    value={creatorName}
+                    onChange={(e) => setCreatorName(e.target.value)}
+                    className="input-primary w-full px-3 py-2 rounded-md text-primary placeholder:text-muted"
+                    placeholder="Enter your name"
+                  />
+                  <p className="text-xs text-muted mt-1">
+                    Maximum 30 characters
+                  </p>
+                </div>
               </div>
             </CardSection>
 
@@ -419,11 +450,12 @@ export default function CreateGroupPage() {
                       id="creatorCodeName"
                       name="creatorCodeName"
                       required
+                      maxLength={30}
                       className="input-primary w-full px-3 py-2 rounded-md text-primary placeholder:text-muted"
                       placeholder="Enter your code name (e.g., MysteriousElf)"
                     />
                     <p className="text-xs text-muted mt-1">
-                      Code name is required when auto-assignment is disabled
+                      Code name is required when auto-assignment is disabled (max 30 characters)
                     </p>
                   </div>
                 )}
