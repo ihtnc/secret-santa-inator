@@ -17,7 +17,19 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Secret Santa-inator",
-  description: "A fun and interactive Secret Santa organizer",
+  description: "A fun and interactive Secret Santa organizer for groups and families",
+  keywords: ["Secret Santa", "gift exchange", "Christmas", "holiday", "organizer"],
+  authors: [{ name: "Secret Santa-inator" }],
+  icons: {
+    icon: [
+      { url: "/icon-16.svg", sizes: "16x16", type: "image/svg+xml" },
+      { url: "/icon.svg", sizes: "32x32", type: "image/svg+xml" },
+    ],
+    apple: { url: "/apple-icon.svg", sizes: "180x180", type: "image/svg+xml" },
+  },
+  manifest: "/manifest.json",
+  themeColor: "#DC2626",
+  viewport: "width=device-width, initial-scale=1",
 };
 
 export default function RootLayout({

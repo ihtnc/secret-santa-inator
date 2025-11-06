@@ -1,0 +1,19 @@
+<svg width="180" height="180" viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg">
+  <!-- Gift box base -->
+  <rect x="30" y="70" width="120" height="90" rx="8" fill="#059669"/>
+
+  <!-- Gift ribbon horizontal -->
+  <rect x="30" y="105" width="120" height="15" fill="#FFFFFF"/>
+
+  <!-- Gift ribbon vertical -->
+  <rect x="82" y="70" width="16" height="90" fill="#FFFFFF"/>
+
+  <!-- Santa hat on top of gift -->
+  <path d="M50 70 C50 45, 65 25, 90 25 C115 25, 130 45, 130 70 L130 75 L50 75 Z" fill="#DC2626"/>
+
+  <!-- Hat brim -->
+  <ellipse cx="90" cy="75" rx="40" ry="8" fill="#FFFFFF"/>
+
+  <!-- Hat pom-pom -->
+  <circle cx="130" cy="35" r="12" fill="#FFFFFF"/>
+</svg>
