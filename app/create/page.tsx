@@ -6,6 +6,7 @@ import { Card, CardSection } from "@/app/components/Card";
 import { PageHeader } from "@/app/components/PageHeader";
 import { BackToHome } from "@/app/components/BackToHome";
 import { AlertMessage } from "@/app/components/AlertMessage";
+import PasswordInput from "@/app/components/PasswordInput";
 
 export default function CreateGroupPage() {
   // Get creator code from localStorage
@@ -146,8 +147,7 @@ export default function CreateGroupPage() {
                   <label htmlFor="password" className="block text-sm font-medium text-label mb-1">
                     Group Password (Optional)
                   </label>
-                  <input
-                    type="password"
+                  <PasswordInput
                     id="password"
                     name="password"
                     className="input-primary w-full px-3 py-2 rounded-md text-primary placeholder:text-muted"

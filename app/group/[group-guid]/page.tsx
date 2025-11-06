@@ -108,6 +108,13 @@ export default function GroupPage() {
         setGroupInfo(groupInfoData);
         setMembers(membersData);
 
+        // Check if current user is still in the group
+        if (userInfoData && !membersData.some((member: Member) => member.name === userInfoData.name)) {
+          console.log('Current user is not in the members list, redirecting to join page');
+          router.push(`/join/${groupGuid}`);
+          return;
+        }
+
         // If group is frozen, get the user's Secret Santa assignment
         if (groupInfoData?.is_frozen) {
           const secretSantaData = await getMySecretSanta(groupGuid, memberCode);
@@ -144,7 +151,17 @@ export default function GroupPage() {
         const { name } = payload.payload;
         if (name && typeof name === 'string') {
           // Update members list (remove the member who left)
-          setMembers(prevMembers => prevMembers.filter(member => member.name !== name));
+          setMembers(prevMembers => {
+            const updatedMembers = prevMembers.filter(member => member.name !== name);
+            
+            // Check if the current user was kicked/left
+            if (userInfoRef.current && name === userInfoRef.current.name) {
+              console.log('Current user was removed from group, redirecting to join page');
+              router.push(`/join/${groupGuid}`);
+            }
+            
+            return updatedMembers;
+          });
         }
       })
       .on('broadcast', { event: 'group_locked' }, (payload) => {
@@ -340,7 +357,7 @@ export default function GroupPage() {
           <div className="space-y-2 text-sm text-secondary">
             <div className="flex justify-between">
               <span>Group Code:</span>
-              <span className="font-medium">{groupGuid}</span>
+              <span className="font-medium font-mono">{groupGuid}</span>
             </div>
             <div className="flex justify-between">
               <span>Group Name:</span>

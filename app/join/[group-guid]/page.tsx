@@ -11,6 +11,7 @@ import { BackToHome } from "@/app/components/BackToHome";
 import { WarningMessage, ErrorMessage, AlertMessage } from "@/app/components/AlertMessage";
 import { Loading } from "@/app/components/Loading";
 import CollapsibleSection from "@/app/components/CollapsibleSection";
+import PasswordInput from "@/app/components/PasswordInput";
 import supabase from "@/utilities/supabase/browser";
 
 interface GroupInfo {
@@ -280,7 +281,7 @@ export default function JoinGroupPage() {
               <div className="space-y-2 text-sm text-secondary">
                 <div className="flex justify-between">
                   <span>Group Code:</span>
-                  <span className="font-medium">{groupGuid}</span>
+                  <span className="font-medium font-mono">{groupGuid}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Group Name:</span>
@@ -403,8 +404,7 @@ export default function JoinGroupPage() {
                       <label htmlFor="password" className="block text-sm font-medium text-label mb-1">
                         Group Password *
                       </label>
-                      <input
-                        type="password"
+                      <PasswordInput
                         id="password"
                         name="password"
                         required

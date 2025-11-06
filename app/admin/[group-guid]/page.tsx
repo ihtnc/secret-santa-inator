@@ -13,6 +13,7 @@ import { PageHeader } from "@/app/components/PageHeader";
 import { BackToHome } from "@/app/components/BackToHome";
 import { WarningMessage, ErrorMessage, InfoMessage, AlertMessage } from "@/app/components/AlertMessage";
 import { Loading } from "@/app/components/Loading";
+import PasswordInput from "@/app/components/PasswordInput";
 import supabase from "@/utilities/supabase/browser";
 
 interface GroupDetails {
@@ -701,8 +702,7 @@ export default function AdminPage() {
                   <label htmlFor="password" className="block text-sm font-medium text-label mb-1">
                     Group Password
                   </label>
-                  <input
-                    type="password"
+                  <PasswordInput
                     id="password"
                     name="password"
                     defaultValue={groupDetails.password || ''}
