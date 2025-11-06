@@ -6,7 +6,7 @@ import { getUserInfo, getMySecretSanta, getGroupMembers, getGroupInfo, leaveGrou
 import LiveIndicator from "@/app/components/LiveIndicator";
 import CollapsibleSection from "@/app/components/CollapsibleSection";
 import MemberListItem from "@/app/components/MemberListItem";
-import { RoleBadge } from "@/app/components/Badge";
+import { RoleBadge, StatusBadge } from "@/app/components/Badge";
 import { Card } from "@/app/components/Card";
 import { PageHeader } from "@/app/components/PageHeader";
 import { BackToHome } from "@/app/components/BackToHome";
@@ -20,6 +20,7 @@ interface UserInfo {
 }
 
 interface GroupInfo {
+  name: string;
   password: string | null;
   capacity: number;
   description: string | null;
@@ -47,7 +48,8 @@ export default function GroupPage() {
   const [groupInfo, setGroupInfo] = useState<GroupInfo | null>(null);
   const [members, setMembers] = useState<Member[]>([]);
   const [secretSanta, setSecretSanta] = useState<string | null>(null);
-  const [isMemberListExpanded, setIsMemberListExpanded] = useState(false);
+  const [isMemberListExpanded, setIsMemberListExpanded] = useState(true);
+  const [isGroupDetailsExpanded, setIsGroupDetailsExpanded] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isLeaving, setIsLeaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -92,7 +94,7 @@ export default function GroupPage() {
 
         // Fetch group info and members in parallel
         const [groupInfoData, membersData] = await Promise.all([
-          getGroupInfo(groupGuid),
+          getGroupInfo(groupGuid, memberCode),
           getGroupMembers(groupGuid, memberCode)
         ]);
 
@@ -149,26 +151,26 @@ export default function GroupPage() {
         console.log('Group locked:', payload);
         showSuccessMessage('🔒 Secret Santa assignments have been made! The group is now locked.');
         // Refresh group info and get Secret Santa assignment
-        getGroupInfo(groupGuid).then(setGroupInfo);
+        getGroupInfo(groupGuid, memberCode).then(setGroupInfo);
         getMySecretSanta(groupGuid, memberCode).then(setSecretSanta);
       })
       .on('broadcast', { event: 'group_unlocked' }, (payload) => {
         console.log('Group unlocked:', payload);
         showSuccessMessage('🔓 The group has been unlocked and is now active again.');
         // Refresh group info
-        getGroupInfo(groupGuid).then(setGroupInfo);
+        getGroupInfo(groupGuid, memberCode).then(setGroupInfo);
       })
       .on('broadcast', { event: 'group_opened' }, (payload) => {
         console.log('Group opened:', payload);
         showSuccessMessage('🟢 The group has been opened - new members can now join!');
         // Refresh group info
-        getGroupInfo(groupGuid).then(setGroupInfo);
+        getGroupInfo(groupGuid, memberCode).then(setGroupInfo);
       })
       .on('broadcast', { event: 'group_closed' }, (payload) => {
         console.log('Group closed:', payload);
         showSuccessMessage('🔴 The group has been closed - no new members can join.');
         // Refresh group info
-        getGroupInfo(groupGuid).then(setGroupInfo);
+        getGroupInfo(groupGuid, memberCode).then(setGroupInfo);
       })
       .subscribe((status) => {
         if (status === 'SUBSCRIBED') {
@@ -226,7 +228,8 @@ export default function GroupPage() {
               title="Secret Santa Group"
               subtitle={
                 <>
-                  <span className="block text-sm text-muted">Group Code: {groupGuid}</span>
+                  <span className="block text-lg text-secondary">Group</span>
+                  <span className="block text-sm text-muted mt-1">No description</span>
                 </>
               }
               emoji="🎁"
@@ -248,14 +251,7 @@ export default function GroupPage() {
         <div className="max-w-md mx-auto space-y-6">
           <PageHeader
             title="Secret Santa Group"
-            subtitle={
-              <>
-                <span className="block text-sm text-muted">Group Code: {groupGuid}</span>
-                {groupInfo?.description && (
-                  <span className="block text-lg text-secondary mt-1">{groupInfo.description}</span>
-                )}
-              </>
-            }
+            subtitle="View your Secret Santa assignment and group members"
             emoji="🎁"
           />
 
@@ -324,12 +320,51 @@ export default function GroupPage() {
           </div>
         </div>
 
+        {/* Group Details Section - Collapsible */}
+        <CollapsibleSection
+          title="Group Details"
+          isExpanded={isGroupDetailsExpanded}
+          onToggle={() => setIsGroupDetailsExpanded(!isGroupDetailsExpanded)}
+          className="rounded-b-none"
+          rightContent={
+            <div className="flex pt-0.5 space-x-2">
+              {!groupInfo?.is_frozen && (
+                <StatusBadge status={groupInfo?.is_open ? 'open' : 'closed'} />
+              )}
+              {groupInfo?.is_frozen && (
+                <StatusBadge status="locked" />
+              )}
+            </div>
+          }
+        >
+          <div className="space-y-2 text-sm text-secondary">
+            <div className="flex justify-between">
+              <span>Group Code:</span>
+              <span className="font-medium">{groupGuid}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Group Name:</span>
+              <span className="font-medium">{groupInfo?.name || 'Loading...'}</span>
+            </div>
+            {groupInfo?.description && (
+              <div className="flex justify-between">
+                <span>Description:</span>
+                <span className="font-medium text-right max-w-xs">{groupInfo.description}</span>
+              </div>
+            )}
+            <div className="flex justify-between">
+              <span>Admin Name:</span>
+              <span className="font-medium">{groupInfo?.creator_name}</span>
+            </div>
+          </div>
+        </CollapsibleSection>
+
         {/* Members List Section - Collapsible */}
         <CollapsibleSection
-          title={`Group Members (${members.length} / ${groupInfo?.capacity})`}
+          title={`Group Members (${members.length})`}
           isExpanded={isMemberListExpanded}
           onToggle={() => setIsMemberListExpanded(!isMemberListExpanded)}
-          className="mb-6"
+          className="rounded-t-none -mt-6 border-t border-accent [&>div>button]:rounded-t-none"
         >
           {members.length > 0 ? (
             <div className="space-y-2">
@@ -360,6 +395,7 @@ export default function GroupPage() {
           <Card
             title="Manage Group"
             description="You are the group admin. You can create Secret Santa assignments, manage group settings, manage members, and more."
+            className="mt-6"
           >
             <a
               href={`/admin/${groupGuid}`}
@@ -378,6 +414,7 @@ export default function GroupPage() {
           ) : (
             "If you leave this group, you won't be able to rejoin if it's password protected or closed."
           )}
+          className="mt-6"
         >
           <form action={handleLeaveGroup}>
             <input type="hidden" name="groupGuid" value={groupGuid} />

@@ -57,7 +57,8 @@ export async function getGroupDetails(groupGuid: string, creatorCode: string): P
     // Get group details using the updated get_group function
     const { data: groupDetails, error: detailsError } = await supabase
       .rpc('get_group', {
-        p_group_guid: groupGuid
+        p_group_guid: groupGuid,
+        p_member_code: creatorCode
       })
       .single();
 

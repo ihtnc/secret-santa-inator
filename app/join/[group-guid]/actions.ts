@@ -9,28 +9,6 @@ type ActionResult = {
   error?: string;
 };
 
-export async function checkMembership(groupGuid: string, memberCode: string) {
-  const supabase = await getClient();
-
-  try {
-    // Check if user is already a member of this group
-    const { data: isMember, error } = await supabase.rpc("is_member", {
-      p_group_guid: groupGuid,
-      p_member_code: memberCode,
-    });
-
-    if (error) {
-      console.error("Error checking membership:", error);
-      return false;
-    }
-
-    return isMember === true;
-  } catch (error) {
-    console.error("Failed to check membership:", error);
-    return false;
-  }
-}
-
 export async function joinGroup(formData: FormData): Promise<ActionResult | never> {
   const supabase = await getClient();
 
@@ -79,13 +57,14 @@ export async function joinGroup(formData: FormData): Promise<ActionResult | neve
   redirect(`/group/${groupGuid}`);
 }
 
-export async function getGroupInfo(groupGuid: string) {
+export async function getGroupInfo(groupGuid: string, memberCode: string = '') {
   const supabase = await getClient();
 
   try {
-    // Get group information to determine if code names are used
+    // Get group information with membership status
     const { data: groupInfo, error } = await supabase.rpc("get_group", {
       p_group_guid: groupGuid,
+      p_member_code: memberCode || null,
     });
 
     if (error) {

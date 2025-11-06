@@ -80,13 +80,14 @@ export async function getGroupMembers(groupGuid: string, memberCode: string) {
   }
 }
 
-export async function getGroupInfo(groupGuid: string) {
+export async function getGroupInfo(groupGuid: string, memberCode: string = '') {
   const supabase = await getClient();
 
   try {
     // Get group information
     const { data: groupInfo, error } = await supabase.rpc("get_group", {
       p_group_guid: groupGuid,
+      p_member_code: memberCode || null,
     });
 
     if (error) {

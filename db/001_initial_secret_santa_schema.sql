@@ -335,7 +335,8 @@ $$;
 
 -- Function to get group details
 CREATE OR REPLACE FUNCTION get_group(
-    p_group_guid TEXT
+    p_group_guid TEXT,
+    p_member_code TEXT DEFAULT NULL
 )
 RETURNS TABLE(
     name TEXT,
@@ -349,7 +350,10 @@ RETURNS TABLE(
     use_custom_code_names BOOLEAN,
     creator_name TEXT,
     is_frozen BOOLEAN,
-    member_count INTEGER
+    member_count INTEGER,
+    is_admin BOOLEAN,
+    is_member BOOLEAN,
+    has_password BOOLEAN
 )
 LANGUAGE plpgsql
 SECURITY DEFINER
@@ -357,6 +361,8 @@ SET search_path = ''
 AS $$
 DECLARE
     group_id_var INTEGER;
+    is_creator_check BOOLEAN := FALSE;
+    is_member_check BOOLEAN := FALSE;
 BEGIN
     -- Check if group exists and get its ID
     SELECT id INTO group_id_var
@@ -368,11 +374,26 @@ BEGIN
         RAISE EXCEPTION 'Group not found';
     END IF;
 
-    -- Return group details
+    -- Check if the member_code matches the creator_code and if user is a member
+    IF p_member_code IS NOT NULL THEN
+        SELECT (creator_code = p_member_code) INTO is_creator_check
+        FROM public.groups
+        WHERE group_guid = p_group_guid;
+
+        SELECT EXISTS(
+            SELECT 1 FROM public.members 
+            WHERE group_id = group_id_var AND code = p_member_code
+        ) INTO is_member_check;
+    END IF;
+
+    -- Return group details with conditional password access and membership info
     RETURN QUERY
     SELECT
         g.name,
-        g.password,
+        CASE 
+            WHEN is_creator_check THEN g.password
+            ELSE NULL
+        END AS password,
         g.capacity,
         g.description,
         g.is_open,
@@ -382,7 +403,10 @@ BEGIN
         g.use_custom_code_names,
         g.creator_name,
         g.is_frozen,
-        COALESCE(member_count_result.count, 0)::INTEGER AS member_count
+        COALESCE(member_count_result.count, 0)::INTEGER AS member_count,
+        is_creator_check AS is_admin,
+        is_member_check AS is_member,
+        (g.password IS NOT NULL) AS has_password
     FROM public.groups g
     LEFT JOIN (
         SELECT
@@ -1419,7 +1443,7 @@ GRANT USAGE ON SCHEMA app TO anon, authenticated;
 
 -- Grant EXECUTE permissions ONLY on the specific functions that the frontend calls
 GRANT EXECUTE ON FUNCTION public.create_group(TEXT, INTEGER, BOOLEAN, BOOLEAN, BOOLEAN, TEXT, TEXT, TEXT, TEXT, TIMESTAMP WITH TIME ZONE, TEXT[]) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION public.get_group(TEXT) TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.get_group(TEXT, TEXT) TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.get_my_groups(TEXT) TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.join_group(TEXT, TEXT, TEXT, TEXT, TEXT) TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.leave_group(TEXT, TEXT) TO anon, authenticated;
