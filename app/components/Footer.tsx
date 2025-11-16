@@ -4,16 +4,15 @@ import { useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import Link from 'next/link';
 import DarkModeToggle from './DarkModeToggle';
+import { getCreatorCode, setCreatorCode } from '@/utilities/localStorage';
 
 export default function Footer() {
   // Initialize localStorage on component mount
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const existingCode = localStorage.getItem('creatorCode');
-      if (!existingCode) {
-        const newCreatorCode = uuidv4();
-        localStorage.setItem('creatorCode', newCreatorCode);
-      }
+    const existingCode = getCreatorCode();
+    if (!existingCode) {
+      const newCreatorCode = uuidv4();
+      setCreatorCode(newCreatorCode);
     }
   }, []);
 

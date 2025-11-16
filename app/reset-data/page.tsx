@@ -7,11 +7,14 @@ import { useRouter } from 'next/navigation';
 import { PageHeader } from '@/app/components/PageHeader';
 import { BackToHome } from '@/app/components/BackToHome';
 import { WarningMessage } from '@/app/components/AlertMessage';
+import { getCreatorCode, setCreatorCode } from '@/utilities/localStorage';
 
 export default function ResetDataPage() {
   const router = useRouter();
   const [confirmText, setConfirmText] = useState('');
   const [isResetting, setIsResetting] = useState(false);
+  // Get creator code from localStorage
+  const currentCreatorCode = getCreatorCode();
 
   const handleResetData = () => {
     if (confirmText.toLowerCase() !== 'reset') {
@@ -23,7 +26,7 @@ export default function ResetDataPage() {
     try {
       // Generate new creator code
       const newCreatorCode = uuidv4();
-      localStorage.setItem('creatorCode', newCreatorCode);
+      setCreatorCode(newCreatorCode);
 
       // Show success and redirect after a brief delay
       setTimeout(() => {
@@ -58,6 +61,7 @@ export default function ResetDataPage() {
       <div className="flex-1 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         <PageHeader
           title="Reset Data"
+          subtitle={`Current ID: ${currentCreatorCode}`}
           emoji="⚠️"
         />
 

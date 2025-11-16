@@ -11,6 +11,7 @@ import { PageHeader } from "@/app/components/PageHeader";
 import { BackToHome } from "@/app/components/BackToHome";
 import { ErrorMessage } from "@/app/components/AlertMessage";
 import { Loading } from "@/app/components/Loading";
+import { getCreatorCode } from "@/utilities/localStorage";
 
 interface GroupInfo {
   group_guid: string;
@@ -30,7 +31,7 @@ interface GroupInfo {
 
 export default function MyGroupsPage() {
   // Get member code from localStorage
-  const memberCode = typeof window !== 'undefined' ? localStorage.getItem('creatorCode') || '' : '';
+  const memberCode = getCreatorCode();
 
   const [groups, setGroups] = useState<GroupInfo[]>([]);
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());

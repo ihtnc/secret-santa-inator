@@ -15,6 +15,7 @@ import { WarningMessage, ErrorMessage, InfoMessage, AlertMessage } from "@/app/c
 import { Loading } from "@/app/components/Loading";
 import PasswordInput from "@/app/components/PasswordInput";
 import supabase from "@/utilities/supabase/browser";
+import { getCreatorCode } from "@/utilities/localStorage";
 
 interface GroupDetails {
   group_guid: string;
@@ -85,7 +86,7 @@ export default function AdminPage() {
     async function fetchGroupDetails() {
       try {
         setLoading(true);
-        const creatorCode = localStorage.getItem('creatorCode');
+        const creatorCode = getCreatorCode();
         if (!creatorCode) {
           setError('Admin code not found. Please return to the home page.');
           return;
@@ -239,7 +240,7 @@ export default function AdminPage() {
 
     try {
       setSaving(true);
-      const creatorCode = localStorage.getItem('creatorCode');
+      const creatorCode = getCreatorCode();
       if (!creatorCode) {
         showErrorMessage('Admin code not found.');
         return;
@@ -300,7 +301,7 @@ export default function AdminPage() {
 
     try {
       setAssigning(true);
-      const creatorCode = localStorage.getItem('creatorCode');
+      const creatorCode = getCreatorCode();
       if (!creatorCode) {
         showErrorMessage('Admin code not found.');
         return;
@@ -333,7 +334,7 @@ export default function AdminPage() {
 
     try {
       setUnlocking(true);
-      const creatorCode = localStorage.getItem('creatorCode');
+      const creatorCode = getCreatorCode();
       if (!creatorCode) {
         showErrorMessage('Admin code not found.');
         return;
@@ -366,7 +367,7 @@ export default function AdminPage() {
 
     try {
       setJoining(true);
-      const creatorCode = localStorage.getItem('creatorCode');
+      const creatorCode = getCreatorCode();
       if (!creatorCode) {
         showErrorMessage('Admin code not found.');
         return;
@@ -404,7 +405,7 @@ export default function AdminPage() {
     if (!groupDetails) return;
 
     try {
-      const creatorCode = localStorage.getItem('creatorCode');
+      const creatorCode = getCreatorCode();
       if (!creatorCode) {
         showErrorMessage('Admin code not found.');
         return;
@@ -458,7 +459,7 @@ export default function AdminPage() {
 
     try {
       setDeleting(true);
-      const creatorCode = localStorage.getItem('creatorCode');
+      const creatorCode = getCreatorCode();
       if (!creatorCode) {
         showErrorMessage('Admin code not found.');
         return;

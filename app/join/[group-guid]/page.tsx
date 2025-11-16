@@ -13,6 +13,7 @@ import { Loading } from "@/app/components/Loading";
 import CollapsibleSection from "@/app/components/CollapsibleSection";
 import PasswordInput from "@/app/components/PasswordInput";
 import supabase from "@/utilities/supabase/browser";
+import { getCreatorCode } from "@/utilities/localStorage";
 
 interface GroupInfo {
   name: string;
@@ -37,7 +38,7 @@ export default function JoinGroupPage() {
   const groupGuid = params['group-guid'] as string;
 
   // Get creator code from localStorage
-  const creatorCode = typeof window !== 'undefined' ? localStorage.getItem('creatorCode') || '' : '';
+  const creatorCode = getCreatorCode();
 
   const [groupInfo, setGroupInfo] = useState<GroupInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);

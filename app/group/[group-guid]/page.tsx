@@ -13,6 +13,7 @@ import { BackToHome } from "@/app/components/BackToHome";
 import { WarningMessage, ErrorMessage, AlertMessage } from "@/app/components/AlertMessage";
 import { Loading } from "@/app/components/Loading";
 import supabase from "@/utilities/supabase/browser";
+import { getCreatorCode } from "@/utilities/localStorage";
 
 interface UserInfo {
   name: string;
@@ -42,7 +43,7 @@ export default function GroupPage() {
   const groupGuid = params['group-guid'] as string;
 
   // Get member code from localStorage
-  const memberCode = typeof window !== 'undefined' ? localStorage.getItem('creatorCode') || '' : '';
+  const memberCode = getCreatorCode();
 
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [groupInfo, setGroupInfo] = useState<GroupInfo | null>(null);

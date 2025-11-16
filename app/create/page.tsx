@@ -7,10 +7,11 @@ import { PageHeader } from "@/app/components/PageHeader";
 import { BackToHome } from "@/app/components/BackToHome";
 import { AlertMessage } from "@/app/components/AlertMessage";
 import PasswordInput from "@/app/components/PasswordInput";
+import { getCreatorCode } from "@/utilities/localStorage";
 
 export default function CreateGroupPage() {
   // Get creator code from localStorage
-  const creatorCode = typeof window !== 'undefined' ? localStorage.getItem('creatorCode') || '' : '';
+  const creatorCode = getCreatorCode();
 
   // State for conditional rendering
   const [useCodeNames, setUseCodeNames] = useState(false);
