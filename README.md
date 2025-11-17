@@ -65,7 +65,7 @@ A modern, real-time web application for organizing Secret Santa gift exchanges w
    ```env
    NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your_supabase_anon_public_key
-   NEXT_PUBLIC_SUPABASE_KEY=your_supabase_secret_key
+   NEXT_SUPABASE_SECRET_KEY=your_supabase_secret_key
    ```
 
    You can find these values in your Supabase project settings:

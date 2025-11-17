@@ -5,7 +5,7 @@ import { cookies } from "next/headers";
 
 export async function getClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_KEY || "";
+  const supabaseKey = process.env.NEXT_SUPABASE_SECRET_KEY || "";
   const cookieStore = await cookies();
   const supabase = createServerClient(supabaseUrl, supabaseKey, {
     cookies: {
