@@ -255,7 +255,7 @@ export default function JoinGroupPage() {
             </WarningMessage>
           )}
 
-          {!groupInfo?.is_open && (
+          {!groupInfo?.is_open && !groupInfo?.is_frozen && (
             <ErrorMessage>
               🔴 <strong>Group Closed:</strong> This group is no longer accepting new members.
             </ErrorMessage>
