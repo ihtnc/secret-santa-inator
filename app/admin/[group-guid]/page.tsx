@@ -1085,45 +1085,70 @@ export default function AdminPage() {
           </Card>
         )}
 
-        {/* Assign Santa Section - Non-collapsible */}
-        <Card
-          title="Assign Secret Santa"
-          description="Ready to create the Secret Santa assignments? This will randomly pair all members and freeze the group."
-          className="mt-6"
-        >
-          {groupDetails.is_frozen ? (
-            <div>
-              <WarningMessage className="mb-4">
-                <strong>🔒 Group Locked:</strong> Secret Santa assignments have already been made.
+        {/* Assign Santa Section - Only show when not frozen */}
+        {groupDetails && !groupDetails.is_frozen && (
+          <Card
+            title="Assign Secret Santa"
+            description="Ready to create the Secret Santa assignments? This will randomly pair all members and freeze the group."
+            className="mt-6"
+          >
+            {groupMembers.length < 2 ? (
+              <WarningMessage>
+                <strong>⚠️ Minimum Members Required:</strong> You need at least 2 members to assign Secret Santa pairs.
               </WarningMessage>
-              <button
-                onClick={handleUnlockGroup}
-                disabled={unlocking}
-                className="w-full py-3 px-6 btn-primary text-sm font-medium rounded-md transition-colors duration-200 shadow-sm cursor-pointer"
-              >
-                {unlocking ? 'Resetting...' : 'Reset Secret Santa'}
-              </button>
-            </div>
-          ) : groupMembers.length < 2 ? (
-            <WarningMessage>
-              <strong>⚠️ Minimum Members Required:</strong> You need at least 2 members to assign Secret Santa pairs.
+            ) : (
+              <div>
+                <InfoMessage className="mb-4">
+                  <strong>🎯 Ready to assign!</strong> You have {groupMembers.length} members.
+                  Once assigned, the group will be frozen and no more changes can be made.
+                </InfoMessage>
+                <button
+                  onClick={handleAssignSanta}
+                  disabled={assigning}
+                  className="btn-success w-full py-3 px-6 text-sm font-medium rounded-md focus-btn-success transition-colors duration-200 cursor-pointer"
+                >
+                  {assigning ? 'Assigning...' : '🎁 Assign Secret Santa'}
+                </button>
+              </div>
+            )}
+          </Card>
+        )}
+
+        {/* View Assignments Section - Only show if group is frozen */}
+        {groupDetails && groupDetails.is_frozen && (
+          <Card
+            title="View Secret Santa Assignments"
+            description="See how all the Secret Santa assignments are connected with a visual network diagram or simple table."
+            className="mt-6"
+          >
+            <Link
+              href={`/assignments/${groupGuid}`}
+              className="inline-block w-full py-3 px-6 btn-primary text-sm font-medium rounded-md transition-colors duration-200 shadow-sm text-center cursor-pointer"
+            >
+              View Assignments
+            </Link>
+          </Card>
+        )}
+
+        {/* Reset Secret Santa Section - Only show if group is frozen */}
+        {groupDetails && groupDetails.is_frozen && (
+          <Card
+            title="Reset Secret Santa"
+            description="Reset all Secret Santa assignments and unlock the group for changes. This will allow new members to join and settings to be modified."
+            className="mt-6"
+          >
+            <WarningMessage className="mb-4">
+              <strong>⚠️ Warning:</strong> This will permanently delete all existing Secret Santa assignments and unlock the group.
             </WarningMessage>
-          ) : (
-            <div>
-              <InfoMessage className="mb-4">
-                <strong>🎯 Ready to assign!</strong> You have {groupMembers.length} members.
-                Once assigned, the group will be frozen and no more changes can be made.
-              </InfoMessage>
-              <button
-                onClick={handleAssignSanta}
-                disabled={assigning}
-                className="btn-success w-full py-3 px-6 text-sm font-medium rounded-md focus-btn-success transition-colors duration-200 cursor-pointer"
-              >
-                {assigning ? 'Assigning...' : '🎁 Assign Secret Santa'}
-              </button>
-            </div>
-          )}
-        </Card>
+            <button
+              onClick={handleUnlockGroup}
+              disabled={unlocking}
+              className="w-full py-3 px-6 btn-primary text-sm font-medium rounded-md transition-colors duration-200 shadow-sm cursor-pointer"
+            >
+              {unlocking ? 'Resetting...' : 'Reset Secret Santa'}
+            </button>
+          </Card>
+        )}
 
         {/* Delete Group Section - Only show if no members */}
         {groupDetails && groupMembers.length === 0 && (

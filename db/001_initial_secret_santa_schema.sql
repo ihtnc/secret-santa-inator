@@ -381,7 +381,7 @@ BEGIN
         WHERE group_guid = p_group_guid;
 
         SELECT EXISTS(
-            SELECT 1 FROM public.members 
+            SELECT 1 FROM public.members
             WHERE group_id = group_id_var AND code = p_member_code
         ) INTO is_member_check;
     END IF;
@@ -390,7 +390,7 @@ BEGIN
     RETURN QUERY
     SELECT
         g.name,
-        CASE 
+        CASE
             WHEN is_creator_check THEN g.password
             ELSE NULL
         END AS password,
@@ -1177,6 +1177,51 @@ BEGIN
 END;
 $$;
 
+-- Function to get all Secret Santa relationships in a group (admin only)
+CREATE OR REPLACE FUNCTION get_all_secret_santa_relationships(
+    p_group_guid TEXT,
+    p_creator_code TEXT
+)
+RETURNS TABLE(
+    santa_name TEXT,
+    santa_code_name TEXT,
+    receiver_name TEXT,
+    receiver_code_name TEXT
+)
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+DECLARE
+    group_id_var INTEGER;
+BEGIN
+    -- Validate that the caller is the group creator and group exists and is frozen
+    SELECT g.id INTO group_id_var
+    FROM public.groups g
+    WHERE g.group_guid = p_group_guid
+      AND g.creator_code = p_creator_code
+      AND g.is_frozen = TRUE
+      AND (g.expiry_date IS NULL OR g.expiry_date > NOW());
+
+    IF group_id_var IS NULL THEN
+        RAISE EXCEPTION 'Group not found, invalid creator credentials, group is not frozen, or group has expired';
+    END IF;
+
+    -- Return all Secret Santa relationships for this group
+    RETURN QUERY
+    SELECT
+        santa_member.name AS santa_name,
+        santa_member.code_name AS santa_code_name,
+        receiver_member.name AS receiver_name,
+        receiver_member.code_name AS receiver_code_name
+    FROM public.santas s
+    JOIN public.members santa_member ON santa_member.id = s.santa_id
+    JOIN public.members receiver_member ON receiver_member.id = s.member_id
+    WHERE s.group_id = group_id_var
+    ORDER BY santa_member.name;
+END;
+$$;
+
 -- Function to purge expired data
 CREATE OR REPLACE FUNCTION app.purge_data(
     delete_all BOOLEAN DEFAULT FALSE
@@ -1457,6 +1502,7 @@ GRANT EXECUTE ON FUNCTION public.is_creator(TEXT, TEXT) TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.is_member(TEXT, TEXT) TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.get_member(TEXT, TEXT) TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.get_custom_code_names(TEXT, TEXT) TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.get_all_secret_santa_relationships(TEXT, TEXT) TO anon, authenticated;
 
 -- Grant minimal permissions for realtime subscriptions
 -- Only SELECT on outbox table for realtime to read events
