@@ -20,6 +20,12 @@
   --color-info: #2563eb;         /* blue-600 */
   --color-info-bg: #dbeafe;      /* blue-100 */
   --color-info-border: #93c5fd;  /* blue-300 */
+
+  /* Secret Santa relationship colors */
+  --color-santa-giving: #22c55e;     /* green-500 - recipient/giving to */
+  --color-santa-giving-dark: #16a34a; /* green-600 - darker variant */
+  --color-santa-receiving: #3b82f6;   /* blue-500 - giver/receiving from */
+  --color-santa-receiving-dark: #2563eb; /* blue-600 - darker variant */
 }
 
 /* Dark mode using class-based approach */
@@ -43,6 +49,12 @@
   --color-info: #60a5fa;         /* blue-400 */
   --color-info-bg: #1e3a8a;      /* blue-900/30 */
   --color-info-border: #1d4ed8;  /* blue-700 */
+
+  /* Secret Santa relationship colors for dark mode */
+  --color-santa-giving: #22c55e;     /* green-500 - keep same for visibility */
+  --color-santa-giving-dark: #16a34a; /* green-600 - darker variant */
+  --color-santa-receiving: #3b82f6;   /* blue-500 - keep same for visibility */
+  --color-santa-receiving-dark: #2563eb; /* blue-600 - darker variant */
 }
 
 /* Essential component overrides for gray colors and base elements */
