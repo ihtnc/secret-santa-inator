@@ -207,8 +207,8 @@ export function NetworkVisualization({ assignments }: NetworkVisualizationProps)
             <li>Each circle represents a participant in the Secret Santa exchange</li>
             <li>Arrows show who gives gifts to whom - follow the direction of the arrow</li>
             <li>Hover over or click on a person to highlight their connections and see details</li>
-            <li>🎁 <strong>Green arrows</strong> show who they&apos;re giving a gift to</li>
-            <li>🎀 <strong>Blue arrows</strong> show who&apos;s giving a gift to them</li>
+            <li>🎁 <strong><span className="text-green-500">Green</span> arrows</strong> show who they&apos;re giving a gift to</li>
+            <li>🎅 <strong><span className="text-blue-500">Blue</span> arrows</strong> show who&apos;s giving a gift to them</li>
           </ul>
         </div>
 
@@ -280,11 +280,6 @@ export function NetworkVisualization({ assignments }: NetworkVisualizationProps)
             {/* Draw nodes first (lower z-index) */}
             {nodes.map((node) => {
               const isHighlighted = highlightedNode === node.id;
-              const isConnected = connections && (
-                connections.outgoing.some((e) => e.to === node.id) ||
-                connections.incoming.some((e) => e.from === node.id) ||
-                node.id === highlightedNode
-              );
               const isInChain = chainMembers && chainMembers.has(node.id);
 
               // Determine node color based on relationship to highlighted node
@@ -412,12 +407,6 @@ export function NetworkVisualization({ assignments }: NetworkVisualizationProps)
 
             {/* Draw text elements on top (highest z-index) */}
             {nodes.map((node) => {
-              const isHighlighted = highlightedNode === node.id;
-              const isConnected = connections && (
-                connections.outgoing.some((e) => e.to === node.id) ||
-                connections.incoming.some((e) => e.from === node.id) ||
-                node.id === highlightedNode
-              );
               const isInChain = chainMembers && chainMembers.has(node.id);
 
               // Determine node color based on relationship to highlighted node
@@ -480,7 +469,7 @@ export function NetworkVisualization({ assignments }: NetworkVisualizationProps)
               </div>
               <div className="flex items-center gap-3">
                 <div className="w-4 h-0.5 bg-blue-500"></div>
-                <span>🎀 Receiving gifts from</span>
+                <span>🎅 Receiving gifts from</span>
               </div>
               <div className="flex items-center gap-3">
                 <div className="w-6 h-6 bg-gray-200 rounded-full border-2 border-gray-400"></div>
@@ -525,7 +514,7 @@ export function NetworkVisualization({ assignments }: NetworkVisualizationProps)
               </div>
             </div>
             <div>
-              <span className="text-blue-600 font-medium">🎀 Receiving from:</span>
+              <span className="text-blue-600 font-medium">🎅 Receiving from:</span>
               <div className="ml-4">
                 {tooltip.incoming.map((edge) => {
                   const fromNode = nodes.find((n) => n.id === edge.from);

@@ -7,7 +7,7 @@ import LiveIndicator from "@/app/components/LiveIndicator";
 import { StatusBadge } from "@/app/components/Badge";
 import { Card } from "@/app/components/Card";
 import { PageHeader } from "@/app/components/PageHeader";
-import { BackToHome } from "@/app/components/BackToHome";
+import { BackToMyGroups } from "@/app/components/BackToHome";
 import { WarningMessage, ErrorMessage, AlertMessage } from "@/app/components/AlertMessage";
 import { Loading } from "@/app/components/Loading";
 import CollapsibleSection from "@/app/components/CollapsibleSection";
@@ -202,7 +202,7 @@ export default function JoinGroupPage() {
               emoji="🎅"
             />
             <ErrorMessage title="Error">{error}</ErrorMessage>
-            <BackToHome />
+            <BackToMyGroups />
           </div>
         </div>
       </div>
@@ -222,7 +222,7 @@ export default function JoinGroupPage() {
             <ErrorMessage title="Group Not Found">
               This group does not exist or the group code is invalid.
             </ErrorMessage>
-            <BackToHome />
+            <BackToMyGroups />
           </div>
         </div>
       </div>
@@ -454,7 +454,7 @@ export default function JoinGroupPage() {
             </form>
           </Card>
 
-          <BackToHome />
+          <BackToMyGroups />
         </div>
       </div>
     </div>

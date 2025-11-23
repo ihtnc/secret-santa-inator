@@ -10,7 +10,7 @@ import MemberListItem from "@/app/components/MemberListItem";
 import { StatusBadge, RoleBadge } from "@/app/components/Badge";
 import { Card } from "@/app/components/Card";
 import { PageHeader } from "@/app/components/PageHeader";
-import { BackToHome } from "@/app/components/BackToHome";
+import { BackToMyGroups } from "@/app/components/BackToHome";
 import { WarningMessage, ErrorMessage, InfoMessage, AlertMessage } from "@/app/components/AlertMessage";
 import { Loading } from "@/app/components/Loading";
 import PasswordInput from "@/app/components/PasswordInput";
@@ -42,7 +42,7 @@ export default function AdminPage() {
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [isGroupDetailsExpanded, setIsGroupDetailsExpanded] = useState(false);
-  const [isMemberListExpanded, setIsMemberListExpanded] = useState(true);
+  const [isMemberListExpanded, setIsMemberListExpanded] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [statusType, setStatusType] = useState<'success' | 'error'>('success');
   const [isRealtimeConnected, setIsRealtimeConnected] = useState(false);
@@ -81,6 +81,9 @@ export default function AdminPage() {
   const [description, setDescription] = useState<string>('');
   const [deleting, setDeleting] = useState(false);
   const [deleteConfirmationText, setDeleteConfirmationText] = useState('');
+  const [isResetExpanded, setIsResetExpanded] = useState(false);
+  const [resetConfirmationText, setResetConfirmationText] = useState('');
+  const [isDeleteExpanded, setIsDeleteExpanded] = useState(false);
 
   useEffect(() => {
     async function fetchGroupDetails() {
@@ -345,6 +348,9 @@ export default function AdminPage() {
         // Show success message
         showSuccessMessage('Group unlocked successfully! Secret Santa assignments have been reset.');
 
+        // Clear the reset confirmation text
+        setResetConfirmationText('');
+
         // Refresh group details to reflect unfrozen state
         const updatedDetails = await getGroupDetails(groupGuid, creatorCode);
         if (updatedDetails) {
@@ -352,6 +358,7 @@ export default function AdminPage() {
         }
       } else {
         showErrorMessage(result.error || 'Failed to unlock group.');
+        setResetConfirmationText('');
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
@@ -503,7 +510,7 @@ export default function AdminPage() {
               emoji="🎅"
             />
             <ErrorMessage title="Error">{error}</ErrorMessage>
-            <BackToHome />
+            <BackToMyGroups />
           </div>
         </div>
       </div>
@@ -523,7 +530,7 @@ export default function AdminPage() {
             <ErrorMessage title="Group Not Found">
               This group does not exist or the provided group code is invalid.
             </ErrorMessage>
-            <BackToHome />
+            <BackToMyGroups />
           </div>
         </div>
       </div>
@@ -1132,31 +1139,52 @@ export default function AdminPage() {
 
         {/* Reset Secret Santa Section - Only show if group is frozen */}
         {groupDetails && groupDetails.is_frozen && (
-          <Card
+          <CollapsibleSection
             title="Reset Secret Santa"
-            description="Reset all Secret Santa assignments and unlock the group for changes. This will allow new members to join and settings to be modified."
+            isExpanded={isResetExpanded}
+            onToggle={() => setIsResetExpanded(!isResetExpanded)}
             className="mt-6"
           >
+            <p className="text-sm text-secondary mb-4">
+              Reset all Secret Santa assignments and unlock the group for changes. This will allow new members to join and settings to be modified.
+            </p>
             <WarningMessage className="mb-4">
               <strong>⚠️ Warning:</strong> This will permanently delete all existing Secret Santa assignments and unlock the group.
             </WarningMessage>
+
+            <p className="text-sm font-medium text-label mb-2">
+              Type <strong>&quot;RESET&quot;</strong> to confirm this action:
+            </p>
+
+            <input
+              type="text"
+              value={resetConfirmationText}
+              onChange={(e) => setResetConfirmationText(e.target.value)}
+              placeholder="RESET"
+              className="input-primary w-full px-3 py-2 rounded-md text-primary placeholder:text-muted mb-4"
+            />
+
             <button
               onClick={handleUnlockGroup}
-              disabled={unlocking}
-              className="w-full py-3 px-6 btn-primary text-sm font-medium rounded-md transition-colors duration-200 shadow-sm cursor-pointer"
+              disabled={unlocking || resetConfirmationText.toUpperCase() !== 'RESET'}
+              className="w-full py-3 px-6 btn-primary text-sm font-medium rounded-md transition-colors duration-200 shadow-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {unlocking ? 'Resetting...' : 'Reset Secret Santa'}
             </button>
-          </Card>
+          </CollapsibleSection>
         )}
 
         {/* Delete Group Section - Only show if no members */}
         {groupDetails && groupMembers.length === 0 && (
-          <Card
+          <CollapsibleSection
             title="Delete Group"
-            description="Only empty groups can be deleted."
+            isExpanded={isDeleteExpanded}
+            onToggle={() => setIsDeleteExpanded(!isDeleteExpanded)}
             className="mt-6"
           >
+            <p className="text-sm text-secondary mb-4">
+              Only empty groups can be deleted.
+            </p>
             <ErrorMessage className="mb-4">
               <strong>⚠️ Warning:</strong> This will permanently delete the group and all its settings. This action cannot be undone.
             </ErrorMessage>
@@ -1180,10 +1208,10 @@ export default function AdminPage() {
             >
               {deleting ? 'Deleting...' : 'Delete Group'}
             </button>
-          </Card>
+          </CollapsibleSection>
         )}
 
-        <BackToHome />
+        <BackToMyGroups />
         </div>
       </div>
     </div>

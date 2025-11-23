@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import {
   getAllSecretSantaAssignments,
   validateAdminAccess,
@@ -10,6 +10,7 @@ import {
 import { Loading } from "@/app/components/Loading";
 import { PageHeader } from "@/app/components/PageHeader";
 import { ErrorMessage, WarningMessage } from "@/app/components/AlertMessage";
+import { BackToManageGroup } from "@/app/components/BackToHome";
 import { getCreatorCode } from "@/utilities/localStorage";
 
 // Import the components
@@ -18,7 +19,6 @@ import { AssignmentsTable } from "./AssignmentsTable";
 
 export default function AssignmentsPage() {
   const params = useParams();
-  const router = useRouter();
   const groupGuid = params["group-guid"] as string;
 
   // Get creator code from localStorage
@@ -80,14 +80,7 @@ export default function AssignmentsPage() {
             emoji="🎁"
           />
           <ErrorMessage title="Error">{error}</ErrorMessage>
-          <div className="flex justify-center">
-            <button
-              onClick={() => router.push(`/admin/${groupGuid}`)}
-              className="px-6 py-3 btn-primary text-sm font-medium rounded-md transition-colors duration-200 shadow-sm cursor-pointer"
-            >
-              Back to Admin Panel
-            </button>
-          </div>
+          <BackToManageGroup groupGuid={groupGuid} />
         </div>
       </div>
     );
@@ -106,14 +99,7 @@ export default function AssignmentsPage() {
             No Secret Santa assignments found. The group administrator may not
             have assigned pairs yet, or the group may not be locked.
           </WarningMessage>
-          <div className="flex justify-center">
-            <button
-              onClick={() => router.push(`/admin/${groupGuid}`)}
-              className="px-6 py-3 btn-primary text-sm font-medium rounded-md transition-colors duration-200 shadow-sm cursor-pointer"
-            >
-              Back to Admin Panel
-            </button>
-          </div>
+          <BackToManageGroup groupGuid={groupGuid} />
         </div>
       </div>
     );
@@ -155,14 +141,7 @@ export default function AssignmentsPage() {
           )}
 
           {/* Navigation */}
-          <div className="flex justify-center">
-            <button
-              onClick={() => router.push(`/admin/${groupGuid}`)}
-              className="px-6 py-3 btn-primary text-sm font-medium rounded-md transition-colors duration-200 shadow-sm cursor-pointer"
-            >
-              Back to Admin Panel
-            </button>
-          </div>
+          <BackToManageGroup groupGuid={groupGuid} />
       </div>
     </div>
   );

@@ -9,7 +9,7 @@ import MemberListItem from "@/app/components/MemberListItem";
 import { RoleBadge, StatusBadge } from "@/app/components/Badge";
 import { Card } from "@/app/components/Card";
 import { PageHeader } from "@/app/components/PageHeader";
-import { BackToHome } from "@/app/components/BackToHome";
+import { BackToMyGroups } from "@/app/components/BackToHome";
 import { WarningMessage, ErrorMessage, AlertMessage } from "@/app/components/AlertMessage";
 import { Loading } from "@/app/components/Loading";
 import supabase from "@/utilities/supabase/browser";
@@ -49,10 +49,12 @@ export default function GroupPage() {
   const [groupInfo, setGroupInfo] = useState<GroupInfo | null>(null);
   const [members, setMembers] = useState<Member[]>([]);
   const [secretSanta, setSecretSanta] = useState<string | null>(null);
-  const [isMemberListExpanded, setIsMemberListExpanded] = useState(true);
+  const [isMemberListExpanded, setIsMemberListExpanded] = useState(false);
   const [isGroupDetailsExpanded, setIsGroupDetailsExpanded] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isLeaving, setIsLeaving] = useState(false);
+  const [isLeaveExpanded, setIsLeaveExpanded] = useState(false);
+  const [leaveConfirmationText, setLeaveConfirmationText] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [statusType, setStatusType] = useState<'success' | 'error'>('success');
@@ -220,6 +222,7 @@ export default function GroupPage() {
       // If we get here, it means there was an error (successful calls redirect)
       if (result && !result.success) {
         showErrorMessage(result.error || 'Failed to leave group. Please try again.');
+        setLeaveConfirmationText('');
         return;
       }
 
@@ -228,6 +231,7 @@ export default function GroupPage() {
       console.error('Failed to leave group:', err);
       const errorMessage = err instanceof Error ? err.message : 'Unexpected error occurred';
       showErrorMessage(errorMessage);
+      setLeaveConfirmationText('');
     } finally {
       setIsLeaving(false);
     }
@@ -264,7 +268,7 @@ export default function GroupPage() {
               emoji="🎁"
             />
             <ErrorMessage title="Error">{error}</ErrorMessage>
-            <BackToHome />
+            <BackToMyGroups />
           </div>
         </div>
       </div>
@@ -447,31 +451,46 @@ export default function GroupPage() {
           </Card>
         )}
 
-        {/* Leave Group Section */}
-        <Card
-          title="Leave Group"
-          description={groupInfo?.is_frozen ? (
-            "You cannot leave this group because Secret Santa assignments have been made and the group is locked."
-          ) : (
-            "If you leave this group, you won't be able to rejoin if it's password protected or closed."
-          )}
-          className="mt-6"
-        >
-          <form action={handleLeaveGroup}>
-            <input type="hidden" name="groupGuid" value={groupGuid} />
-            <input type="hidden" name="memberCode" value={memberCode} />
+        {/* Leave Group Section - Only show if group is not frozen */}
+        {!groupInfo?.is_frozen && (
+          <CollapsibleSection
+            title="Leave Group"
+            isExpanded={isLeaveExpanded}
+            onToggle={() => setIsLeaveExpanded(!isLeaveExpanded)}
+            className="mt-6"
+          >
+            <p className="text-sm text-secondary mb-4">
+              If you leave this group, you won&apos;t be able to rejoin if it&apos;s password protected or closed.
+            </p>
 
-            <button
-              type="submit"
-              disabled={groupInfo?.is_frozen || isLeaving}
-              className="w-full py-3 px-6 btn-primary text-sm font-medium rounded-md transition-colors duration-200 shadow-sm cursor-pointer"
-            >
-              {isLeaving ? 'Leaving...' : 'Leave Group'}
-            </button>
-          </form>
-        </Card>
+            <p className="text-sm font-medium text-label mb-2">
+              Type <strong>&quot;LEAVE&quot;</strong> to confirm this action:
+            </p>
 
-        <BackToHome />
+            <input
+              type="text"
+              value={leaveConfirmationText}
+              onChange={(e) => setLeaveConfirmationText(e.target.value)}
+              placeholder="LEAVE"
+              className="input-primary w-full px-3 py-2 rounded-md text-primary placeholder:text-muted mb-4"
+            />
+
+            <form action={handleLeaveGroup}>
+              <input type="hidden" name="groupGuid" value={groupGuid} />
+              <input type="hidden" name="memberCode" value={memberCode} />
+
+              <button
+                type="submit"
+                disabled={isLeaving || leaveConfirmationText.toUpperCase() !== 'LEAVE'}
+                className="w-full py-3 px-6 btn-primary text-sm font-medium rounded-md transition-colors duration-200 shadow-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isLeaving ? 'Leaving...' : 'Leave Group'}
+              </button>
+            </form>
+          </CollapsibleSection>
+        )}
+
+        <BackToMyGroups />
         </div>
       </div>
     </div>
