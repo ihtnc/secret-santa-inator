@@ -31,7 +31,7 @@ export default function Footer() {
           </div>
 
           {/* Links - centered on mobile, right on desktop */}
-          <div className="flex flex-wrap justify-center sm:justify-end space-x-6 text-sm w-full sm:w-auto">
+          <div className="flex flex-wrap justify-center sm:justify-end space-x-4 text-sm w-full sm:w-auto">
             <Link
               href="/about"
               className="text-secondary hover:text-primary transition-colors"
@@ -46,6 +46,12 @@ export default function Footer() {
             >
               GitHub
             </a>
+            <Link
+              href="/backup-data"
+              className="text-secondary hover:text-primary transition-colors"
+            >
+              Backup
+            </Link>
             <Link
               href="/reset-data"
               className="text-secondary hover:text-primary transition-colors"

@@ -95,6 +95,23 @@ CREATE TABLE code_nouns (
 ALTER TABLE code_nouns ENABLE ROW LEVEL SECURITY;
 CREATE UNIQUE INDEX idx_code_nouns_value_unique ON code_nouns (value);
 
+-- Backup codes table for temporary creator code storage
+CREATE TABLE backup_codes (
+    id SERIAL PRIMARY KEY,
+    backup_guid TEXT NOT NULL,
+    creator_code TEXT NOT NULL,
+    password TEXT NOT NULL,
+    created_date TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    expiry_date TIMESTAMP WITH TIME ZONE DEFAULT (NOW() + INTERVAL '1 day'),
+    restored_by TEXT
+);
+
+-- Enable RLS but NO POLICIES - only SECURITY DEFINER functions can access
+ALTER TABLE backup_codes ENABLE ROW LEVEL SECURITY;
+CREATE UNIQUE INDEX idx_backup_codes_guid_unique ON backup_codes (backup_guid);
+CREATE INDEX idx_backup_codes_expiry ON backup_codes (expiry_date);
+CREATE INDEX idx_backup_codes_creator_code ON backup_codes (creator_code);
+
 -- App schema and outbox table for realtime events
 CREATE SCHEMA IF NOT EXISTS app;
 
@@ -1222,6 +1239,110 @@ BEGIN
 END;
 $$;
 
+-- Function to backup creator code with password protection
+CREATE OR REPLACE FUNCTION backup_creator_code(
+    p_creator_code TEXT,
+    p_password TEXT
+)
+RETURNS TEXT
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+DECLARE
+    generated_backup_guid TEXT;
+BEGIN
+    -- Validate inputs
+    IF p_creator_code IS NULL OR LENGTH(TRIM(p_creator_code)) = 0 THEN
+        RAISE EXCEPTION 'Creator code is required';
+    END IF;
+
+    IF p_password IS NULL OR LENGTH(TRIM(p_password)) = 0 THEN
+        RAISE EXCEPTION 'Password is required';
+    END IF;
+
+    -- Mark all existing unused backup codes for this creator as used by setting restored_by to 'REPLACED'
+    UPDATE public.backup_codes
+    SET restored_by = 'REPLACED'
+    WHERE creator_code = p_creator_code
+    AND restored_by IS NULL
+    AND expiry_date > NOW();
+
+    -- Generate a new backup GUID
+    generated_backup_guid := gen_random_uuid()::text;
+
+    -- Insert the new backup code
+    INSERT INTO public.backup_codes (
+        backup_guid,
+        creator_code,
+        password
+    )
+    VALUES (
+        generated_backup_guid,
+        p_creator_code,
+        p_password
+    );
+
+    -- Return the generated backup GUID
+    RETURN generated_backup_guid;
+END;
+$$;
+
+-- Function to restore creator code using backup GUID and password
+CREATE OR REPLACE FUNCTION restore_creator_code(
+    p_backup_guid TEXT,
+    p_password TEXT,
+    p_current_guid TEXT
+)
+RETURNS TEXT
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+DECLARE
+    stored_creator_code TEXT;
+    backup_record RECORD;
+BEGIN
+    -- Validate inputs
+    IF p_backup_guid IS NULL OR LENGTH(TRIM(p_backup_guid)) = 0 THEN
+        RAISE EXCEPTION 'Backup GUID is required';
+    END IF;
+
+    IF p_password IS NULL OR LENGTH(TRIM(p_password)) = 0 THEN
+        RAISE EXCEPTION 'Password is required';
+    END IF;
+
+    IF p_current_guid IS NULL OR LENGTH(TRIM(p_current_guid)) = 0 THEN
+        RAISE EXCEPTION 'Current GUID is required';
+    END IF;
+
+    -- Find the backup record with matching GUID, password, and valid state
+    SELECT backup_guid, creator_code, password, restored_by, expiry_date
+    INTO backup_record
+    FROM public.backup_codes
+    WHERE backup_guid = p_backup_guid
+    AND password = p_password
+    AND restored_by IS NULL
+    AND expiry_date > NOW();
+
+    -- Check if record was found
+    IF backup_record.backup_guid IS NULL THEN
+        RAISE EXCEPTION 'Invalid backup GUID, incorrect password, or backup has expired/already been used';
+    END IF;
+
+    -- Get the creator code
+    stored_creator_code := backup_record.creator_code;
+
+    -- Mark this backup as used by recording who restored it (one-time use)
+    UPDATE public.backup_codes
+    SET restored_by = p_current_guid
+    WHERE backup_guid = p_backup_guid;
+
+    -- Return the creator code
+    RETURN stored_creator_code;
+END;
+$$;
+
 -- Function to purge expired data
 CREATE OR REPLACE FUNCTION app.purge_data(
     delete_all BOOLEAN DEFAULT FALSE
@@ -1230,6 +1351,7 @@ RETURNS TABLE(
     deleted_santas INTEGER,
     deleted_members INTEGER,
     deleted_groups INTEGER,
+    deleted_backup_codes INTEGER,
     deleted_outbox_messages INTEGER
 )
 LANGUAGE plpgsql
@@ -1240,6 +1362,7 @@ DECLARE
     santas_deleted INTEGER := 0;
     members_deleted INTEGER := 0;
     groups_deleted INTEGER := 0;
+    backup_codes_deleted INTEGER := 0;
     outbox_deleted INTEGER := 0;
     target_group_ids INTEGER[];
 BEGIN
@@ -1274,6 +1397,17 @@ BEGIN
     END IF;
 
     IF delete_all THEN
+        -- Delete all backup codes when delete_all is true
+        DELETE FROM public.backup_codes;
+        GET DIAGNOSTICS backup_codes_deleted = ROW_COUNT;
+    ELSE
+        -- Delete expired or used backup codes
+        DELETE FROM public.backup_codes
+        WHERE expiry_date <= NOW() OR restored_by IS NOT NULL;
+        GET DIAGNOSTICS backup_codes_deleted = ROW_COUNT;
+    END IF;
+
+    IF delete_all THEN
         -- Delete all outbox messages when delete_all is true
         DELETE FROM app.outbox;
         GET DIAGNOSTICS outbox_deleted = ROW_COUNT;
@@ -1285,7 +1419,7 @@ BEGIN
     END IF;
 
     -- Return counts
-    RETURN QUERY SELECT santas_deleted, members_deleted, groups_deleted, outbox_deleted;
+    RETURN QUERY SELECT santas_deleted, members_deleted, groups_deleted, backup_codes_deleted, outbox_deleted;
 END;
 $$;
 
@@ -1503,6 +1637,8 @@ GRANT EXECUTE ON FUNCTION public.is_member(TEXT, TEXT) TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.get_member(TEXT, TEXT) TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.get_custom_code_names(TEXT, TEXT) TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.get_all_secret_santa_relationships(TEXT, TEXT) TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.backup_creator_code(TEXT, TEXT) TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.restore_creator_code(TEXT, TEXT, TEXT) TO anon, authenticated;
 
 -- Grant minimal permissions for realtime subscriptions
 -- Only SELECT on outbox table for realtime to read events
@@ -1573,7 +1709,8 @@ BEGIN
             'create_group', 'get_group', 'get_my_groups', 'join_group',
             'leave_group', 'update_group', 'assign_santa', 'unlock_group',
             'kick_member', 'get_my_secret_santa', 'get_members', 'is_creator',
-            'is_member', 'get_member', 'get_custom_code_names'
+            'is_member', 'get_member', 'get_custom_code_names', 'get_all_secret_santa_relationships',
+            'backup_creator_code', 'restore_creator_code'
         )
     );
     RAISE NOTICE '- SELECT/INSERT on app.outbox for realtime only';

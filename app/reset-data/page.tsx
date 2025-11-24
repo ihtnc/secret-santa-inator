@@ -68,8 +68,8 @@ export default function ResetDataPage() {
         <div className="bg-card rounded-lg shadow-md p-8">
           <div className="space-y-6">
             {/* Warning Section */}
-            <WarningMessage title="Important Warning">
-              Resetting your data will permanently remove your access to all Secret Santa groups, both created and joined.
+            <WarningMessage>
+              <strong>⚠️ Important Warning:</strong> Resetting your data will permanently remove your access to all Secret Santa groups, both created and joined.
             </WarningMessage>
 
             {/* What Will Happen Section */}
@@ -135,28 +135,30 @@ export default function ResetDataPage() {
             <div className="mt-6 pt-4 border-t border-accent"></div>
 
             {/* Confirmation Section */}
-            <div className="space-y-4">
-              <div>
-                <label htmlFor="confirmText" className="block text-sm font-medium text-label mb-2">
-                  Type &quot;RESET&quot; to confirm this action:
-                </label>
-                <input
-                  type="text"
-                  id="confirmText"
-                  value={confirmText}
-                  onChange={(e) => setConfirmText(e.target.value)}
-                  className="input-primary w-full px-3 py-2 border rounded-md"
-                  placeholder="RESET"
-                />
-              </div>
-              <div className="text-center">
-                <button
-                  onClick={handleResetData}
-                  disabled={confirmText.toLowerCase() !== 'reset'}
-                  className="btn-primary px-4 py-2 rounded-md font-medium disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-                >
-                  Reset Data
-                </button>
+            <div className="max-w-md mx-auto md:px-6 md:pb-6">
+              <div className="space-y-4">
+                <div>
+                  <label htmlFor="confirmText" className="block text-sm font-medium text-label mb-2">
+                    Type &quot;RESET&quot; to confirm this action:
+                  </label>
+                  <input
+                    type="text"
+                    id="confirmText"
+                    value={confirmText}
+                    onChange={(e) => setConfirmText(e.target.value)}
+                    className="input-primary w-full px-3 py-2 border rounded-md"
+                    placeholder="RESET"
+                  />
+                </div>
+                <div className="text-center">
+                  <button
+                    onClick={handleResetData}
+                    disabled={confirmText.toLowerCase() !== 'reset'}
+                    className="btn-primary px-4 py-2 rounded-md font-medium disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                  >
+                    Reset Data
+                  </button>
+                </div>
               </div>
             </div>
           </div>

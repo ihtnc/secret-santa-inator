@@ -9,6 +9,7 @@ interface PasswordInputProps {
   defaultValue?: string;
   placeholder?: string;
   required?: boolean;
+  minLength?: number;
   className?: string;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
@@ -20,6 +21,7 @@ export default function PasswordInput({
   defaultValue,
   placeholder,
   required = false,
+  minLength,
   className = "",
   onChange,
 }: PasswordInputProps) {
@@ -39,6 +41,7 @@ export default function PasswordInput({
         defaultValue={defaultValue}
         placeholder={placeholder}
         required={required}
+        minLength={minLength}
         onChange={onChange}
         className={`${className} pr-10`}
       />
