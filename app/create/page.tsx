@@ -136,12 +136,15 @@ export default function CreateGroupPage() {
                     id="capacity"
                     name="capacity"
                     required
-                    min="2"
+                    min="3"
                     max="100"
                     value={capacity}
                     onChange={(e) => setCapacity(e.target.value)}
                     className="input-primary w-full px-3 py-2 rounded-md text-primary placeholder:text-muted"
                   />
+                  <p className="text-xs text-muted mt-1">
+                    Minimum 3 members, maximum 100 members
+                  </p>
                 </div>
 
                 <div>

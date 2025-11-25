@@ -112,6 +112,31 @@ CREATE UNIQUE INDEX idx_backup_codes_guid_unique ON backup_codes (backup_guid);
 CREATE INDEX idx_backup_codes_expiry ON backup_codes (expiry_date);
 CREATE INDEX idx_backup_codes_creator_code ON backup_codes (creator_code);
 
+-- Messages table for group and individual messaging
+-- group_message_id references the original group message (NULL for individual messages and original group messages)
+-- sender_id can be NULL for group messages sent by non-member admins
+CREATE TABLE messages (
+    id SERIAL PRIMARY KEY,
+    group_id INTEGER NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
+    sender_id INTEGER REFERENCES members(id) ON DELETE CASCADE,
+    recipient_id INTEGER REFERENCES members(id) ON DELETE CASCADE,
+    message TEXT NOT NULL,
+    group_message_id INTEGER REFERENCES messages(id) ON DELETE CASCADE,
+    is_from_secret_santa BOOLEAN NOT NULL DEFAULT FALSE,
+    is_read BOOLEAN NOT NULL DEFAULT FALSE,
+    created_date TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    read_date TIMESTAMP WITH TIME ZONE
+);
+
+-- Enable RLS but NO POLICIES - only SECURITY DEFINER functions can access
+ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
+CREATE INDEX idx_messages_group_id ON messages (group_id);
+CREATE INDEX idx_messages_sender_id ON messages (sender_id);
+CREATE INDEX idx_messages_recipient_id ON messages (recipient_id);
+CREATE INDEX idx_messages_created_date ON messages (created_date);
+CREATE INDEX idx_messages_group_message_id ON messages (group_message_id);
+CREATE INDEX idx_messages_is_from_secret_santa ON messages (is_from_secret_santa);
+
 -- App schema and outbox table for realtime events
 CREATE SCHEMA IF NOT EXISTS app;
 
@@ -806,8 +831,27 @@ BEGIN
                 SELECT * INTO custom_code_record FROM public.get_custom_code_name(group_record.id);
 
                 -- Insert the new member with custom code name
-                INSERT INTO public.members (group_id, name, code, code_name, custom_code_name_id)
-                VALUES (group_record.id, p_name, p_code, custom_code_record.name, custom_code_record.id);
+                DECLARE
+                    new_member_id INTEGER;
+                BEGIN
+                    INSERT INTO public.members (group_id, name, code, code_name, custom_code_name_id)
+                    VALUES (group_record.id, p_name, p_code, custom_code_record.name, custom_code_record.id)
+                    RETURNING id INTO new_member_id;
+
+                    -- Copy all existing group messages for the new member
+                    INSERT INTO public.messages (group_id, sender_id, recipient_id, message, group_message_id, is_from_secret_santa)
+                    SELECT
+                        group_record.id,
+                        NULL,  -- Group messages always have NULL sender_id
+                        new_member_id,  -- New member's ID from RETURNING clause
+                        orig.message,
+                        orig.id,  -- Reference to original group message
+                        FALSE     -- Group messages are not from Secret Santa
+                    FROM public.messages orig
+                    WHERE orig.group_id = group_record.id
+                    AND orig.group_message_id IS NULL  -- Only original group messages
+                    AND orig.recipient_id IS NULL;     -- Original group messages have NULL recipient_id
+                END;
             END;
         ELSE
             -- Auto-assign regular code name, retry if duplicate found
@@ -833,9 +877,28 @@ BEGIN
                 END IF;
             END LOOP;
 
-            -- Insert the new member with regular code name
-            INSERT INTO public.members (group_id, name, code, code_name)
-            VALUES (group_record.id, p_name, p_code, final_code_name);
+            -- Insert the new member with regular code name and copy group messages
+            DECLARE
+                new_member_id INTEGER;
+            BEGIN
+                INSERT INTO public.members (group_id, name, code, code_name)
+                VALUES (group_record.id, p_name, p_code, final_code_name)
+                RETURNING id INTO new_member_id;
+
+                -- Copy all existing group messages for the new member
+                INSERT INTO public.messages (group_id, sender_id, recipient_id, message, group_message_id, is_from_secret_santa)
+                SELECT
+                    group_record.id,
+                    NULL,  -- Group messages always have NULL sender_id
+                    new_member_id,  -- New member's ID from RETURNING clause
+                    orig.message,
+                    orig.id,  -- Reference to original group message
+                    FALSE     -- Group messages are not from Secret Santa
+                FROM public.messages orig
+                WHERE orig.group_id = group_record.id
+                AND orig.group_message_id IS NULL  -- Only original group messages
+                AND orig.recipient_id IS NULL;     -- Original group messages have NULL recipient_id
+            END;
         END IF;
     ELSE
         -- Use provided code name or assign name if use_code_names is false
@@ -857,9 +920,28 @@ BEGIN
             END IF;
         END IF;
 
-        -- Insert the new member with provided code name
-        INSERT INTO public.members (group_id, name, code, code_name)
-        VALUES (group_record.id, p_name, p_code, final_code_name);
+        -- Insert the new member with provided code name and copy group messages
+        DECLARE
+            new_member_id INTEGER;
+        BEGIN
+            INSERT INTO public.members (group_id, name, code, code_name)
+            VALUES (group_record.id, p_name, p_code, final_code_name)
+            RETURNING id INTO new_member_id;
+
+            -- Copy all existing group messages for the new member
+            INSERT INTO public.messages (group_id, sender_id, recipient_id, message, group_message_id, is_from_secret_santa)
+            SELECT
+                group_record.id,
+                NULL,  -- Group messages always have NULL sender_id
+                new_member_id,  -- New member's ID from RETURNING clause
+                orig.message,
+                orig.id,  -- Reference to original group message
+                FALSE     -- Group messages are not from Secret Santa
+            FROM public.messages orig
+            WHERE orig.group_id = group_record.id
+            AND orig.group_message_id IS NULL  -- Only original group messages
+            AND orig.recipient_id IS NULL;     -- Original group messages have NULL recipient_id
+        END;
     END IF;
 END;
 $$;
@@ -876,7 +958,7 @@ SET search_path = ''
 AS $$
 DECLARE
     group_id_found INTEGER;
-    member_exists BOOLEAN := FALSE;
+    member_id_found INTEGER;
 BEGIN
     -- Validate group exists, is not frozen, and is not expired
     SELECT id INTO group_id_found
@@ -889,16 +971,21 @@ BEGIN
         RAISE EXCEPTION 'Group not found, group is frozen, or group has expired';
     END IF;
 
-    -- Check if member exists in the group with matching code
-    SELECT EXISTS(
-        SELECT 1 FROM public.members
-        WHERE group_id = group_id_found
-          AND code = p_code
-    ) INTO member_exists;
+    -- Check if member exists in the group with matching code and get the member ID
+    SELECT id INTO member_id_found
+    FROM public.members
+    WHERE group_id = group_id_found
+      AND code = p_code;
 
-    IF NOT member_exists THEN
+    IF member_id_found IS NULL THEN
         RAISE EXCEPTION 'Member not found in this group or invalid credentials';
     END IF;
+
+    -- Delete all messages for this member (both sent and received)
+    -- Individual messages and group message copies will be deleted
+    DELETE FROM public.messages
+    WHERE group_id = group_id_found
+    AND (sender_id = member_id_found OR recipient_id = member_id_found);
 
     -- Delete the member record
     DELETE FROM public.members
@@ -1032,6 +1119,12 @@ BEGIN
     IF group_id_found IS NULL THEN
         RAISE EXCEPTION 'Group not found, invalid creator credentials, group has expired, or group is not frozen';
     END IF;
+
+    -- Delete only Secret Santa messages (individual messages between santa pairs)
+    -- Keep group messages (where group_message_id IS NULL and recipient_id IS NULL)
+    DELETE FROM public.messages
+    WHERE group_id = group_id_found
+    AND NOT (group_message_id IS NULL AND recipient_id IS NULL);
 
     -- Delete all Secret Santa assignments for this group
     DELETE FROM public.santas WHERE group_id = group_id_found;
@@ -1348,6 +1441,7 @@ CREATE OR REPLACE FUNCTION app.purge_data(
     delete_all BOOLEAN DEFAULT FALSE
 )
 RETURNS TABLE(
+    deleted_messages INTEGER,
     deleted_santas INTEGER,
     deleted_members INTEGER,
     deleted_groups INTEGER,
@@ -1359,6 +1453,7 @@ SECURITY DEFINER
 SET search_path = ''
 AS $$
 DECLARE
+    messages_deleted INTEGER := 0;
     santas_deleted INTEGER := 0;
     members_deleted INTEGER := 0;
     groups_deleted INTEGER := 0;
@@ -1380,17 +1475,22 @@ BEGIN
 
     -- Only proceed if there are groups to delete
     IF target_group_ids IS NOT NULL AND array_length(target_group_ids, 1) > 0 THEN
-        -- Delete santa assignments for target groups (step 1)
+        -- Delete messages for target groups (step 1)
+        DELETE FROM public.messages
+        WHERE group_id = ANY(target_group_ids);
+        GET DIAGNOSTICS messages_deleted = ROW_COUNT;
+
+        -- Delete santa assignments for target groups (step 2)
         DELETE FROM public.santas
         WHERE group_id = ANY(target_group_ids);
         GET DIAGNOSTICS santas_deleted = ROW_COUNT;
 
-        -- Delete members from target groups (step 2)
+        -- Delete members from target groups (step 3)
         DELETE FROM public.members
         WHERE group_id = ANY(target_group_ids);
         GET DIAGNOSTICS members_deleted = ROW_COUNT;
 
-        -- Delete target groups (step 3)
+        -- Delete target groups (step 4)
         DELETE FROM public.groups
         WHERE id = ANY(target_group_ids);
         GET DIAGNOSTICS groups_deleted = ROW_COUNT;
@@ -1419,9 +1519,516 @@ BEGIN
     END IF;
 
     -- Return counts
-    RETURN QUERY SELECT santas_deleted, members_deleted, groups_deleted, backup_codes_deleted, outbox_deleted;
+    RETURN QUERY SELECT messages_deleted, santas_deleted, members_deleted, groups_deleted, backup_codes_deleted, outbox_deleted;
 END;
 $$;
+
+-- Function to send a message (individual or group)
+-- Group messages: First insert original message with group_message_id=NULL, then create copies for each member
+-- Individual messages use actual sender_id from members table
+CREATE OR REPLACE FUNCTION send_message(
+    p_group_guid TEXT,
+    p_sender_code TEXT,
+    p_message TEXT,
+    p_is_group_message BOOLEAN DEFAULT FALSE,
+    p_message_to_secret_santa BOOLEAN DEFAULT FALSE
+)
+RETURNS VOID
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+DECLARE
+    group_record RECORD;
+    sender_record RECORD;
+    recipient_record INTEGER;
+    member_record RECORD;
+    is_creator BOOLEAN := FALSE;
+    original_group_message_id INTEGER;
+BEGIN
+    -- Validate inputs
+    IF p_group_guid IS NULL OR LENGTH(TRIM(p_group_guid)) = 0 THEN
+        RAISE EXCEPTION 'Group GUID is required';
+    END IF;
+
+    IF p_sender_code IS NULL OR LENGTH(TRIM(p_sender_code)) = 0 THEN
+        RAISE EXCEPTION 'Sender code is required';
+    END IF;
+
+    IF p_message IS NULL OR LENGTH(TRIM(p_message)) = 0 THEN
+        RAISE EXCEPTION 'Message is required';
+    END IF;
+
+    -- Get group details and validate it's not expired
+    SELECT id, creator_code, is_frozen INTO group_record
+    FROM public.groups
+    WHERE group_guid = p_group_guid
+    AND (expiry_date IS NULL OR expiry_date > NOW());
+
+    IF group_record.id IS NULL THEN
+        RAISE EXCEPTION 'Group not found or group has expired';
+    END IF;
+
+    -- Check if sender is the group creator
+    IF group_record.creator_code = p_sender_code THEN
+        is_creator := TRUE;
+    END IF;
+
+    -- Try to get sender as a member (needed for individual messages)
+    SELECT id INTO sender_record
+    FROM public.members
+    WHERE group_id = group_record.id
+    AND code = p_sender_code;
+
+    -- Check message type and handle accordingly
+    IF p_is_group_message THEN
+        -- GROUP MESSAGE LOGIC
+        -- Validate that sender is the group creator (admin)
+        IF NOT is_creator THEN
+            RAISE EXCEPTION 'Only group admin can send messages to the entire group';
+        END IF;
+
+        -- First, insert the original group message with group_message_id = NULL
+        INSERT INTO public.messages (
+            group_id, sender_id, recipient_id, message, group_message_id, is_from_secret_santa
+        ) VALUES (
+            group_record.id, NULL, NULL, p_message, NULL, FALSE
+        ) RETURNING id INTO original_group_message_id;
+
+        -- Then, create copies for each member referencing the original message
+        FOR member_record IN
+            SELECT id FROM public.members WHERE group_id = group_record.id
+        LOOP
+            INSERT INTO public.messages (
+                group_id, sender_id, recipient_id, message, group_message_id, is_from_secret_santa
+            ) VALUES (
+                group_record.id, NULL, member_record.id, p_message, original_group_message_id, FALSE
+            );
+        END LOOP;
+
+    ELSIF p_message_to_secret_santa THEN
+        -- INDIVIDUAL MESSAGE TO SECRET SANTA
+        -- Individual message - sender must be a member
+        IF sender_record.id IS NULL THEN
+            RAISE EXCEPTION 'Individual messages can only be sent by group members';
+        END IF;
+
+        -- Get the sender's Secret Santa (who is giving them a gift)
+        SELECT s.santa_id INTO recipient_record
+        FROM public.santas s
+        WHERE s.group_id = group_record.id
+        AND s.member_id = sender_record.id;
+
+        IF recipient_record IS NULL THEN
+            RAISE EXCEPTION 'Secret Santa assignments not found. Cannot send message to Secret Santa.';
+        END IF;
+
+        -- Insert message to Secret Santa (is_from_secret_santa = FALSE because it's FROM giftee TO santa)
+        INSERT INTO public.messages (
+            group_id, sender_id, recipient_id, message, group_message_id, is_from_secret_santa
+        ) VALUES (
+            group_record.id, sender_record.id, recipient_record, p_message, NULL, FALSE
+        );
+
+    ELSE
+        -- INDIVIDUAL MESSAGE TO GIFTEE (FromSecretSanta)
+        -- Individual message - sender must be a member
+        IF sender_record.id IS NULL THEN
+            RAISE EXCEPTION 'Individual messages can only be sent by group members';
+        END IF;
+
+        -- Get the sender's giftee (who they are giving a gift to)
+        SELECT s.member_id INTO recipient_record
+        FROM public.santas s
+        WHERE s.group_id = group_record.id
+        AND s.santa_id = sender_record.id;
+
+        IF recipient_record IS NULL THEN
+            RAISE EXCEPTION 'Secret Santa assignments not found. Cannot send message to giftee.';
+        END IF;
+
+        -- Insert message to giftee (is_from_secret_santa = TRUE because it's FROM santa TO giftee)
+        INSERT INTO public.messages (
+            group_id, sender_id, recipient_id, message, group_message_id, is_from_secret_santa
+        ) VALUES (
+            group_record.id, sender_record.id, recipient_record, p_message, NULL, TRUE
+        );
+    END IF;
+END;
+$$;
+
+-- Function to get message history for a member with automatic read marking
+-- Clear if-elif-else logic based on message type
+CREATE OR REPLACE FUNCTION get_message_history(
+    p_group_guid TEXT,
+    p_member_code TEXT,
+    p_is_group_message BOOLEAN DEFAULT FALSE,
+    p_is_from_secret_santa BOOLEAN DEFAULT FALSE
+)
+RETURNS TABLE(
+    id INTEGER,
+    message TEXT,
+    is_group_message BOOLEAN,
+    is_read BOOLEAN,
+    created_date TIMESTAMP WITH TIME ZONE,
+    sender_name TEXT,
+    recipient_name TEXT
+)
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+DECLARE
+    group_record RECORD;
+    member_record RECORD;
+    my_giftee_id INTEGER;
+    my_secret_santa_id INTEGER;
+BEGIN
+    -- Validate inputs
+    IF p_group_guid IS NULL OR LENGTH(TRIM(p_group_guid)) = 0 THEN
+        RAISE EXCEPTION 'Group GUID is required';
+    END IF;
+
+    IF p_member_code IS NULL OR LENGTH(TRIM(p_member_code)) = 0 THEN
+        RAISE EXCEPTION 'Member code is required';
+    END IF;
+
+    -- Get group details and validate it's not expired
+    SELECT g.id, g.creator_code INTO group_record
+    FROM public.groups g
+    WHERE g.group_guid = p_group_guid
+    AND (g.expiry_date IS NULL OR g.expiry_date > NOW());
+
+    IF group_record.id IS NULL THEN
+        RAISE EXCEPTION 'Group not found or group has expired';
+    END IF;
+
+    -- Get member details
+    SELECT m.id INTO member_record
+    FROM public.members m
+    WHERE m.group_id = group_record.id
+    AND m.code = p_member_code;
+
+    -- Main logic with clear if-elif-else structure
+    IF p_is_group_message THEN
+        -- GROUP MESSAGE HISTORY (Admin only)
+        IF group_record.creator_code != p_member_code THEN
+            RAISE EXCEPTION 'Only group admin can view group message history';
+        END IF;
+
+        RETURN QUERY
+        SELECT
+            msg.id,
+            msg.message,
+            TRUE AS is_group_message,
+            (
+                SELECT COALESCE(BOOL_AND(copy_msg.is_read), TRUE)
+                FROM public.messages copy_msg
+                WHERE copy_msg.group_message_id = msg.id
+            ) AS is_read,
+            msg.created_date,
+            'You'::TEXT AS sender_name,
+            'Group'::TEXT AS recipient_name
+        FROM public.messages msg
+        WHERE msg.group_id = group_record.id
+        AND msg.group_message_id IS NULL
+        AND msg.recipient_id IS NULL
+        ORDER BY msg.created_date DESC;
+
+    ELSIF p_is_from_secret_santa THEN
+        -- MESSAGES WITH GIFTEE (You as Secret Santa)
+        IF member_record.id IS NULL THEN
+            RAISE EXCEPTION 'Individual message history can only be viewed by group members';
+        END IF;
+
+        -- Get my giftee
+        SELECT s.member_id INTO my_giftee_id
+        FROM public.santas s
+        WHERE s.group_id = group_record.id
+        AND s.santa_id = member_record.id;
+
+
+
+        RETURN QUERY
+        SELECT
+            msg.id,
+            msg.message,
+            (msg.group_message_id IS NOT NULL) AS is_group_message,
+            msg.is_read,
+            msg.created_date,
+            CASE
+                WHEN msg.sender_id IS NULL THEN 'Admin'::TEXT
+                WHEN msg.sender_id = my_giftee_id THEN giftee_member.code_name
+                WHEN msg.sender_id = member_record.id THEN 'You'::TEXT
+                ELSE 'Unknown'::TEXT
+            END AS sender_name,
+            CASE
+                WHEN msg.recipient_id = member_record.id THEN 'You'::TEXT
+                WHEN msg.recipient_id = my_giftee_id THEN giftee_member.code_name
+                ELSE 'Unknown'::TEXT
+            END AS recipient_name
+        FROM public.messages msg
+        LEFT JOIN public.members giftee_member ON giftee_member.id = my_giftee_id
+        WHERE msg.group_id = group_record.id
+        AND (
+            (msg.recipient_id = member_record.id AND msg.sender_id = my_giftee_id) OR
+            (msg.sender_id = member_record.id AND msg.recipient_id = my_giftee_id) OR
+            (msg.recipient_id = member_record.id AND msg.sender_id IS NULL AND msg.group_message_id IS NOT NULL)
+        )
+        ORDER BY msg.created_date DESC;
+
+    ELSE
+        -- MESSAGES WITH SECRET SANTA (You as giftee)
+        IF member_record.id IS NULL THEN
+            RAISE EXCEPTION 'Individual message history can only be viewed by group members';
+        END IF;
+
+        -- Get my Secret Santa
+        SELECT s.santa_id INTO my_secret_santa_id
+        FROM public.santas s
+        WHERE s.group_id = group_record.id
+        AND s.member_id = member_record.id;
+
+        IF my_secret_santa_id IS NULL THEN
+            RAISE EXCEPTION 'Secret Santa assignments not found. Cannot view Secret Santa message history.';
+        END IF;
+
+
+
+        RETURN QUERY
+        SELECT
+            msg.id,
+            msg.message,
+            FALSE AS is_group_message,
+            msg.is_read,
+            msg.created_date,
+            CASE
+                WHEN msg.sender_id = my_secret_santa_id THEN 'Secret Santa'::TEXT
+                WHEN msg.sender_id = member_record.id THEN 'You'::TEXT
+                ELSE 'Unknown'::TEXT
+            END AS sender_name,
+            CASE
+                WHEN msg.recipient_id = member_record.id THEN 'You'::TEXT
+                WHEN msg.recipient_id = my_secret_santa_id THEN 'Secret Santa'::TEXT
+                ELSE 'Unknown'::TEXT
+            END AS recipient_name
+        FROM public.messages msg
+        WHERE msg.group_id = group_record.id
+        AND msg.group_message_id IS NULL
+        AND (
+            (msg.sender_id = my_secret_santa_id AND msg.recipient_id = member_record.id) OR
+            (msg.sender_id = member_record.id AND msg.recipient_id = my_secret_santa_id)
+        )
+        ORDER BY msg.created_date DESC;
+    END IF;
+
+    -- Mark group messages as read if all copies are read
+    UPDATE public.messages orig_msg
+    SET is_read = TRUE
+    WHERE orig_msg.group_id = group_record.id
+    AND orig_msg.recipient_id IS NULL
+    AND orig_msg.group_message_id IS NULL
+    AND NOT EXISTS (
+        SELECT 1 FROM public.messages copy_msg
+        WHERE copy_msg.group_message_id = orig_msg.id
+        AND copy_msg.is_read = FALSE
+    );
+END;
+$$;
+
+-- Function to get count of unread and total messages for a member
+-- Uses same logic as get_message_history but returns both counts
+CREATE OR REPLACE FUNCTION get_unread_message_count(
+    p_group_guid TEXT,
+    p_member_code TEXT,
+    p_is_group_message BOOLEAN DEFAULT FALSE,
+    p_is_from_secret_santa BOOLEAN DEFAULT FALSE
+)
+RETURNS TABLE(unread_count INTEGER, total_count INTEGER)
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+DECLARE
+    group_record RECORD;
+    member_record RECORD;
+    my_giftee_id INTEGER;
+    my_secret_santa_id INTEGER;
+    unread_count_val INTEGER := 0;
+    total_count_val INTEGER := 0;
+BEGIN
+    -- Validate inputs
+    IF p_group_guid IS NULL OR LENGTH(TRIM(p_group_guid)) = 0 THEN
+        RAISE EXCEPTION 'Group GUID is required';
+    END IF;
+
+    IF p_member_code IS NULL OR LENGTH(TRIM(p_member_code)) = 0 THEN
+        RAISE EXCEPTION 'Member code is required';
+    END IF;
+
+    -- Get group details and validate it's not expired
+    SELECT g.id, g.creator_code INTO group_record
+    FROM public.groups g
+    WHERE g.group_guid = p_group_guid
+    AND (g.expiry_date IS NULL OR g.expiry_date > NOW());
+
+    IF group_record.id IS NULL THEN
+        RAISE EXCEPTION 'Group not found or group has expired';
+    END IF;
+
+    -- Get member details
+    SELECT m.id INTO member_record
+    FROM public.members m
+    WHERE m.group_id = group_record.id
+    AND m.code = p_member_code;
+
+    -- Main logic with clear if-elif-else structure
+    IF p_is_group_message THEN
+        -- GROUP MESSAGE COUNTS (Admin only)
+        IF group_record.creator_code != p_member_code THEN
+            RAISE EXCEPTION 'Only group admin can view group message history';
+        END IF;
+
+        SELECT 
+            COUNT(*)::INTEGER,
+            COUNT(CASE WHEN msg.is_read = FALSE THEN 1 END)::INTEGER
+        INTO total_count_val, unread_count_val
+        FROM public.messages msg
+        WHERE msg.group_id = group_record.id
+        AND msg.group_message_id IS NULL
+        AND msg.recipient_id IS NULL;
+
+    ELSIF p_is_from_secret_santa THEN
+        -- MESSAGE COUNTS WITH GIFTEE (You as Secret Santa)
+        IF member_record.id IS NULL THEN
+            RAISE EXCEPTION 'Individual message history can only be viewed by group members';
+        END IF;
+
+        -- Get my giftee
+        SELECT s.member_id INTO my_giftee_id
+        FROM public.santas s
+        WHERE s.group_id = group_record.id
+        AND s.santa_id = member_record.id;
+
+        SELECT 
+            COUNT(*)::INTEGER,
+            COUNT(CASE WHEN msg.recipient_id = member_record.id AND msg.is_read = FALSE THEN 1 END)::INTEGER
+        INTO total_count_val, unread_count_val
+        FROM public.messages msg
+        WHERE msg.group_id = group_record.id
+        AND (
+            (msg.recipient_id = member_record.id AND msg.sender_id = my_giftee_id) OR
+            (msg.sender_id = member_record.id AND msg.recipient_id = my_giftee_id) OR
+            (msg.recipient_id = member_record.id AND msg.sender_id IS NULL AND msg.group_message_id IS NOT NULL)
+        );
+
+    ELSE
+        -- MESSAGE COUNTS WITH SECRET SANTA (You as giftee)
+        IF member_record.id IS NULL THEN
+            RAISE EXCEPTION 'Individual message history can only be viewed by group members';
+        END IF;
+
+        -- Get my Secret Santa
+        SELECT s.santa_id INTO my_secret_santa_id
+        FROM public.santas s
+        WHERE s.group_id = group_record.id
+        AND s.member_id = member_record.id;
+
+        IF my_secret_santa_id IS NULL THEN
+            RAISE EXCEPTION 'Secret Santa assignments not found. Cannot view Secret Santa message history.';
+        END IF;
+
+        SELECT 
+            COUNT(*)::INTEGER,
+            COUNT(CASE WHEN msg.recipient_id = member_record.id AND msg.is_read = FALSE THEN 1 END)::INTEGER
+        INTO total_count_val, unread_count_val
+        FROM public.messages msg
+        WHERE msg.group_id = group_record.id
+        AND msg.group_message_id IS NULL
+        AND (
+            (msg.sender_id = my_secret_santa_id AND msg.recipient_id = member_record.id) OR
+            (msg.sender_id = member_record.id AND msg.recipient_id = my_secret_santa_id)
+        );
+    END IF;
+
+    RETURN QUERY SELECT unread_count_val, total_count_val;
+END;
+$$;
+
+-- Function to mark specific messages as read for a member
+CREATE OR REPLACE FUNCTION mark_messages_as_read(
+    p_group_guid TEXT,
+    p_member_code TEXT,
+    p_message_ids INTEGER[]
+)
+RETURNS VOID
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+DECLARE
+    group_record RECORD;
+    member_record RECORD;
+BEGIN
+    -- Validate inputs
+    IF p_group_guid IS NULL OR LENGTH(TRIM(p_group_guid)) = 0 THEN
+        RAISE EXCEPTION 'Group GUID is required';
+    END IF;
+
+    IF p_member_code IS NULL OR LENGTH(TRIM(p_member_code)) = 0 THEN
+        RAISE EXCEPTION 'Member code is required';
+    END IF;
+
+    IF p_message_ids IS NULL OR array_length(p_message_ids, 1) = 0 THEN
+        RAISE EXCEPTION 'Message IDs are required';
+    END IF;
+
+    -- Get group details and validate it's not expired
+    SELECT g.id INTO group_record
+    FROM public.groups g
+    WHERE g.group_guid = p_group_guid
+    AND (g.expiry_date IS NULL OR g.expiry_date > NOW());
+
+    IF group_record.id IS NULL THEN
+        RAISE EXCEPTION 'Group not found or group has expired';
+    END IF;
+
+    -- Get member details
+    SELECT m.id INTO member_record
+    FROM public.members m
+    WHERE m.group_id = group_record.id
+    AND m.code = p_member_code;
+
+    IF member_record.id IS NULL THEN
+        RAISE EXCEPTION 'Member not found in this group';
+    END IF;
+
+    -- Mark specific messages as read
+    UPDATE public.messages
+    SET is_read = TRUE, read_date = NOW()
+    WHERE group_id = group_record.id
+    AND recipient_id = member_record.id
+    AND id = ANY(p_message_ids)
+    AND is_read = FALSE;
+
+    -- Mark group messages as read if all copies are read
+    UPDATE public.messages orig_msg
+    SET is_read = TRUE, read_date = NOW()
+    WHERE orig_msg.group_id = group_record.id
+    AND orig_msg.recipient_id IS NULL
+    AND orig_msg.group_message_id IS NULL
+    AND orig_msg.is_read = FALSE
+    AND NOT EXISTS (
+        SELECT 1 FROM public.messages copy_msg
+        WHERE copy_msg.group_message_id = orig_msg.id
+        AND copy_msg.is_read = FALSE
+    );
+END;
+$$;
+
+
+
+
 
 -- ============================================================================
 -- TRIGGER FUNCTIONS (SECURITY DEFINER to access tables)
@@ -1504,6 +2111,219 @@ BEGIN
     );
 
     RETURN OLD;
+END;
+$$;
+
+
+
+-- Function to handle message read events with correct sender read receipt channels
+CREATE OR REPLACE FUNCTION app.handle_message_read()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+DECLARE
+    sender_code TEXT;
+    recipient_code TEXT;
+    creator_code TEXT;
+BEGIN
+    -- Only process if is_read changed from false to true
+    IF OLD.is_read = FALSE AND NEW.is_read = TRUE THEN
+
+        -- Get recipient code (always exists for individual messages)
+        IF NEW.recipient_id IS NOT NULL THEN
+            SELECT code INTO recipient_code
+            FROM public.members
+            WHERE id = NEW.recipient_id;
+
+            -- Send event to recipient's channel (for unread indicator updates)
+            INSERT INTO app.outbox (topic, event, payload)
+            VALUES (
+                CASE
+                    -- If message is FROM Secret Santa to giftee -> recipient (giftee) uses ToSecretSanta mode
+                    WHEN NEW.is_from_secret_santa THEN 'to_secret_santa:' || recipient_code
+                    -- If message is TO Secret Santa from giftee -> recipient (santa) uses FromSecretSanta mode
+                    ELSE 'from_secret_santa:' || recipient_code
+                END,
+                'read_message',
+                jsonb_build_object(
+                    'message_id', NEW.id
+                )
+            );
+        END IF;
+
+        -- Handle sender channel (for read receipts/checkmarks)
+        IF NEW.sender_id IS NOT NULL THEN
+            -- Regular message with sender - send to sender's channel
+            SELECT code INTO sender_code
+            FROM public.members
+            WHERE id = NEW.sender_id;
+
+            -- Send read receipt to sender's channel
+            INSERT INTO app.outbox (topic, event, payload)
+            VALUES (
+                CASE
+                    -- If message is FROM Secret Santa -> sender (santa) uses FromSecretSanta mode
+                    WHEN NEW.is_from_secret_santa THEN 'from_secret_santa:' || sender_code
+                    -- If message is TO Secret Santa -> sender (giftee) uses ToSecretSanta mode
+                    ELSE 'to_secret_santa:' || sender_code
+                END,
+                'read_message',
+                jsonb_build_object(
+                    'message_id', NEW.id
+                )
+            );
+        ELSE
+            -- Group message (sender_id is NULL) - send to creator's channel
+            SELECT g.creator_code INTO creator_code
+            FROM public.groups g
+            WHERE g.id = NEW.group_id;
+
+            IF creator_code IS NOT NULL THEN
+                -- Group messages are always "from admin" so use from_secret_santa channel
+                INSERT INTO app.outbox (topic, event, payload)
+                VALUES (
+                    'from_secret_santa:' || creator_code,
+                    'read_message',
+                    jsonb_build_object(
+                        'message_id', NEW.id
+                    )
+                );
+            END IF;
+        END IF;
+    END IF;
+
+    RETURN NEW;
+END;
+$$;
+
+-- Function to handle new message events - send to both sender and recipient
+CREATE OR REPLACE FUNCTION app.handle_new_message()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+DECLARE
+    recipient_code TEXT;
+    sender_code TEXT;
+    creator_code TEXT;
+    sender_display_name TEXT;
+    recipient_display_name TEXT;
+BEGIN
+    -- Handle original group messages (sender_id=NULL, recipient_id=NULL, group_message_id=NULL)
+    IF NEW.sender_id IS NULL AND NEW.recipient_id IS NULL AND NEW.group_message_id IS NULL THEN
+        -- This is an original group message - send admin event only
+        SELECT g.creator_code INTO creator_code
+        FROM public.groups g
+        WHERE g.id = NEW.group_id;
+
+        IF creator_code IS NOT NULL THEN
+            INSERT INTO app.outbox (topic, event, payload)
+            VALUES (
+                'from_admin:' || creator_code,
+                'new_message',
+                jsonb_build_object(
+                    'id', NEW.id,
+                    'message', NEW.message,
+                    'is_group_message', true,
+                    'is_read', NEW.is_read,
+                    'created_date', NEW.created_date,
+                    'sender_name', 'You',
+                    'recipient_name', 'Group'
+                )
+            );
+        END IF;
+
+        RETURN NEW;
+    END IF;
+
+    -- Only process messages with recipients (includes group message copies and individual messages)
+    IF NEW.recipient_id IS NULL THEN
+        RETURN NEW;
+    END IF;
+
+    -- Get recipient code
+    SELECT code INTO recipient_code
+    FROM public.members
+    WHERE id = NEW.recipient_id;
+
+    -- Get sender code (if message has a sender)
+    IF NEW.sender_id IS NOT NULL THEN
+        SELECT code INTO sender_code
+        FROM public.members
+        WHERE id = NEW.sender_id;
+    ELSE
+        -- Group message - get creator code
+        SELECT g.creator_code INTO creator_code
+        FROM public.groups g
+        WHERE g.id = NEW.group_id;
+    END IF;
+
+    -- Determine sender display name for recipient
+    IF NEW.is_from_secret_santa THEN
+        sender_display_name := 'Secret Santa';
+    ELSIF NEW.sender_id IS NULL THEN
+        sender_display_name := 'Admin';
+    ELSE
+        SELECT code_name INTO sender_display_name
+        FROM public.members
+        WHERE id = NEW.sender_id;
+    END IF;
+
+    -- Determine recipient display name for sender
+    IF NEW.is_from_secret_santa THEN
+        -- Secret Santa messaging giftee -> sender sees recipient's code_name
+        SELECT code_name INTO recipient_display_name
+        FROM public.members
+        WHERE id = NEW.recipient_id;
+    ELSE
+        -- Giftee messaging Secret Santa -> sender sees "Secret Santa"
+        recipient_display_name := 'Secret Santa';
+    END IF;
+
+    -- Send event to RECIPIENT
+    INSERT INTO app.outbox (topic, event, payload)
+    VALUES (
+        CASE WHEN NEW.is_from_secret_santa
+             THEN 'to_secret_santa:' || recipient_code
+             ELSE 'from_secret_santa:' || recipient_code
+        END,
+        'new_message',
+        jsonb_build_object(
+            'id', NEW.id,
+            'message', NEW.message,
+            'is_group_message', (NEW.group_message_id IS NOT NULL),
+            'is_read', NEW.is_read,
+            'created_date', NEW.created_date,
+            'sender_name', sender_display_name,
+            'recipient_name', 'You'
+        )
+    );
+
+    -- Send event to SENDER (if different from recipient)
+    IF NEW.sender_id IS NOT NULL AND sender_code IS NOT NULL AND sender_code != recipient_code THEN
+        INSERT INTO app.outbox (topic, event, payload)
+        VALUES (
+            CASE WHEN NEW.is_from_secret_santa
+                 THEN 'from_secret_santa:' || sender_code
+                 ELSE 'to_secret_santa:' || sender_code
+            END,
+            'new_message',
+            jsonb_build_object(
+                'id', NEW.id,
+                'message', NEW.message,
+                'is_group_message', (NEW.group_message_id IS NOT NULL),
+                'is_read', NEW.is_read,
+                'created_date', NEW.created_date,
+                'sender_name', 'You',
+                'recipient_name', recipient_display_name
+            )
+        );
+    END IF;
+
+    RETURN NEW;
 END;
 $$;
 
@@ -1606,6 +2426,18 @@ CREATE TRIGGER members_left_trigger
     FOR EACH ROW
     EXECUTE FUNCTION app.handle_member_left();
 
+-- Trigger for new message events
+CREATE TRIGGER messages_new_trigger
+    AFTER INSERT ON public.messages
+    FOR EACH ROW
+    EXECUTE FUNCTION app.handle_new_message();
+
+-- Trigger for message read events
+CREATE TRIGGER messages_read_trigger
+    AFTER UPDATE ON public.messages
+    FOR EACH ROW
+    EXECUTE FUNCTION app.handle_message_read();
+
 -- Trigger for group lock/unlock events
 CREATE TRIGGER groups_lock_unlock_trigger
     AFTER UPDATE ON public.groups
@@ -1631,6 +2463,8 @@ GRANT EXECUTE ON FUNCTION public.assign_santa(TEXT, TEXT) TO anon, authenticated
 GRANT EXECUTE ON FUNCTION public.unlock_group(TEXT, TEXT) TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.kick_member(TEXT, TEXT, TEXT) TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.get_my_secret_santa(TEXT, TEXT) TO anon, authenticated;
+
+
 GRANT EXECUTE ON FUNCTION public.get_members(TEXT, TEXT) TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.is_creator(TEXT, TEXT) TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.is_member(TEXT, TEXT) TO anon, authenticated;
@@ -1639,6 +2473,11 @@ GRANT EXECUTE ON FUNCTION public.get_custom_code_names(TEXT, TEXT) TO anon, auth
 GRANT EXECUTE ON FUNCTION public.get_all_secret_santa_relationships(TEXT, TEXT) TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.backup_creator_code(TEXT, TEXT) TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.restore_creator_code(TEXT, TEXT, TEXT) TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.send_message(TEXT, TEXT, TEXT, BOOLEAN) TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.get_message_history(TEXT, TEXT, BOOLEAN, BOOLEAN) TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.mark_messages_as_read(TEXT, TEXT, INTEGER[], BOOLEAN) TO anon, authenticated;
+
+
 
 -- Grant minimal permissions for realtime subscriptions
 -- Only SELECT on outbox table for realtime to read events

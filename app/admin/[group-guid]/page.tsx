@@ -14,6 +14,7 @@ import { BackToMyGroups } from "@/app/components/BackToHome";
 import { WarningMessage, ErrorMessage, InfoMessage, AlertMessage } from "@/app/components/AlertMessage";
 import { Loading } from "@/app/components/Loading";
 import PasswordInput from "@/app/components/PasswordInput";
+import { SendMessage } from "@/app/components/messaging/SendMessage";
 import supabase from "@/utilities/supabase/browser";
 import { getCreatorCode } from "@/utilities/localStorage";
 
@@ -46,6 +47,7 @@ export default function AdminPage() {
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [statusType, setStatusType] = useState<'success' | 'error'>('success');
   const [isRealtimeConnected, setIsRealtimeConnected] = useState(false);
+  const [creatorCode, setCreatorCode] = useState<string | null>(null);
 
   // Helper functions to handle messages with scroll-to-top
   const showSuccessMessage = (message: string, duration: number = 3000) => {
@@ -84,18 +86,21 @@ export default function AdminPage() {
   const [isResetExpanded, setIsResetExpanded] = useState(false);
   const [resetConfirmationText, setResetConfirmationText] = useState('');
   const [isDeleteExpanded, setIsDeleteExpanded] = useState(false);
+  const [isGroupMessagingExpanded, setIsGroupMessagingExpanded] = useState(false);
 
   useEffect(() => {
     async function fetchGroupDetails() {
       try {
         setLoading(true);
-        const creatorCode = getCreatorCode();
-        if (!creatorCode) {
+        const creatorCodeValue = getCreatorCode();
+        if (!creatorCodeValue) {
           setError('Admin code not found. Please return to the home page.');
           return;
         }
 
-        const details = await getGroupDetails(groupGuid, creatorCode);
+        setCreatorCode(creatorCodeValue);
+
+        const details = await getGroupDetails(groupGuid, creatorCodeValue);
         if (!details) {
           setError('Group not found or you do not have permission to manage this group.');
           return;
@@ -114,7 +119,7 @@ export default function AdminPage() {
         // Fetch group members
         try {
           setLoadingMembers(true);
-          const members = await getGroupMembers(groupGuid, creatorCode);
+          const members = await getGroupMembers(groupGuid, creatorCodeValue);
           setGroupMembers(members);
 
           // Check if admin is already a member
@@ -129,7 +134,7 @@ export default function AdminPage() {
         if (details.use_custom_code_names) {
           try {
             setLoadingCustomNames(true);
-            const customNames = await getCustomCodeNames(groupGuid, creatorCode);
+            const customNames = await getCustomCodeNames(groupGuid, creatorCodeValue);
             setExistingCustomCodeNames(customNames);
           } catch (err) {
             console.error('Failed to fetch custom code names:', err);
@@ -569,6 +574,51 @@ export default function AdminPage() {
           </AlertMessage>
         )}
 
+        {/* Assign Santa Section - Only show when not frozen */}
+        {groupDetails && !groupDetails.is_frozen && (
+          <Card
+            title="Assign Secret Santa"
+            description="Ready to create the Secret Santa assignments? This will randomly pair all members and freeze the group."
+            className="mt-6"
+          >
+            {groupMembers.length < 3 ? (
+              <WarningMessage>
+                <strong>⚠️ Minimum Members Required:</strong> You need at least 3 members to assign Secret Santa pairs.
+              </WarningMessage>
+            ) : (
+              <div>
+                <InfoMessage className="mb-4">
+                  <strong>🎯 Ready to assign!</strong> You have {groupMembers.length} members.
+                  Once assigned, the group will be frozen and no more changes can be made.
+                </InfoMessage>
+                <button
+                  onClick={handleAssignSanta}
+                  disabled={assigning}
+                  className="btn-success w-full py-3 px-6 text-sm font-medium rounded-md focus-btn-success transition-colors duration-200 cursor-pointer"
+                >
+                  {assigning ? 'Assigning...' : '🎁 Assign Secret Santa'}
+                </button>
+              </div>
+            )}
+          </Card>
+        )}
+
+        {/* View Assignments Section - Only show if group is frozen */}
+        {groupDetails && groupDetails.is_frozen && (
+          <Card
+            title="View Secret Santa Assignments"
+            description="See how all the Secret Santa assignments are connected with a visual network diagram or simple table."
+            className="mt-6"
+          >
+            <Link
+              href={`/assignments/${groupGuid}`}
+              className="inline-block w-full py-3 px-6 btn-primary text-sm font-medium rounded-md transition-colors duration-200 shadow-sm text-center cursor-pointer"
+            >
+              View Assignments
+            </Link>
+          </Card>
+        )}
+
         <CollapsibleSection
           title="Group Details & Settings"
           isExpanded={isGroupDetailsExpanded}
@@ -695,14 +745,14 @@ export default function AdminPage() {
                     id="capacity"
                     name="capacity"
                     required
-                    min="2"
+                    min="3"
                     max="100"
                     value={capacity}
                     onChange={(e) => setCapacity(parseInt(e.target.value) || 0)}
                     className="input-primary w-full px-3 py-2 rounded-md text-primary placeholder:text-muted"
                   />
                   <p className="text-xs text-muted mt-1">
-                    Minimum 2 members, maximum 100 members
+                    Minimum 3 members, maximum 100 members
                   </p>
                 </div>
 
@@ -965,7 +1015,7 @@ export default function AdminPage() {
           title={`Group Members (${groupMembers.length} / ${groupDetails.capacity})`}
           isExpanded={isMemberListExpanded}
           onToggle={() => setIsMemberListExpanded(!isMemberListExpanded)}
-          className="rounded-t-none -mt-6 border-t border-accent [&>div>button]:rounded-t-none"
+          className="rounded-t-none rounded-b-none -mt-6 border-t border-accent [&>div>button]:rounded-t-none"
         >
           {loadingMembers ? (
             <div className="flex items-center justify-center py-8">
@@ -1011,11 +1061,10 @@ export default function AdminPage() {
                           </button>
                         </>
                       ) : (
-                        /* Delete button */
                         <button
                           onClick={() => handleConfirmKick(memberName)}
-                          className="action-destructive p-1 rounded-md transition-colors duration-200 cursor-pointer"
-                          title={`Remove ${memberName} from group`}
+                          className="text-error hover:text-error hover:bg-error-hover p-1 rounded-md transition-colors duration-200 cursor-pointer"
+                          title={`Remove ${memberName}`}
                         >
                           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -1029,6 +1078,26 @@ export default function AdminPage() {
             </div>
           )}
         </CollapsibleSection>
+
+        {/* Group Messaging Section */}
+        {groupDetails && creatorCode && (
+          <CollapsibleSection
+            title="Send Group Message"
+            isExpanded={isGroupMessagingExpanded}
+            onToggle={() => setIsGroupMessagingExpanded(!isGroupMessagingExpanded)}
+            className="rounded-t-none -mt-6 border-t border-accent [&>div>button]:rounded-t-none"
+          >
+            <p className="text-sm text-secondary mb-4">
+              Send announcements to all group members like house rules, budget limits, or important dates.
+            </p>
+
+            <SendMessage
+              groupCode={groupGuid}
+              senderCode={creatorCode}
+              messageType="FromAdmin"
+            />
+          </CollapsibleSection>
+        )}
 
         {/* Join Group Section */}
         {groupDetails && !groupDetails.is_frozen && groupDetails.is_open && !isCreatorMember && (
@@ -1088,51 +1157,6 @@ export default function AdminPage() {
               className="inline-block w-full py-3 px-6 btn-primary text-sm font-medium rounded-md transition-colors duration-200 shadow-sm text-center"
             >
               View Group
-            </Link>
-          </Card>
-        )}
-
-        {/* Assign Santa Section - Only show when not frozen */}
-        {groupDetails && !groupDetails.is_frozen && (
-          <Card
-            title="Assign Secret Santa"
-            description="Ready to create the Secret Santa assignments? This will randomly pair all members and freeze the group."
-            className="mt-6"
-          >
-            {groupMembers.length < 2 ? (
-              <WarningMessage>
-                <strong>⚠️ Minimum Members Required:</strong> You need at least 2 members to assign Secret Santa pairs.
-              </WarningMessage>
-            ) : (
-              <div>
-                <InfoMessage className="mb-4">
-                  <strong>🎯 Ready to assign!</strong> You have {groupMembers.length} members.
-                  Once assigned, the group will be frozen and no more changes can be made.
-                </InfoMessage>
-                <button
-                  onClick={handleAssignSanta}
-                  disabled={assigning}
-                  className="btn-success w-full py-3 px-6 text-sm font-medium rounded-md focus-btn-success transition-colors duration-200 cursor-pointer"
-                >
-                  {assigning ? 'Assigning...' : '🎁 Assign Secret Santa'}
-                </button>
-              </div>
-            )}
-          </Card>
-        )}
-
-        {/* View Assignments Section - Only show if group is frozen */}
-        {groupDetails && groupDetails.is_frozen && (
-          <Card
-            title="View Secret Santa Assignments"
-            description="See how all the Secret Santa assignments are connected with a visual network diagram or simple table."
-            className="mt-6"
-          >
-            <Link
-              href={`/assignments/${groupGuid}`}
-              className="inline-block w-full py-3 px-6 btn-primary text-sm font-medium rounded-md transition-colors duration-200 shadow-sm text-center cursor-pointer"
-            >
-              View Assignments
             </Link>
           </Card>
         )}

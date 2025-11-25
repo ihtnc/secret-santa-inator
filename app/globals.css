@@ -26,6 +26,14 @@
   --color-santa-giving-dark: #16a34a; /* green-600 - darker variant */
   --color-santa-receiving: #3b82f6;   /* blue-500 - giver/receiving from */
   --color-santa-receiving-dark: #2563eb; /* blue-600 - darker variant */
+
+  /* Santa message colors */
+  --color-santa-giving-message: #22c55e;    /* green-500 - for giftee messages */
+  --color-santa-receiving-message: #3b82f6; /* blue-500 - for Secret Santa messages */
+
+  /* Group message colors */
+  --color-group-message: #b91c1c;     /* red-700 - matches btn-primary */
+  --color-group-message-text: #ffffff; /* white text */
 }
 
 /* Dark mode using class-based approach */
@@ -55,6 +63,14 @@
   --color-santa-giving-dark: #16a34a; /* green-600 - darker variant */
   --color-santa-receiving: #3b82f6;   /* blue-500 - keep same for visibility */
   --color-santa-receiving-dark: #2563eb; /* blue-600 - darker variant */
+
+  /* Santa message colors for dark mode */
+  --color-santa-giving-message: #16a34a;    /* green-600 - darker variant for giftee messages */
+  --color-santa-receiving-message: #2563eb; /* blue-600 - darker variant for Secret Santa messages */
+
+  /* Group message colors for dark mode */
+  --color-group-message: #991b1b;     /* red-800 - matches dark mode btn-primary */
+  --color-group-message-text: #ffffff; /* white text */
 }
 
 /* Essential component overrides for gray colors and base elements */

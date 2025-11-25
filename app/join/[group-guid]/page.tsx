@@ -249,19 +249,7 @@ export default function JoinGroupPage() {
             </AlertMessage>
           )}
 
-          {groupInfo?.is_frozen && (
-            <WarningMessage>
-              <strong>🔒 Group Locked:</strong> This group is locked. You may not be able to join until it&apos;s unlocked by the admin.
-            </WarningMessage>
-          )}
-
-          {!groupInfo?.is_open && !groupInfo?.is_frozen && (
-            <ErrorMessage>
-              🔴 <strong>Group Closed:</strong> This group is no longer accepting new members.
-            </ErrorMessage>
-          )}
-
-          {/* Group Information Section */}
+          {/* Group Information Section */ }
           {groupInfo && (
             <CollapsibleSection
               title="Group Details"
@@ -280,6 +268,19 @@ export default function JoinGroupPage() {
               }
             >
               <div className="space-y-2 text-sm text-secondary">
+                {/* Group status alerts */}
+                {groupInfo.is_frozen && (
+                  <div className="bg-warning border border-warning rounded-md p-3 mb-4">
+                    <strong>🔒 Group Locked:</strong> This group is locked. You may not be able to join until it&apos;s unlocked by the admin.
+                  </div>
+                )}
+
+                {!groupInfo.is_open && !groupInfo.is_frozen && (
+                  <div className="bg-error border border-error rounded-md p-3 mb-4 text-error-content">
+                    🔴 <strong>Group Closed:</strong> This group is no longer accepting new members.
+                  </div>
+                )}
+
                 <div className="flex justify-between">
                   <span>Group Code:</span>
                   <span className="font-medium font-mono">{groupGuid}</span>

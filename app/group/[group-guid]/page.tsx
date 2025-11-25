@@ -12,6 +12,7 @@ import { PageHeader } from "@/app/components/PageHeader";
 import { BackToMyGroups } from "@/app/components/BackToHome";
 import { WarningMessage, ErrorMessage, AlertMessage } from "@/app/components/AlertMessage";
 import { Loading } from "@/app/components/Loading";
+import { SendMessage } from "@/app/components/messaging/SendMessage";
 import supabase from "@/utilities/supabase/browser";
 import { getCreatorCode } from "@/utilities/localStorage";
 
@@ -49,8 +50,12 @@ export default function GroupPage() {
   const [groupInfo, setGroupInfo] = useState<GroupInfo | null>(null);
   const [members, setMembers] = useState<Member[]>([]);
   const [secretSanta, setSecretSanta] = useState<string | null>(null);
+
+
   const [isMemberListExpanded, setIsMemberListExpanded] = useState(false);
   const [isGroupDetailsExpanded, setIsGroupDetailsExpanded] = useState(false);
+  const [isMessagingExpanded, setIsMessagingExpanded] = useState(false);
+
   const [isLoading, setIsLoading] = useState(true);
   const [isLeaving, setIsLeaving] = useState(false);
   const [isLeaveExpanded, setIsLeaveExpanded] = useState(false);
@@ -118,7 +123,7 @@ export default function GroupPage() {
           return;
         }
 
-        // If group is frozen, get the user's Secret Santa assignment
+        // If group is frozen, get the user's Secret Santa assignment and who is giving to them
         if (groupInfoData?.is_frozen) {
           const secretSantaData = await getMySecretSanta(groupGuid, memberCode);
           setSecretSanta(secretSantaData);
@@ -172,7 +177,9 @@ export default function GroupPage() {
         showSuccessMessage('🔒 Secret Santa assignments have been made! The group is now locked.');
         // Refresh group info and get Secret Santa assignment
         getGroupInfo(groupGuid, memberCode).then(setGroupInfo);
-        getMySecretSanta(groupGuid, memberCode).then(setSecretSanta);
+        getMySecretSanta(groupGuid, memberCode).then((secretSantaData) => {
+          setSecretSanta(secretSantaData);
+        });
       })
       .on('broadcast', { event: 'group_unlocked' }, (payload) => {
         console.log('Group unlocked:', payload);
@@ -307,19 +314,6 @@ export default function GroupPage() {
           </AlertMessage>
         )}
 
-        {/* Group status alerts */}
-        {groupInfo?.is_frozen && (
-          <WarningMessage>
-            <strong>🔒 Group Locked:</strong> Secret Santa assignments have been made! The group is now locked.
-          </WarningMessage>
-        )}
-
-        {!groupInfo?.is_open && !groupInfo?.is_frozen && (
-          <ErrorMessage>
-            🔴 <strong>Group Closed:</strong> This group is no longer accepting new members.
-          </ErrorMessage>
-        )}
-
         {/* Secret Santa Assignment Section - Always show */}
         <div className="bg-success border border-success rounded-lg shadow-md">
           <div className="px-6 py-6">
@@ -362,15 +356,56 @@ export default function GroupPage() {
                 <strong>⏳ Waiting for Secret Santa Assignments:</strong> The group admin hasn&apos;t assigned Secret Santa pairs yet.
               </WarningMessage>
             )}
+
+            {/* Admin messaging */}
+            {memberCode && (
+              <div className="mt-4">
+                <h3 className="text-lg font-medium text-primary mb-4">
+                  Your Messages
+                </h3>
+                <p className="text-sm text-secondary mb-4">
+                  Messages from the admin and communication with your giftee appear here. Ask about sizes, preferences, or coordinate delivery.
+                </p>
+                <SendMessage
+                  groupCode={groupGuid}
+                  senderCode={memberCode}
+                  messageType="FromSecretSanta"
+                  hideIcon={!groupInfo?.is_frozen}
+                  compactView={true}
+                />
+              </div>
+            )}
           </div>
         </div>
+
+
+
+        {/* Message Your Secret Santa Section - Only when group is locked */}
+        {groupInfo?.is_frozen && memberCode && (
+          <CollapsibleSection
+            title="Message Your Secret Santa"
+            isExpanded={isMessagingExpanded}
+            onToggle={() => setIsMessagingExpanded(!isMessagingExpanded)}
+            className="mt-6"
+          >
+            <p className="text-sm text-secondary mb-4">
+              Send anonymous messages to your Secret Santa like your wishlist, size info, or preferences.
+            </p>
+
+            <SendMessage
+              groupCode={groupGuid}
+              senderCode={memberCode}
+              messageType="ToSecretSanta"
+            />
+          </CollapsibleSection>
+        )}
 
         {/* Group Details Section - Collapsible */}
         <CollapsibleSection
           title="Group Details"
           isExpanded={isGroupDetailsExpanded}
           onToggle={() => setIsGroupDetailsExpanded(!isGroupDetailsExpanded)}
-          className="rounded-b-none"
+          className="rounded-b-none mt-6"
           rightContent={
             <div className="flex pt-0.5 space-x-2">
               {!groupInfo?.is_frozen && (
@@ -383,6 +418,19 @@ export default function GroupPage() {
           }
         >
           <div className="space-y-2 text-sm text-secondary">
+            {/* Group status alerts */}
+            {groupInfo?.is_frozen && (
+              <div className="bg-warning border border-warning rounded-md p-3 mb-4">
+                <strong>🔒 Group Locked:</strong> Secret Santa assignments have been made! The group is now locked.
+              </div>
+            )}
+
+            {!groupInfo?.is_open && !groupInfo?.is_frozen && (
+              <div className="bg-error border border-error rounded-md p-3 mb-4 text-error-content">
+                🔴 <strong>Group Closed:</strong> This group is no longer accepting new members.
+              </div>
+            )}
+
             <div className="flex justify-between">
               <span>Group Code:</span>
               <span className="font-medium font-mono">{groupGuid}</span>
@@ -450,6 +498,8 @@ export default function GroupPage() {
             </a>
           </Card>
         )}
+
+
 
         {/* Leave Group Section - Only show if group is not frozen */}
         {!groupInfo?.is_frozen && (
