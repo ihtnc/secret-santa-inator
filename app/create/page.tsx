@@ -119,6 +119,7 @@ export default function CreateGroupPage() {
                     maxLength={30}
                     value={groupName}
                     onChange={(e) => setGroupName(e.target.value)}
+                    autoComplete="off"
                     className="input-primary w-full px-3 py-2 rounded-md text-primary placeholder:text-muted"
                     placeholder="Enter a name for your group"
                   />
@@ -140,6 +141,7 @@ export default function CreateGroupPage() {
                     max="100"
                     value={capacity}
                     onChange={(e) => setCapacity(e.target.value)}
+                    autoComplete="off"
                     className="input-primary w-full px-3 py-2 rounded-md text-primary placeholder:text-muted"
                   />
                   <p className="text-xs text-muted mt-1">
@@ -351,6 +353,7 @@ export default function CreateGroupPage() {
                               setCustomCodeNames(newNames);
                             }}
                             placeholder={`Code name ${index + 1} (e.g., MysteriousElf)`}
+                            autoComplete="off"
                             className={`input-primary w-full px-3 py-2 rounded-md text-primary placeholder:text-muted text-sm ${
                               customCodeNames.length > 1 && index < customCodeNames.length - 1 ? 'pr-10' : ''
                             }`}
@@ -401,6 +404,7 @@ export default function CreateGroupPage() {
                     maxLength={30}
                     value={creatorName}
                     onChange={(e) => setCreatorName(e.target.value)}
+                    autoComplete="off"
                     className="input-primary w-full px-3 py-2 rounded-md text-primary placeholder:text-muted"
                     placeholder="Enter your name"
                   />
@@ -455,6 +459,7 @@ export default function CreateGroupPage() {
                       name="creatorCodeName"
                       required
                       maxLength={30}
+                      autoComplete="off"
                       className="input-primary w-full px-3 py-2 rounded-md text-primary placeholder:text-muted"
                       placeholder="Enter your code name (e.g., MysteriousElf)"
                     />

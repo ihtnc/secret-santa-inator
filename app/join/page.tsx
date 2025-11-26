@@ -79,6 +79,7 @@ export default function JoinPage() {
                   onChange={(e) => setGroupGuid(e.target.value)}
                   placeholder="Enter group code..."
                   className="input-primary w-full px-3 py-2 rounded-md text-primary placeholder:text-muted"
+                  autoComplete="off"
                   required
                   disabled={isLoading}
                 />

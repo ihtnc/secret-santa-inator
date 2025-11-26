@@ -657,6 +657,7 @@ export default function AdminPage() {
                     name="groupCode"
                     value={groupDetails.group_guid}
                     readOnly
+                    autoComplete="off"
                     className="input-primary w-full px-3 py-2 rounded-md text-primary placeholder:text-muted opacity-60 font-mono"
                   />
                   <p className="text-xs text-muted mt-1">
@@ -674,6 +675,7 @@ export default function AdminPage() {
                     name="groupName"
                     value={groupDetails.name}
                     readOnly
+                    autoComplete="off"
                     className="input-primary w-full px-3 py-2 rounded-md text-primary placeholder:text-muted opacity-60"
                   />
                   <p className="text-xs text-muted mt-1">
@@ -691,6 +693,7 @@ export default function AdminPage() {
                     name="adminName"
                     value={groupDetails.creator_name}
                     readOnly
+                    autoComplete="off"
                     className="input-primary w-full px-3 py-2 rounded-md text-primary placeholder:text-muted opacity-60"
                   />
                   <p className="text-xs text-muted mt-1">
@@ -749,6 +752,7 @@ export default function AdminPage() {
                     max="100"
                     value={capacity}
                     onChange={(e) => setCapacity(parseInt(e.target.value) || 0)}
+                    autoComplete="off"
                     className="input-primary w-full px-3 py-2 rounded-md text-primary placeholder:text-muted"
                   />
                   <p className="text-xs text-muted mt-1">
@@ -967,6 +971,7 @@ export default function AdminPage() {
                                       setNewCustomCodeNames(updatedNames);
                                     }}
                                     placeholder={`New code name ${index + 1} (e.g., SecretReindeer)`}
+                                    autoComplete="off"
                                     className="input-primary w-full px-3 py-2 rounded-md text-primary placeholder:text-muted text-sm pr-10"
                                   />
                                   <button
@@ -1122,6 +1127,7 @@ export default function AdminPage() {
                     name="creatorCodeName"
                     required
                     maxLength={30}
+                    autoComplete="off"
                     className="input-primary w-full px-3 py-2 rounded-md text-primary placeholder:text-muted"
                     placeholder="Enter your code name (e.g., MysteriousElf)"
                   />
@@ -1185,6 +1191,7 @@ export default function AdminPage() {
               value={resetConfirmationText}
               onChange={(e) => setResetConfirmationText(e.target.value)}
               placeholder="RESET"
+              autoComplete="off"
               className="input-primary w-full px-3 py-2 rounded-md text-primary placeholder:text-muted mb-4"
             />
 
@@ -1222,6 +1229,7 @@ export default function AdminPage() {
               value={deleteConfirmationText}
               onChange={(e) => setDeleteConfirmationText(e.target.value)}
               placeholder="DELETE"
+              autoComplete="off"
               className="input-primary w-full px-3 py-2 rounded-md text-primary placeholder:text-muted mb-4"
             />
 

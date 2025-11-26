@@ -392,6 +392,7 @@ export default function JoinGroupPage() {
                       name="name"
                       required
                       maxLength={30}
+                      autoComplete="off"
                       className="input-primary w-full px-3 py-2 rounded-md text-primary placeholder:text-muted"
                       placeholder="Enter your name"
                     />
@@ -433,6 +434,7 @@ export default function JoinGroupPage() {
                     name="codeName"
                     required
                     maxLength={30}
+                    autoComplete="off"
                     className="input-primary w-full px-3 py-2 rounded-md text-primary placeholder:text-muted"
                     placeholder="Enter your code name (e.g., MysteriousElf)"
                   />

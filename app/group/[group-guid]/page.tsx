@@ -522,6 +522,7 @@ export default function GroupPage() {
               value={leaveConfirmationText}
               onChange={(e) => setLeaveConfirmationText(e.target.value)}
               placeholder="LEAVE"
+              autoComplete="off"
               className="input-primary w-full px-3 py-2 rounded-md text-primary placeholder:text-muted mb-4"
             />
 

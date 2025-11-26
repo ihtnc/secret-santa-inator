@@ -43,6 +43,7 @@ export default function PasswordInput({
         required={required}
         minLength={minLength}
         onChange={onChange}
+        autoComplete="off"
         className={`${className} pr-10`}
       />
       <button

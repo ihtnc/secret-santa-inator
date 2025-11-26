@@ -69,6 +69,7 @@ export default function Home() {
                 value={groupGuid}
                 onChange={(e) => setGroupGuid(e.target.value)}
                 placeholder="Enter group code..."
+                autoComplete="off"
                 className="input-primary flex-1 px-4 py-3 text-lg border-2 rounded-lg shadow-sm placeholder:text-muted"
                 required
               />

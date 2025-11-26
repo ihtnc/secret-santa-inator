@@ -146,6 +146,7 @@ export default function ResetDataPage() {
                     id="confirmText"
                     value={confirmText}
                     onChange={(e) => setConfirmText(e.target.value)}
+                    autoComplete="off"
                     className="input-primary w-full px-3 py-2 border rounded-md"
                     placeholder="RESET"
                   />
