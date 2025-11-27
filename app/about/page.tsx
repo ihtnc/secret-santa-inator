@@ -7,11 +7,11 @@ export default function AboutPage() {
   return (
     <div className="bg-surface h-full flex flex-col">
       <div className="flex-1 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-        <PageHeader 
+        <PageHeader
           title="About Secret Santa-inator"
           emoji="📖"
         />
-        
+
         <div className="bg-card rounded-lg shadow-md p-8">
 
           <div className="space-y-6 text-secondary">
@@ -37,7 +37,7 @@ export default function AboutPage() {
                 </div>
                 <div className="flex items-start space-x-3">
                   <span className="shrink-0 w-6 h-6 bg-green-600 text-white rounded-full flex items-center justify-center text-sm font-bold">3</span>
-                  <p className="leading-relaxed"><s><strong>Add Wish Lists:</strong> Everyone can add their wish list items to help their Secret Santa choose the perfect gift.</s> <em className="text-sm text-muted">(maybe in the future)</em></p>
+                  <p className="leading-relaxed"><strong>Add Wish Lists:</strong> Everyone can add their wish list items to help their Secret Santa choose the perfect gift.</p>
                 </div>
                 <div className="flex items-start space-x-3">
                   <span className="shrink-0 w-6 h-6 bg-green-600 text-white rounded-full flex items-center justify-center text-sm font-bold">4</span>
@@ -99,27 +99,41 @@ export default function AboutPage() {
               <p className="leading-relaxed mb-2">
                 This project came about due to a random request from my sister to hunt for a tool that could help her organize Secret Santa groups.
               </p>
-              <p className="leading-relaxed mb-2">
-                I then took this as an opportunity to conduct an experiment: How far can I take an AI tool (GitHub Copilot) to write code for me without me intervening and writing it myself.
-                As it turns out, very far!
-              </p>
-              <p className="leading-relaxed mb-2">
-                You see, this application is written virtually by AI &mdash; everything from front-end logic to backend triggers.
-                I haven&apos;t written a line of code in this project apart from this small section here on the About page and a couple of Supabase client code I copied from a previous project.
-              </p>
-              <p className="leading-relaxed mb-2">
-                Most of the time I spent is on writing prompts, reviewing the changes, accepting some changes, and refining the rest with further prompts.
-              </p>
-              <p className="leading-relaxed mb-2">
-                Notice the &quot;Add Wish Lists&quot; feature it hallucinated? I figured to keep it for illustration purposes and just ask GitHub Copilot to add a disclaimer there.
-              </p>
-              <p className="leading-relaxed mb-2">
-                Am I satisfied with the end result? On the backend side, absolutely! That part took the most scrutiny from me.
-                As for the frontend, I&apos;ll admit I still feel uneasy about the fact that I just blindly accepted the suggested code based on how it looked on the browser.
-              </p>
-              <p className="leading-relaxed mb-2">
-                Anyway, this whole project/experiment has been fun and I am very happy that I have something to show for, considering that it only took about a day to complete.
-              </p>
+              <details className="group">
+                <summary className="cursor-pointer text-accent hover:text-accent-dark font-medium mb-2">
+                  Read more
+                </summary>
+                <div className="mt-4 space-y-4 border-l-2 border-accent/20 pl-4">
+                  <p className="leading-relaxed mb-2">
+                    I then took this as an opportunity to conduct an experiment: How far can I take an AI tool (GitHub Copilot) to write code for me without me intervening and writing it myself.
+                    As it turns out, very far!
+                  </p>
+                  <p className="leading-relaxed mb-2">
+                    You see, this application is written virtually by AI &mdash; everything from front-end logic to backend triggers.
+                    I haven&apos;t written a line of code in this project apart from this small section here on the About page and a couple of Supabase client code I copied from a previous project.
+                    That emdash is intentional for the lulz.
+                  </p>
+                  <p className="leading-relaxed mb-2">
+                    Most of the time I spent is on writing prompts, reviewing the changes, accepting some changes, and refining the rest with further prompts.
+                  </p>
+                  <p className="leading-relaxed mb-2">
+                    However, it initially hallucinated the &quot;Add Wish Lists&quot; feature.
+                    Though it did give me an idea for a feature, which, over time, I eventually added along with several other features.
+                    I decided to keep the wish list &quot;feature&quot; here to demonstrate that the AI came up with this on its own.
+                  </p>
+                  <p className="leading-relaxed mb-2">
+                    Am I satisfied with the end result? On the backend side, absolutely! That part took the most scrutiny from me.
+                    As for the frontend, I&apos;ll admit I still feel uneasy about the fact that I just blindly accepted the suggested code based on how it looked on the browser.
+                    I tried to steer it to refactor some code at times and guide it to a better implementation but mostly I just accepted what it gave me.
+                  </p>
+                  <p>
+                    However, I don&apos;t think I&apos;ll be able to compete with how fast it is able to generate advanced components like collapsible cards, message history popups, network visualisation in SVG, etc.
+                  </p>
+                  <p className="leading-relaxed mb-2">
+                    Anyway, this whole project/experiment has been fun and I am very happy that I have something to show for, considering that it only took about a day for the first cut that I&apos;m happy with to reach Production.
+                  </p>
+                </div>
+              </details>
             </section>
           </div>
         </div>
