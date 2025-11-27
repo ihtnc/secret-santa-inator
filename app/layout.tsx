@@ -62,7 +62,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased h-full flex flex-col bg-surface text-primary`}
       >
         <DarkModeProvider>
-          <main className="flex-1">
+          <main className="flex-1 min-w-md">
             {children}
           </main>
           <Footer />

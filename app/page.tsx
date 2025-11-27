@@ -71,11 +71,9 @@ export default function Home() {
                 placeholder="Enter group code..."
                 autoComplete="off"
                 className="input-primary flex-1 px-4 py-3 text-lg border-2 rounded-lg shadow-sm placeholder:text-muted"
-                required
               />
               <button
                 type="submit"
-                disabled={!groupGuid.trim()}
                 className="btn-success py-3 px-6 text-lg font-semibold rounded-lg focus-btn-success cursor-pointer transition-colors whitespace-nowrap shadow-md sm:w-auto w-full"
               >
                 🎁 Join Group

@@ -26,6 +26,13 @@ export default function CreateGroupPage() {
   const [capacity, setCapacity] = useState('10');
   const [description, setDescription] = useState('');
   const [expiryDate, setExpiryDate] = useState('');
+  const [password, setPassword] = useState('');
+
+  // State for tracking which optional fields are being edited
+  const [editingCapacity, setEditingCapacity] = useState(false);
+  const [editingPassword, setEditingPassword] = useState(false);
+  const [editingDescription, setEditingDescription] = useState(false);
+  const [editingExpiryDate, setEditingExpiryDate] = useState(false);
 
   // State for error handling
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
@@ -129,80 +136,165 @@ export default function CreateGroupPage() {
                 </div>
 
                 <div>
-                  <label htmlFor="capacity" className="block text-sm font-medium text-label mb-1">
-                    Maximum Members *
-                  </label>
-                  <input
-                    type="number"
-                    id="capacity"
-                    name="capacity"
-                    required
-                    min="3"
-                    max="100"
-                    value={capacity}
-                    onChange={(e) => setCapacity(e.target.value)}
-                    autoComplete="off"
-                    className="input-primary w-full px-3 py-2 rounded-md text-primary placeholder:text-muted"
-                  />
-                  <p className="text-xs text-muted mt-1">
-                    Minimum 3 members, maximum 100 members
-                  </p>
+                  {!editingCapacity ? (
+                    <div>
+                      <input type="hidden" name="capacity" value={capacity} />
+                      <div className="flex items-center justify-between">
+                        <label htmlFor="capacity" className="block text-sm font-medium text-label mb-1">
+                          Maximum Members: <span className="font-normal text-primary">{capacity}</span>
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => setEditingCapacity(true)}
+                          className="text-muted hover:text-secondary p-1 rounded-md hover:bg-surface transition-colors cursor-pointer"
+                          title="Edit maximum members"
+                        >
+                          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div>
+                      <label htmlFor="capacity" className="block text-sm font-medium text-label mb-1">
+                        Maximum Members: *
+                      </label>
+                      <input
+                        type="number"
+                        id="capacity"
+                        name="capacity"
+                        required
+                        min="3"
+                        max="100"
+                        value={capacity}
+                        onChange={(e) => setCapacity(e.target.value)}
+                        autoComplete="off"
+                        className="input-primary w-full px-3 py-2 rounded-md text-primary placeholder:text-muted"
+                      />
+                      <p className="text-xs text-muted mt-1">
+                        Minimum 3 members, maximum 100 members
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 <div>
-                  <label htmlFor="password" className="block text-sm font-medium text-label mb-1">
-                    Group Password (Optional)
-                  </label>
-                  <PasswordInput
-                    id="password"
-                    name="password"
-                    className="input-primary w-full px-3 py-2 rounded-md text-primary placeholder:text-muted"
-                    placeholder="Leave blank for no password"
-                  />
-                  <p className="text-xs text-muted mt-1">
-                    If set, members will need this password to join
-                  </p>
+                  {!editingPassword ? (
+                    <div className="flex items-center justify-between">
+                      <label htmlFor="password" className="block text-sm font-medium text-label mb-1">
+                        Group Password: <span className="font-normal text-primary">{password ? '••••••••' : 'None'}</span>
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setEditingPassword(true)}
+                        className="text-muted hover:text-secondary p-1 rounded-md hover:bg-surface transition-colors cursor-pointer"
+                        title="Edit group password"
+                      >
+                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                      </button>
+                    </div>
+                  ) : (
+                    <div>
+                      <label htmlFor="password" className="block text-sm font-medium text-label mb-1">
+                        Group Password (Optional)
+                      </label>
+                      <PasswordInput
+                        id="password"
+                        name="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="input-primary w-full px-3 py-2 rounded-md text-primary placeholder:text-muted"
+                        placeholder="Leave blank for no password"
+                      />
+                      <p className="text-xs text-muted mt-1">
+                        If set, members will need this password to join
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 <div>
-                  <div className="flex justify-between items-center mb-1">
-                    <label htmlFor="description" className="block text-sm font-medium text-label">
-                      Description (Optional)
-                    </label>
-                    <span className="text-xs text-muted">
-                      {description.length}/500
-                    </span>
-                  </div>
-                  <textarea
-                    id="description"
-                    name="description"
-                    rows={3}
-                    maxLength={500}
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    className="input-primary w-full px-3 py-2 rounded-md text-primary placeholder:text-muted resize-none"
-                    placeholder="Describe your Secret Santa event..."
-                  />
-                  <p className="text-xs text-muted mt-1">
-                    Provide additional details about your Secret Santa group
-                  </p>
+                  {!editingDescription ? (
+                    <div className="flex items-center justify-between">
+                      <label htmlFor="description" className="block text-sm font-medium text-label mb-1">
+                        Description: <span className="font-normal text-primary">{description || 'None'}</span>
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setEditingDescription(true)}
+                        className="text-muted hover:text-secondary p-1 rounded-md hover:bg-surface transition-colors cursor-pointer"
+                        title="Edit description"
+                      >
+                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                      </button>
+                    </div>
+                  ) : (
+                    <div>
+                      <div className="flex justify-between items-center mb-1">
+                        <label htmlFor="description" className="block text-sm font-medium text-label">
+                          Description (Optional)
+                        </label>
+                        <span className="text-xs text-muted">
+                          {description.length}/500
+                        </span>
+                      </div>
+                      <textarea
+                        id="description"
+                        name="description"
+                        rows={3}
+                        maxLength={500}
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
+                        className="input-primary w-full px-3 py-2 rounded-md text-primary placeholder:text-muted resize-none"
+                        placeholder="Describe your Secret Santa event..."
+                      />
+                      <p className="text-xs text-muted mt-1">
+                        Provide additional details about your Secret Santa group
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 <div>
-                  <label htmlFor="expiryDate" className="block text-sm font-medium text-label mb-1">
-                    Expiry Date (Optional)
-                  </label>
-                  <input
-                    type="date"
-                    id="expiryDate"
-                    name="expiryDate"
-                    value={expiryDate}
-                    onChange={(e) => setExpiryDate(e.target.value)}
-                    className="input-primary w-full px-3 py-2 rounded-md text-primary"
-                  />
-                  <p className="text-xs text-muted mt-1">
-                    Defaults to 1 month from now if not specified
-                  </p>
+                  {!editingExpiryDate ? (
+                    <div className="flex items-center justify-between">
+                      <label htmlFor="expiryDate" className="block text-sm font-medium text-label mb-1">
+                        Expiry Date: <span className="font-normal text-primary">{expiryDate || '1 month from now'}</span>
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setEditingExpiryDate(true)}
+                        className="text-muted hover:text-secondary p-1 rounded-md hover:bg-surface transition-colors cursor-pointer"
+                        title="Edit expiry date"
+                      >
+                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                      </button>
+                    </div>
+                  ) : (
+                    <div>
+                      <label htmlFor="expiryDate" className="block text-sm font-medium text-label mb-1">
+                        Expiry Date (Optional)
+                      </label>
+                      <input
+                        type="date"
+                        id="expiryDate"
+                        name="expiryDate"
+                        value={expiryDate}
+                        onChange={(e) => setExpiryDate(e.target.value)}
+                        className="input-primary w-full px-3 py-2 rounded-md text-primary"
+                      />
+                      <p className="text-xs text-muted mt-1">
+                        Defaults to 1 month from now if not specified
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
             </CardSection>

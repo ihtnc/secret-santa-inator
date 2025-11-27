@@ -119,12 +119,15 @@ const MessageList = ({ allMessages, loadingHistory, formatDate }: {
 );
 
 // Shared popup header
-const PopupHeader = ({ loadMessageHistory, handleClose }: {
+const PopupHeader = ({ loadMessageHistory, handleClose, totalCount }: {
   loadMessageHistory: () => void,
-  handleClose: () => void
+  handleClose: () => void,
+  totalCount?: number
 }) => (
   <div className="flex justify-between items-center p-3 border-b-2 border-accent bg-surface">
-    <h3 className="text-sm font-medium text-primary">Messages</h3>
+    <h3 className="text-sm font-medium text-primary">
+      Messages{totalCount && totalCount > 0 ? ` (${totalCount})` : ''}
+    </h3>
     <div className="flex items-center space-x-1">
       <button
         onClick={loadMessageHistory}
@@ -187,6 +190,16 @@ const MessageForm = ({
         value={message}
         onChange={(e) => setMessage(e.target.value)}
         onClick={!compactView ? handleTextboxClick : undefined}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' && !e.shiftKey && !isSubmitting && message.trim()) {
+            e.preventDefault();
+            const form = e.currentTarget.form;
+            if (form) {
+              const formData = new FormData(form);
+              handleSubmit(formData);
+            }
+          }
+        }}
         placeholder="Type a message..."
         required
         disabled={isSubmitting}
@@ -302,11 +315,14 @@ export function SendMessage({
       const icon = compactView
         ? document.querySelector('[data-compact-button]')
         : document.querySelector('[data-regular-icon]');
+      const unreadCountButton = compactView
+        ? document.querySelector('[data-compact-button]')?.nextElementSibling as Element
+        : null;
       const sendButton = compactView
         ? document.querySelector('[data-compact-popup] button[type="submit"]')
         : document.querySelector('[data-regular-input]')?.parentElement?.querySelector('button[type="submit"]');
 
-      if (popup && trigger && !popup.contains(target) && !trigger.contains(target) && (!icon || !icon.contains(target)) && (!sendButton || !sendButton.contains(target))) {
+      if (popup && trigger && !popup.contains(target) && !trigger.contains(target) && (!icon || !icon.contains(target)) && (!unreadCountButton || !unreadCountButton.contains(target)) && (!sendButton || !sendButton.contains(target))) {
         setIsExpanded(false);
       }
     };
@@ -540,15 +556,23 @@ export function SendMessage({
 
         {/* Unread count display for compact view */}
         {messageCounts.total_count > 0 && (
-          <div className="text-sm text-primary whitespace-nowrap">
-            {messageCounts.unread_count}/{messageCounts.total_count} unread
-          </div>
+          <button
+            onClick={handleExpand}
+            className="text-sm text-primary whitespace-nowrap cursor-pointer hover:text-secondary transition-colors"
+          >
+            {messageCounts.unread_count > 0
+              ? `${messageCounts.unread_count} new`
+              : messageCounts.total_count === 1
+                ? '1 message'
+                : `${messageCounts.total_count} messages`
+            }
+          </button>
         )}
 
         {/* Compact view expanded content */}
         {isExpanded && (
           <div data-compact-popup className="absolute bottom-12 left-0 z-50 bg-card border-2 border-accent rounded-md shadow-xl min-w-96 ring-1 ring-black ring-opacity-5">
-            <PopupHeader loadMessageHistory={loadMessageHistory} handleClose={handleClose} />
+            <PopupHeader loadMessageHistory={loadMessageHistory} handleClose={handleClose} totalCount={messageCounts.total_count} />
             <MessageList allMessages={allMessages} loadingHistory={loadingHistory} formatDate={formatDate} />
             {!hideIcon && (
               <div className="border-t-2 border-accent p-3">
@@ -584,7 +608,7 @@ export function SendMessage({
       {/* Chat Messages Section (shown when expanded) */}
       {isExpanded && (
         <div data-regular-popup className="absolute bottom-full left-0 right-0 mb-2 border-2 border-accent rounded-md bg-card shadow-xl z-10 ring-1 ring-black ring-opacity-5">
-          <PopupHeader loadMessageHistory={loadMessageHistory} handleClose={handleClose} />
+          <PopupHeader loadMessageHistory={loadMessageHistory} handleClose={handleClose} totalCount={messageCounts.total_count} />
           <MessageList allMessages={allMessages} loadingHistory={loadingHistory} formatDate={formatDate} />
         </div>
       )}
