@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { getUserInfo, getMySecretSanta, getGroupMembers, getGroupInfo, leaveGroup } from "./actions";
+import { getMySecretSanta, getGroupMembers, getGroupInfo, leaveGroup, getMemberDetailsOrRedirect } from "./actions";
 import LiveIndicator from "@/app/components/LiveIndicator";
 import CollapsibleSection from "@/app/components/CollapsibleSection";
 import MemberListItem from "@/app/components/MemberListItem";
@@ -65,8 +65,7 @@ export default function GroupPage() {
   const [statusType, setStatusType] = useState<'success' | 'error'>('success');
   const [isRealtimeConnected, setIsRealtimeConnected] = useState(false);
 
-  // Use ref to store userInfo for event handlers to avoid dependency issues
-  const userInfoRef = useRef<UserInfo | null>(null);
+
 
   // Helper functions to handle messages with scroll-to-top
   const showSuccessMessage = (message: string, duration: number = 3000) => {
@@ -92,11 +91,12 @@ export default function GroupPage() {
       }
 
       try {
-        // Get user info (which also validates membership)
-        const userInfoData = await getUserInfo(groupGuid, memberCode);
+        // Check membership and redirect server-side if not a member
+        const userInfoData = await getMemberDetailsOrRedirect(groupGuid, memberCode);
+        
+        // If userInfoData is null, there was an error - let client handle it
         if (!userInfoData) {
-          // User is not a member, redirect to join page
-          router.push(`/join/${groupGuid}`);
+          setError("Unable to verify membership or you do not have permission to access this group.");
           return;
         }
 
@@ -112,16 +112,8 @@ export default function GroupPage() {
         }
 
         setUserInfo(userInfoData);
-        userInfoRef.current = userInfoData;
         setGroupInfo(groupInfoData);
         setMembers(membersData);
-
-        // Check if current user is still in the group
-        if (userInfoData && !membersData.some((member: Member) => member.name === userInfoData.name)) {
-          console.log('Current user is not in the members list, redirecting to join page');
-          router.push(`/join/${groupGuid}`);
-          return;
-        }
 
         // If group is frozen, get the user's Secret Santa assignment and who is giving to them
         if (groupInfoData?.is_frozen) {
@@ -137,6 +129,11 @@ export default function GroupPage() {
     };
 
     fetchData();
+  }, [groupGuid, memberCode]);
+
+  // Separate useEffect for realtime subscription to avoid dependency issues
+  useEffect(() => {
+    if (!groupGuid || !userInfo) return;
 
     // Set up realtime subscription for member changes
     const memberChannel = supabase
@@ -163,9 +160,8 @@ export default function GroupPage() {
             const updatedMembers = prevMembers.filter(member => member.name !== name);
 
             // Check if the current user was kicked/left
-            if (userInfoRef.current && name === userInfoRef.current.name) {
-              console.log('Current user was removed from group, redirecting to join page');
-              router.push(`/join/${groupGuid}`);
+            if (userInfo && name === userInfo.name) {
+              router.replace(`/join/${groupGuid}`);
             }
 
             return updatedMembers;
@@ -216,7 +212,7 @@ export default function GroupPage() {
       setIsRealtimeConnected(false);
       memberChannel.unsubscribe();
     };
-  }, [groupGuid, memberCode, router]);
+  }, [groupGuid, userInfo, memberCode, router]);
 
   const handleLeaveGroup = async (formData: FormData) => {
     try {

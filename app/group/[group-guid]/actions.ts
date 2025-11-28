@@ -9,31 +9,36 @@ type ActionResult = {
   error?: string;
 };
 
-export async function getUserInfo(groupGuid: string, memberCode: string) {
+export async function getMemberDetailsOrRedirect(groupGuid: string, memberCode: string) {
   const supabase = await getClient();
 
+  let memberData = null;
+
   try {
-    // Get member information using the get_member function
-    const { data: memberData, error } = await supabase.rpc("get_member", {
+    // First check if user is a member
+    const { data: data, error: memberError } = await supabase.rpc("get_member", {
       p_group_guid: groupGuid,
       p_member_code: memberCode,
     });
 
-    if (error) {
-      console.error("Error getting member info:", error);
+    if (memberError) {
+      console.error("Error getting member info:", memberError);
       return null;
     }
 
-    // If no data returned, member doesn't exist
-    if (!memberData || memberData.length === 0) {
-      return null;
-    }
-
-    return memberData[0];
+    memberData = data;
   } catch (error) {
-    console.error("Failed to get member info:", error);
+    console.error("Failed to check access:", error);
     return null;
   }
+
+  // If user is a member, return their info
+  if (memberData && memberData.length > 0) {
+    return memberData[0];
+  }
+
+  // If not a member, redirect to join page (outside try-catch so redirect throws properly)
+  redirect(`/join/${groupGuid}`);
 }
 
 export async function getMySecretSanta(groupGuid: string, memberCode: string) {

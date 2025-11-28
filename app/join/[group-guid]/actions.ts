@@ -57,8 +57,10 @@ export async function joinGroup(formData: FormData): Promise<ActionResult | neve
   redirect(`/group/${groupGuid}`);
 }
 
-export async function getGroupInfo(groupGuid: string, memberCode: string = '') {
+export async function getGroupMembershipAndRedirect(groupGuid: string, memberCode: string) {
   const supabase = await getClient();
+
+  let info = null;
 
   try {
     // Get group information with membership status
@@ -72,9 +74,16 @@ export async function getGroupInfo(groupGuid: string, memberCode: string = '') {
       return null;
     }
 
-    return groupInfo && groupInfo.length > 0 ? groupInfo[0] : null;
+    info = groupInfo && groupInfo.length > 0 ? groupInfo[0] : null;
   } catch (error) {
-    console.error("Failed to get group info:", error);
+    console.error("Failed to check membership:", error);
     return null;
   }
+
+  // If user is already a member, redirect to group page (outside try-catch so redirect throws properly)
+  if (info?.is_member) {
+    redirect(`/group/${groupGuid}`);
+  }
+
+  return info;
 }

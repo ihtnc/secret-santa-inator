@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
-import { joinGroup, getGroupInfo } from "./actions";
+import { useParams } from "next/navigation";
+import { joinGroup, getGroupMembershipAndRedirect } from "./actions";
 import LiveIndicator from "@/app/components/LiveIndicator";
 import { StatusBadge } from "@/app/components/Badge";
 import { Card } from "@/app/components/Card";
@@ -34,7 +34,6 @@ interface GroupInfo {
 
 export default function JoinGroupPage() {
   const params = useParams();
-  const router = useRouter();
   const groupGuid = params['group-guid'] as string;
 
   // Get creator code from localStorage
@@ -72,16 +71,10 @@ export default function JoinGroupPage() {
       }
 
       try {
-        const info = await getGroupInfo(groupGuid, creatorCode);
+        // This will redirect server-side if user is already a member
+        const info = await getGroupMembershipAndRedirect(groupGuid, creatorCode);
         if (info) {
           setGroupInfo(info);
-
-          // Check if user is already a member
-          if (info.is_member) {
-            // User is already a member, redirect to group page
-            router.push(`/group/${groupGuid}`);
-            return;
-          }
         } else {
           setError("Group not found or you do not have permission to access this group.");
         }
@@ -94,7 +87,7 @@ export default function JoinGroupPage() {
     };
 
     fetchGroupInfo();
-  }, [groupGuid, creatorCode, router]);
+  }, [groupGuid, creatorCode]);
 
   // Real-time subscription for group updates
   useEffect(() => {
