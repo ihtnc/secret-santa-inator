@@ -1889,9 +1889,11 @@ BEGIN
             RAISE EXCEPTION 'Only group admin can view group message history';
         END IF;
 
-        SELECT 
+        -- Admins don't receive group messages, they only send them
+        -- So they should never have unread group message counts
+        SELECT
             COUNT(*)::INTEGER,
-            COUNT(CASE WHEN msg.is_read = FALSE THEN 1 END)::INTEGER
+            0::INTEGER  -- Always 0 unread for admin since they only send messages
         INTO total_count_val, unread_count_val
         FROM public.messages msg
         WHERE msg.group_id = group_record.id
@@ -1910,7 +1912,7 @@ BEGIN
         WHERE s.group_id = group_record.id
         AND s.santa_id = member_record.id;
 
-        SELECT 
+        SELECT
             COUNT(*)::INTEGER,
             COUNT(CASE WHEN msg.recipient_id = member_record.id AND msg.is_read = FALSE THEN 1 END)::INTEGER
         INTO total_count_val, unread_count_val
@@ -1938,7 +1940,7 @@ BEGIN
             RAISE EXCEPTION 'Secret Santa assignments not found. Cannot view Secret Santa message history.';
         END IF;
 
-        SELECT 
+        SELECT
             COUNT(*)::INTEGER,
             COUNT(CASE WHEN msg.recipient_id = member_record.id AND msg.is_read = FALSE THEN 1 END)::INTEGER
         INTO total_count_val, unread_count_val

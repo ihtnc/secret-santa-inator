@@ -21,6 +21,7 @@ interface SendMessageProps {
   messageType?: 'FromAdmin' | 'FromSecretSanta' | 'ToSecretSanta';
   hideIcon?: boolean;
   compactView?: boolean;
+  placeholder?: string;
 }
 
 interface MessageCounts {
@@ -162,7 +163,8 @@ const MessageForm = ({
   compactView,
   groupCode,
   senderCode,
-  messageType
+  messageType,
+  placeholder = "Type a message..."
 }: {
   message: string,
   setMessage: (message: string) => void,
@@ -173,7 +175,8 @@ const MessageForm = ({
   compactView: boolean,
   groupCode: string,
   senderCode: string,
-  messageType?: 'FromAdmin' | 'FromSecretSanta' | 'ToSecretSanta'
+  messageType?: 'FromAdmin' | 'FromSecretSanta' | 'ToSecretSanta',
+  placeholder?: string
 }) => (
   <form action={handleSubmit} className="space-y-3">
     {/* Hidden fields */}
@@ -200,7 +203,7 @@ const MessageForm = ({
             }
           }
         }}
-        placeholder="Type a message..."
+        placeholder={placeholder}
         required
         disabled={isSubmitting}
         maxLength={150}
@@ -243,7 +246,8 @@ export function SendMessage({
   className = "",
   messageType,
   hideIcon = false,
-  compactView = false
+  compactView = false,
+  placeholder = "Type a message..."
 }: SendMessageProps) {
   const [message, setMessage] = useState("");
   const [isExpanded, setIsExpanded] = useState(false);
@@ -586,6 +590,7 @@ export function SendMessage({
                   groupCode={groupCode}
                   senderCode={senderCode}
                   messageType={messageType}
+                  placeholder={placeholder}
                 />
               </div>
             )}
@@ -648,6 +653,7 @@ export function SendMessage({
             groupCode={groupCode}
             senderCode={senderCode}
             messageType={messageType}
+            placeholder={placeholder}
           />
         </div>
       </div>

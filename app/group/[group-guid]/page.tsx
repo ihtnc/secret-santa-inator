@@ -93,7 +93,7 @@ export default function GroupPage() {
       try {
         // Check membership and redirect server-side if not a member
         const userInfoData = await getMemberDetailsOrRedirect(groupGuid, memberCode);
-        
+
         // If userInfoData is null, there was an error - let client handle it
         if (!userInfoData) {
           setError("Unable to verify membership or you do not have permission to access this group.");
@@ -326,7 +326,7 @@ export default function GroupPage() {
                 <p className="text-lg font-bold text-success">{userInfo?.name}</p>
               )}
               <p className="text-xs text-muted mt-2">
-                👤 This is how other members know you in the group.
+                👤 You are the Secret Santa to your giftee below. Your code name is how other members know you in the group.
               </p>
             </div>
 
@@ -335,10 +335,10 @@ export default function GroupPage() {
               // Show assignment when group is frozen
               secretSanta ? (
                 <div className="bg-page rounded-md p-4 border border-success">
-                  <p className="text-sm text-label mb-2">You are giving a gift to:</p>
+                  <p className="text-sm text-label mb-2">Your giftee:</p>
                   <p className="text-xl font-bold text-success">{secretSanta}</p>
                   <p className="text-xs text-muted mt-2">
-                    🤫 Keep this secret! Don&apos;t let them know you&apos;re their Secret Santa.
+                    🤫 Keep this secret! Choose a thoughtful gift and don&apos;t let them know you&apos;re their Secret Santa.
                   </p>
                 </div>
               ) : (
@@ -368,6 +368,7 @@ export default function GroupPage() {
                   messageType="FromSecretSanta"
                   hideIcon={!groupInfo?.is_frozen}
                   compactView={true}
+                  placeholder="Type a message to your giftee.."
                 />
               </div>
             )}
