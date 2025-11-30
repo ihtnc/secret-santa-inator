@@ -34,6 +34,9 @@ export default function CreateGroupPage() {
   const [editingDescription, setEditingDescription] = useState(false);
   const [editingExpiryDate, setEditingExpiryDate] = useState(false);
 
+  // State for showing password in read-only mode
+  const [showPassword, setShowPassword] = useState(false);
+
   // State for error handling
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [statusType, setStatusType] = useState<'success' | 'error'>('success');
@@ -140,8 +143,8 @@ export default function CreateGroupPage() {
                     <div>
                       <input type="hidden" name="capacity" value={capacity} />
                       <div className="flex items-center justify-between">
-                        <label htmlFor="capacity" className="block text-sm font-medium text-label mb-1">
-                          Maximum Members: <span className="font-normal text-primary">{capacity}</span>
+                        <label htmlFor="capacity" className="block text-sm font-medium text-primary mb-1">
+                          Maximum Members: <span className="text-secondary">{capacity}</span>
                         </label>
                         <button
                           type="button"
@@ -182,9 +185,30 @@ export default function CreateGroupPage() {
                 <div>
                   {!editingPassword ? (
                     <div className="flex items-center justify-between">
-                      <label htmlFor="password" className="block text-sm font-medium text-label mb-1">
-                        Group Password: <span className="font-normal text-primary">{password ? '••••••••' : 'None'}</span>
-                      </label>
+                      <div className="flex items-center space-x-2 flex-1">
+                        <label htmlFor="password" className="text-sm font-medium text-primary">
+                          Group Password: <span className="text-secondary">{password ? (showPassword ? password : '••••••••') : 'None'}</span>
+                        </label>
+                        {password && (
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="text-muted hover:text-secondary p-0.5 rounded-md hover:bg-surface transition-colors cursor-pointer flex-shrink-0"
+                            title={showPassword ? "Hide password" : "Show password"}
+                          >
+                            {showPassword ? (
+                              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
+                              </svg>
+                            ) : (
+                              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                              </svg>
+                            )}
+                          </button>
+                        )}
+                      </div>
                       <button
                         type="button"
                         onClick={() => setEditingPassword(true)}
@@ -219,8 +243,8 @@ export default function CreateGroupPage() {
                 <div>
                   {!editingDescription ? (
                     <div className="flex items-center justify-between">
-                      <label htmlFor="description" className="block text-sm font-medium text-label mb-1">
-                        Description: <span className="font-normal text-primary">{description || 'None'}</span>
+                      <label htmlFor="description" className="block text-sm font-medium text-primary mb-1">
+                        Description: <span className="text-secondary">{description || 'None'}</span>
                       </label>
                       <button
                         type="button"
@@ -263,8 +287,8 @@ export default function CreateGroupPage() {
                 <div>
                   {!editingExpiryDate ? (
                     <div className="flex items-center justify-between">
-                      <label htmlFor="expiryDate" className="block text-sm font-medium text-label mb-1">
-                        Expiry Date: <span className="font-normal text-primary">{expiryDate || '1 month from now'}</span>
+                      <label htmlFor="expiryDate" className="block text-sm font-medium text-primary mb-1">
+                        Expiry Date: <span className="text-secondary">{expiryDate || '1 month from now'}</span>
                       </label>
                       <button
                         type="button"

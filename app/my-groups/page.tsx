@@ -286,9 +286,9 @@ export default function MyGroupsPage() {
                     <span>{group.admin_name}</span>
                   </div>
                   {group.description && (
-                    <div>
+                    <div className="flex flex-col sm:flex-row sm:gap-2">
                       <span className="font-medium text-primary">Description:</span>
-                      <div className="mt-1">{group.description}</div>
+                      <span>{group.description}</span>
                     </div>
                   )}
                 </div>

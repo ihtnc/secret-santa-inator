@@ -260,45 +260,50 @@ export default function JoinGroupPage() {
                 </div>
               }
             >
-              <div className="space-y-2 text-sm text-secondary">
+              <div className="space-y-4">
                 {/* Group status alerts */}
                 {groupInfo.is_frozen && (
-                  <div className="bg-warning border border-warning rounded-md p-3 mb-4">
+                  <div className="bg-warning border border-warning rounded-md p-3">
                     <strong>🔒 Group Locked:</strong> This group is locked. You may not be able to join until it&apos;s unlocked by the admin.
                   </div>
                 )}
 
                 {!groupInfo.is_open && !groupInfo.is_frozen && (
-                  <div className="bg-error border border-error rounded-md p-3 mb-4 text-error-content">
+                  <div className="bg-error border border-error rounded-md p-3 text-error-content">
                     🔴 <strong>Group Closed:</strong> This group is no longer accepting new members.
                   </div>
                 )}
 
-                <div className="flex justify-between">
-                  <span>Group Code:</span>
-                  <span className="font-medium font-mono">{groupGuid}</span>
+                <div>
+                  <label className="block text-sm font-medium text-primary mb-1">
+                    Group Code: <span className="text-secondary font-mono">{groupGuid}</span>
+                  </label>
                 </div>
-                <div className="flex justify-between">
-                  <span>Group Name:</span>
-                  <span className="font-medium">{groupInfo.name}</span>
+                <div>
+                  <label className="block text-sm font-medium text-primary mb-1">
+                    Group Name: <span className="text-secondary">{groupInfo.name}</span>
+                  </label>
                 </div>
                 {groupInfo.description && (
-                  <div className="flex justify-between">
-                    <span>Description:</span>
-                    <span className="font-medium text-right max-w-xs">{groupInfo.description}</span>
+                  <div className="flex flex-col sm:flex-row sm:gap-2">
+                    <span className="text-sm font-medium text-primary">Description:</span>
+                    <span className="text-sm text-secondary">{groupInfo.description}</span>
                   </div>
                 )}
-                <div className="flex justify-between">
-                  <span>Admin Name:</span>
-                  <span className="font-medium">{groupInfo.creator_name}</span>
+                <div>
+                  <label className="block text-sm font-medium text-primary mb-1">
+                    Admin Name: <span className="text-secondary">{groupInfo.creator_name}</span>
+                  </label>
                 </div>
-                <div className="flex justify-between">
-                  <span>Capacity:</span>
-                  <span className="font-medium">{groupInfo.member_count} / {groupInfo.capacity}</span>
+                <div>
+                  <label className="block text-sm font-medium text-primary mb-1">
+                    Capacity: <span className="text-secondary">{groupInfo.member_count} / {groupInfo.capacity}</span>
+                  </label>
                 </div>
-                <div className="flex justify-between">
-                  <span>Password:</span>
-                  <span className="font-medium">{groupInfo.has_password ? 'Required' : 'None'}</span>
+                <div>
+                  <label className="block text-sm font-medium text-primary mb-1">
+                    Password: <span className="text-secondary">{groupInfo.has_password ? 'Required' : 'None'}</span>
+                  </label>
                 </div>
                 <div className="flex items-center justify-between p-3 border border-primary rounded-lg opacity-60">
                   <span>Use code names instead of real names:</span>

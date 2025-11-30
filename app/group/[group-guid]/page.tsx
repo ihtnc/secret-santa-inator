@@ -326,7 +326,10 @@ export default function GroupPage() {
                 <p className="text-lg font-bold text-success">{userInfo?.name}</p>
               )}
               <p className="text-xs text-muted mt-2">
-                👤 You are the Secret Santa to your giftee below. Your code name is how other members know you in the group.
+                👤 {groupInfo?.is_frozen
+                  ? "You are the Secret Santa to your giftee below. Your code name is how other members know you in the group."
+                  : "This is your Secret Santa code name. Your code name is how other members know you in the group."
+                }
               </p>
             </div>
 
@@ -414,37 +417,40 @@ export default function GroupPage() {
             </div>
           }
         >
-          <div className="space-y-2 text-sm text-secondary">
+          <div className="space-y-4">
             {/* Group status alerts */}
             {groupInfo?.is_frozen && (
-              <div className="bg-warning border border-warning rounded-md p-3 mb-4">
+              <div className="bg-warning border border-warning rounded-md p-3">
                 <strong>🔒 Group Locked:</strong> Secret Santa assignments have been made! The group is now locked.
               </div>
             )}
 
             {!groupInfo?.is_open && !groupInfo?.is_frozen && (
-              <div className="bg-error border border-error rounded-md p-3 mb-4 text-error-content">
+              <div className="bg-error border border-error rounded-md p-3 text-error-content">
                 🔴 <strong>Group Closed:</strong> This group is no longer accepting new members.
               </div>
             )}
 
-            <div className="flex justify-between">
-              <span>Group Code:</span>
-              <span className="font-medium font-mono">{groupGuid}</span>
+            <div>
+              <label className="block text-sm font-medium text-primary mb-1">
+                Group Code: <span className="text-secondary font-mono">{groupGuid}</span>
+              </label>
             </div>
-            <div className="flex justify-between">
-              <span>Group Name:</span>
-              <span className="font-medium">{groupInfo?.name || 'Loading...'}</span>
+            <div>
+              <label className="block text-sm font-medium text-primary mb-1">
+                Group Name: <span className="text-secondary">{groupInfo?.name || 'Loading...'}</span>
+              </label>
             </div>
             {groupInfo?.description && (
-              <div className="flex justify-between">
-                <span>Description:</span>
-                <span className="font-medium text-right max-w-xs">{groupInfo.description}</span>
+              <div className="flex flex-col sm:flex-row sm:gap-2">
+                <span className="text-sm font-medium text-primary">Description:</span>
+                <span className="text-sm text-secondary">{groupInfo.description}</span>
               </div>
             )}
-            <div className="flex justify-between">
-              <span>Admin Name:</span>
-              <span className="font-medium">{groupInfo?.creator_name}</span>
+            <div>
+              <label className="block text-sm font-medium text-primary mb-1">
+                Admin Name: <span className="text-secondary">{groupInfo?.creator_name}</span>
+              </label>
             </div>
           </div>
         </CollapsibleSection>
