@@ -1,6 +1,6 @@
 # Secret Santa-inator 🎄
 
-[![deploy](https://deploy-badge.vercel.app/vercel/secret-santa-inator?name=website)](https://secret-santa-inator.vercel.app/)
+[![deploy](https://deploy-badge.vercel.app/vercel/secret-santa-inator?name=website)](https://secret-santa-inator.dev/)
 
 See it [live](https://secret-santa-inator.vercel.app)!
 
@@ -74,10 +74,16 @@ A modern, real-time web application for organizing Secret Santa gift exchanges w
    - **Secret Key**: Go to Settings → API Keys → Secret keys (keep this secret!)
 
 4. **Set up the database**
-   Run the SQL migration file in your Supabase database:
+   Run the SQL migration files in your Supabase database:
 
    ```bash
+   # Step 1: Execute the main schema
    # Execute the contents of db/001_initial_secret_santa_schema.sql in your Supabase SQL editor
+
+   # Step 2: Set up encryption key for password security
+   # Generate a key at https://generate-secret.vercel.app/32
+   # Replace 'YOUR_GENERATED_KEY_HERE' in db/002_setup_vault_encryption_key.sql with your key
+   # Execute the contents of db/002_setup_vault_encryption_key.sql in your Supabase SQL editor
    ```
 
 5. **Start the development server**

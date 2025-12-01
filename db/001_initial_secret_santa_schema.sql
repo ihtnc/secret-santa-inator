@@ -10,7 +10,7 @@ CREATE TABLE groups (
     id SERIAL PRIMARY KEY,
     group_guid TEXT NOT NULL,
     name TEXT NOT NULL,
-    password TEXT,
+    password BYTEA,
     capacity INTEGER NOT NULL,
     use_code_names BOOLEAN NOT NULL,
     auto_assign_code_names BOOLEAN NOT NULL,
@@ -433,7 +433,8 @@ BEGIN
     SELECT
         g.name,
         CASE
-            WHEN is_creator_check THEN g.password
+            WHEN is_creator_check AND g.password IS NOT NULL THEN
+                extensions.pgp_sym_decrypt(g.password, app.get_encryption_key())
             ELSE NULL
         END AS password,
         g.capacity,
@@ -583,7 +584,11 @@ BEGIN
     VALUES (
         generated_guid,
         p_name,
-        p_password,
+        CASE
+            WHEN p_password IS NOT NULL AND TRIM(p_password) != '' THEN
+                extensions.pgp_sym_encrypt(p_password, app.get_encryption_key())
+            ELSE NULL
+        END,
         p_capacity,
         p_use_code_names,
         p_auto_assign_code_names,
@@ -704,7 +709,11 @@ BEGIN
     UPDATE public.groups
     SET
         description = p_description,
-        password = p_password,
+        password = CASE
+            WHEN p_password IS NOT NULL AND TRIM(p_password) != '' THEN
+                extensions.pgp_sym_encrypt(p_password, app.get_encryption_key())
+            ELSE NULL
+        END,
         capacity = p_capacity,
         is_open = p_is_open,
         expiry_date = p_expiry_date
@@ -774,21 +783,33 @@ DECLARE
     max_attempts INTEGER := 100;
     attempt_count INTEGER := 0;
 BEGIN
-    -- Validate group exists with correct password, is not frozen, and is not expired
-    SELECT id, group_guid, use_code_names, auto_assign_code_names, use_custom_code_names, capacity, creator_name, creator_code
+    -- Get group info and validate it exists, is open, not frozen, and not expired
+    SELECT id, group_guid, use_code_names, auto_assign_code_names, use_custom_code_names, capacity, creator_name, creator_code, password
     INTO group_record
     FROM public.groups
     WHERE group_guid = p_group_guid
-      AND (
-          (p_password IS NOT NULL AND password = p_password) OR
-          (p_password IS NULL AND password IS NULL)
-      )
       AND is_open = TRUE
       AND is_frozen = FALSE
       AND (expiry_date IS NULL OR expiry_date > NOW());
 
     IF NOT FOUND THEN
-        RAISE EXCEPTION 'Group not found, invalid password, group is closed, group is frozen, or group has expired';
+        RAISE EXCEPTION 'Group not found, group is closed, group is frozen, or group has expired';
+    END IF;
+
+    -- Verify password if one is set
+    IF group_record.password IS NOT NULL THEN
+        IF p_password IS NULL OR TRIM(p_password) = '' THEN
+            RAISE EXCEPTION 'Password is required to join this group';
+        END IF;
+
+        -- Decrypt and compare password
+        BEGIN
+            IF extensions.pgp_sym_decrypt(group_record.password, app.get_encryption_key()) != p_password THEN
+                RAISE EXCEPTION 'Invalid password';
+            END IF;
+        EXCEPTION WHEN OTHERS THEN
+            RAISE EXCEPTION 'Invalid password';
+        END;
     END IF;
 
     -- Check if name matches creator name and if user is not the creator
@@ -1344,6 +1365,7 @@ SET search_path = ''
 AS $$
 DECLARE
     generated_backup_guid TEXT;
+    hashed_password TEXT;
 BEGIN
     -- Validate inputs
     IF p_creator_code IS NULL OR LENGTH(TRIM(p_creator_code)) = 0 THEN
@@ -1353,6 +1375,9 @@ BEGIN
     IF p_password IS NULL OR LENGTH(TRIM(p_password)) = 0 THEN
         RAISE EXCEPTION 'Password is required';
     END IF;
+
+    -- Hash the password using bcrypt
+    hashed_password := extensions.crypt(p_password, extensions.gen_salt('bf', 10));
 
     -- Mark all existing unused backup codes for this creator as used by setting restored_by to 'REPLACED'
     UPDATE public.backup_codes
@@ -1364,7 +1389,7 @@ BEGIN
     -- Generate a new backup GUID
     generated_backup_guid := gen_random_uuid()::text;
 
-    -- Insert the new backup code
+    -- Insert the new backup code with hashed password
     INSERT INTO public.backup_codes (
         backup_guid,
         creator_code,
@@ -1373,7 +1398,7 @@ BEGIN
     VALUES (
         generated_backup_guid,
         p_creator_code,
-        p_password
+        hashed_password
     );
 
     -- Return the generated backup GUID
@@ -1395,6 +1420,7 @@ AS $$
 DECLARE
     stored_creator_code TEXT;
     backup_record RECORD;
+    password_valid BOOLEAN := FALSE;
 BEGIN
     -- Validate inputs
     IF p_backup_guid IS NULL OR LENGTH(TRIM(p_backup_guid)) = 0 THEN
@@ -1409,18 +1435,24 @@ BEGIN
         RAISE EXCEPTION 'Current GUID is required';
     END IF;
 
-    -- Find the backup record with matching GUID, password, and valid state
+    -- Find the backup record with matching GUID and valid state
     SELECT backup_guid, creator_code, password, restored_by, expiry_date
     INTO backup_record
     FROM public.backup_codes
     WHERE backup_guid = p_backup_guid
-    AND password = p_password
     AND restored_by IS NULL
     AND expiry_date > NOW();
 
     -- Check if record was found
     IF backup_record.backup_guid IS NULL THEN
-        RAISE EXCEPTION 'Invalid backup GUID, incorrect password, or backup has expired/already been used';
+        RAISE EXCEPTION 'Invalid backup GUID or backup has expired/already been used';
+    END IF;
+
+    -- Verify password using bcrypt
+    password_valid := (backup_record.password = extensions.crypt(p_password, backup_record.password));
+
+    IF NOT password_valid THEN
+        RAISE EXCEPTION 'Invalid password';
     END IF;
 
     -- Get the creator code
@@ -2391,6 +2423,21 @@ BEGIN
 END;
 $$;
 
+-- Enable password hashing functions
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+-- Function to get encryption key from Supabase Vault
+CREATE OR REPLACE FUNCTION app.get_encryption_key()
+RETURNS TEXT
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+BEGIN
+    RETURN (SELECT decrypted_secret FROM vault.decrypted_secrets WHERE name = 'pwd_encryption_key');
+END;
+$$;
+
 -- Enable pg_cron extension for scheduled jobs
 CREATE EXTENSION IF NOT EXISTS pg_cron;
 
@@ -2500,6 +2547,7 @@ GRANT EXECUTE ON FUNCTION gen_random_uuid() TO anon, authenticated;
 GRANT USAGE, CREATE ON SCHEMA public TO service_role;
 GRANT USAGE, CREATE ON SCHEMA app TO service_role;
 GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO service_role;
+GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA app TO service_role;
 GRANT USAGE ON ALL SEQUENCES IN SCHEMA public TO service_role;
 GRANT USAGE ON ALL SEQUENCES IN SCHEMA app TO service_role;
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO service_role;

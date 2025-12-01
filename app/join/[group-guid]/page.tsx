@@ -8,7 +8,7 @@ import { StatusBadge } from "@/app/components/Badge";
 import { Card } from "@/app/components/Card";
 import { PageHeader } from "@/app/components/PageHeader";
 import { BackToMyGroups } from "@/app/components/BackToHome";
-import { WarningMessage, ErrorMessage, AlertMessage } from "@/app/components/AlertMessage";
+import { ErrorMessage, AlertMessage } from "@/app/components/AlertMessage";
 import { Loading } from "@/app/components/Loading";
 import CollapsibleSection from "@/app/components/CollapsibleSection";
 import PasswordInput from "@/app/components/PasswordInput";

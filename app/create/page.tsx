@@ -193,7 +193,7 @@ export default function CreateGroupPage() {
                           <button
                             type="button"
                             onClick={() => setShowPassword(!showPassword)}
-                            className="text-muted hover:text-secondary p-0.5 rounded-md hover:bg-surface transition-colors cursor-pointer flex-shrink-0"
+                            className="text-muted hover:text-secondary p-0.5 rounded-md hover:bg-surface transition-colors cursor-pointer shrink-0"
                             title={showPassword ? "Hide password" : "Show password"}
                           >
                             {showPassword ? (

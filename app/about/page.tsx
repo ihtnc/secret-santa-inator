@@ -130,7 +130,7 @@ export default function AboutPage() {
                     However, I don&apos;t think I&apos;ll be able to compete with how fast it is able to generate advanced components like collapsible cards, message history popups, network visualisation in SVG, etc.
                   </p>
                   <p className="leading-relaxed mb-2">
-                    Anyway, this whole project/experiment has been fun and I am very happy that I have something to show for, considering that it only took about a day for the first cut that I&apos;m happy with to reach Production.
+                    Anyway, this whole project/experiment has been fun and I am very happy that I have something to show for, considering that it only took about a day for the very first version of the app to reach Production.
                   </p>
                 </div>
               </details>
