@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { sendMessage, getMessageHistory, markMessagesAsRead, getUnreadMessageCount } from "./actions";
 import supabase from "@/utilities/supabase/browser";
 
@@ -22,6 +22,7 @@ interface SendMessageProps {
   hideIcon?: boolean;
   compactView?: boolean;
   placeholder?: string;
+  onMessageCountUpdate?: (unreadCount: number, totalCount: number) => void;
 }
 
 interface MessageCounts {
@@ -247,7 +248,8 @@ export function SendMessage({
   messageType,
   hideIcon = false,
   compactView = false,
-  placeholder = "Type a message..."
+  placeholder = "Type a message...",
+  onMessageCountUpdate
 }: SendMessageProps) {
   const [message, setMessage] = useState("");
   const [isExpanded, setIsExpanded] = useState(false);
@@ -257,6 +259,19 @@ export function SendMessage({
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [hasLoadedHistory, setHasLoadedHistory] = useState(false);
   const [messageCounts, setMessageCounts] = useState<MessageCounts>({ unread_count: 0, total_count: 0 });
+
+  // Helper function to update message counts
+  const updateMessageCounts = useCallback((newCounts: MessageCounts | ((prev: MessageCounts) => MessageCounts)) => {
+    setMessageCounts(prev => {
+      const finalCounts = typeof newCounts === 'function' ? newCounts(prev) : newCounts;
+      return finalCounts;
+    });
+  }, []);
+
+  // Trigger callback when message counts change
+  useEffect(() => {
+    onMessageCountUpdate?.(messageCounts.unread_count, messageCounts.total_count);
+  }, [messageCounts.unread_count, messageCounts.total_count, onMessageCountUpdate]);
 
   // Calculate unread messages
   const hasUnreadMessages = hasLoadedHistory
@@ -279,7 +294,7 @@ export function SendMessage({
 
           if (result?.success && result.data) {
             const counts = result.data as MessageCounts;
-            setMessageCounts(counts);
+            updateMessageCounts(counts);
           }
         } catch (error) {
           console.error('Error loading initial message counts:', error);
@@ -288,7 +303,7 @@ export function SendMessage({
     };
 
     loadInitialMessageCounts();
-  }, [groupCode, senderCode, messageType, hasLoadedHistory]);
+  }, [groupCode, senderCode, messageType, hasLoadedHistory, updateMessageCounts]);
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
@@ -365,7 +380,7 @@ export function SendMessage({
                   updatedMessages.sort((a, b) => new Date(b.created_date).getTime() - new Date(a.created_date).getTime());
 
                   // Update total count when adding to loaded history
-                  setMessageCounts(prev => ({
+                  updateMessageCounts(prev => ({
                     ...prev,
                     total_count: updatedMessages.length
                   }));
@@ -385,7 +400,7 @@ export function SendMessage({
                 }
               } else if (!isExpanded && newMessage.sender_name !== 'You') {
                 // If popup is closed and it's an incoming message, increment unread count
-                setMessageCounts(prev => ({
+                updateMessageCounts(prev => ({
                   ...prev,
                   unread_count: prev.unread_count + 1
                 }));
@@ -394,13 +409,13 @@ export function SendMessage({
               // Update counts when history not loaded
               if (newMessage.sender_name !== 'You') {
                 // Increment unread count for incoming messages
-                setMessageCounts(prev => ({
+                updateMessageCounts(prev => ({
                   unread_count: prev.unread_count + 1,
                   total_count: prev.total_count + 1
                 }));
               } else {
                 // Just increment total count for outgoing messages
-                setMessageCounts(prev => ({
+                updateMessageCounts(prev => ({
                   ...prev,
                   total_count: prev.total_count + 1
                 }));
@@ -420,7 +435,7 @@ export function SendMessage({
 
                 // Recalculate unread count from updated messages
                 const newUnreadCount = updatedMessages.filter(msg => !msg.is_read && msg.sender_name !== 'You').length;
-                setMessageCounts(prev => ({
+                updateMessageCounts(prev => ({
                   ...prev,
                   unread_count: newUnreadCount
                 }));
@@ -429,7 +444,7 @@ export function SendMessage({
               });
             } else {
               // Decrement unread count when history not loaded
-              setMessageCounts(prev => ({
+              updateMessageCounts(prev => ({
                 ...prev,
                 unread_count: Math.max(0, prev.unread_count - 1)
               }));
@@ -444,7 +459,7 @@ export function SendMessage({
         supabase.removeChannel(channel);
       }
     };
-  }, [messageType, senderCode, compactView, groupCode, isExpanded, hasLoadedHistory]);
+  }, [messageType, senderCode, compactView, groupCode, isExpanded, hasLoadedHistory, updateMessageCounts]);
 
   const loadMessageHistory = async () => {
     setLoadingHistory(true);

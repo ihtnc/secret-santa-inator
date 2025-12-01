@@ -7,6 +7,7 @@ import LiveIndicator from "@/app/components/LiveIndicator";
 import CollapsibleSection from "@/app/components/CollapsibleSection";
 import MemberListItem from "@/app/components/MemberListItem";
 import { RoleBadge, StatusBadge } from "@/app/components/Badge";
+import { UnreadBadge } from "@/app/components/messaging/UnreadBadge";
 import { Card } from "@/app/components/Card";
 import { PageHeader } from "@/app/components/PageHeader";
 import { BackToMyGroups } from "@/app/components/BackToHome";
@@ -55,6 +56,7 @@ export default function GroupPage() {
   const [isMemberListExpanded, setIsMemberListExpanded] = useState(false);
   const [isGroupDetailsExpanded, setIsGroupDetailsExpanded] = useState(false);
   const [isMessagingExpanded, setIsMessagingExpanded] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   const [isLoading, setIsLoading] = useState(true);
   const [isLeaving, setIsLeaving] = useState(false);
@@ -80,6 +82,13 @@ export default function GroupPage() {
     setStatusMessage(message);
     window.scrollTo({ top: 0, behavior: 'smooth' });
     setTimeout(() => setStatusMessage(null), duration);
+  };
+
+  // Callback for when message counts are updated
+  const handleMessageCountUpdate = (unreadCount: number, totalCount: number) => {
+    console.log(`Message count update: ${unreadCount} unread, ${totalCount} total`);
+    // Update unread message count for badge display
+    setUnreadCount(unreadCount);
   };
 
   useEffect(() => {
@@ -387,6 +396,15 @@ export default function GroupPage() {
             isExpanded={isMessagingExpanded}
             onToggle={() => setIsMessagingExpanded(!isMessagingExpanded)}
             className="mt-6"
+            alwaysRender={true}
+            rightContent={
+              <div className="flex pt-0.5 space-x-2">
+                <UnreadBadge
+                  count={unreadCount}
+                  messageType="FromSecretSanta"
+                />
+              </div>
+            }
           >
             <p className="text-sm text-secondary mb-4">
               Send anonymous messages to your Secret Santa like your wishlist, size info, or preferences.
@@ -396,6 +414,7 @@ export default function GroupPage() {
               groupCode={groupGuid}
               senderCode={memberCode}
               messageType="ToSecretSanta"
+              onMessageCountUpdate={handleMessageCountUpdate}
             />
           </CollapsibleSection>
         )}
@@ -420,15 +439,15 @@ export default function GroupPage() {
           <div className="space-y-4">
             {/* Group status alerts */}
             {groupInfo?.is_frozen && (
-              <div className="bg-warning border border-warning rounded-md p-3">
+              <WarningMessage>
                 <strong>🔒 Group Locked:</strong> Secret Santa assignments have been made! The group is now locked.
-              </div>
+              </WarningMessage>
             )}
 
             {!groupInfo?.is_open && !groupInfo?.is_frozen && (
-              <div className="bg-error border border-error rounded-md p-3 text-error-content">
+              <ErrorMessage>
                 🔴 <strong>Group Closed:</strong> This group is no longer accepting new members.
-              </div>
+              </ErrorMessage>
             )}
 
             <div>

@@ -8,6 +8,7 @@ interface BadgeProps {
   variant: BadgeVariant;
   size?: BadgeSize;
   className?: string;
+  style?: React.CSSProperties;
 }
 
 const variantStyles = {
@@ -26,10 +27,11 @@ export default function Badge({
   children,
   variant,
   size = 'sm',
-  className = ""
+  className = "",
+  style
 }: BadgeProps) {
   return (
-    <span className={`${variantStyles[variant]} ${sizeStyles[size]} rounded-full shrink-0 ${className}`}>
+    <span className={`${variantStyles[variant]} ${sizeStyles[size]} rounded-full shrink-0 ${className}`} style={style}>
       {children}
     </span>
   );
@@ -82,3 +84,4 @@ export function RoleBadge({
     </Badge>
   );
 }
+

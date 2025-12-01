@@ -8,6 +8,7 @@ interface CollapsibleSectionProps {
   rightContent?: ReactNode; // For badges, status indicators, etc.
   hasBorder?: boolean; // For sections that need a border-b
   className?: string; // Additional card styling
+  alwaysRender?: boolean; // Keep children rendered when collapsed (just hide them)
 }
 
 export default function CollapsibleSection({
@@ -18,6 +19,7 @@ export default function CollapsibleSection({
   rightContent,
   hasBorder = false,
   className = "",
+  alwaysRender = false,
 }: CollapsibleSectionProps) {
   return (
     <div className={`bg-card rounded-lg shadow-md ${className}`}>
@@ -56,10 +58,16 @@ export default function CollapsibleSection({
         </button>
       </div>
 
-      {isExpanded && (
-        <div className="px-6 pt-4 pb-6">
+      {alwaysRender ? (
+        <div className={`px-6 pt-4 pb-6 ${!isExpanded ? 'hidden' : ''}`}>
           {children}
         </div>
+      ) : (
+        isExpanded && (
+          <div className="px-6 pt-4 pb-6">
+            {children}
+          </div>
+        )
       )}
     </div>
   );

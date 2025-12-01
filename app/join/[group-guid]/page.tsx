@@ -8,7 +8,7 @@ import { StatusBadge } from "@/app/components/Badge";
 import { Card } from "@/app/components/Card";
 import { PageHeader } from "@/app/components/PageHeader";
 import { BackToMyGroups } from "@/app/components/BackToHome";
-import { ErrorMessage, AlertMessage } from "@/app/components/AlertMessage";
+import { WarningMessage, ErrorMessage, AlertMessage } from "@/app/components/AlertMessage";
 import { Loading } from "@/app/components/Loading";
 import CollapsibleSection from "@/app/components/CollapsibleSection";
 import PasswordInput from "@/app/components/PasswordInput";
@@ -263,15 +263,15 @@ export default function JoinGroupPage() {
               <div className="space-y-4">
                 {/* Group status alerts */}
                 {groupInfo.is_frozen && (
-                  <div className="bg-warning border border-warning rounded-md p-3">
+                  <WarningMessage>
                     <strong>🔒 Group Locked:</strong> This group is locked. You may not be able to join until it&apos;s unlocked by the admin.
-                  </div>
+                  </WarningMessage>
                 )}
 
                 {!groupInfo.is_open && !groupInfo.is_frozen && (
-                  <div className="bg-error border border-error rounded-md p-3 text-error-content">
+                  <ErrorMessage>
                     🔴 <strong>Group Closed:</strong> This group is no longer accepting new members.
-                  </div>
+                  </ErrorMessage>
                 )}
 
                 <div>
@@ -306,7 +306,7 @@ export default function JoinGroupPage() {
                   </label>
                 </div>
                 <div className="flex items-center justify-between p-3 border border-primary rounded-lg opacity-60">
-                  <span>Use code names instead of real names:</span>
+                  <span className="text-sm">Require code names to join:</span>
                   <div className="relative">
                     <div
                       className={`w-12 h-6 rounded-full cursor-not-allowed transition-colors duration-200 flex items-center ${
@@ -323,7 +323,7 @@ export default function JoinGroupPage() {
                 </div>
                 {groupInfo.use_code_names && (
                   <div className="flex items-center justify-between p-3 border border-primary rounded-lg opacity-60">
-                    <span>Automatically assign code names (e.g., &quot;FuzzyPanda&quot;, &quot;MagicDragon&quot;):</span>
+                    <span className="text-sm">Automatically assign code names to members (e.g., &quot;FuzzyPanda&quot;, &quot;MagicDragon&quot;):</span>
                     <div className="relative">
                       <div
                         className={`w-12 h-6 rounded-full cursor-not-allowed transition-colors duration-200 flex items-center ${
@@ -420,25 +420,38 @@ export default function JoinGroupPage() {
                 </div>
               )}
 
-              {/* Code Name field - show for all users if group uses code names and doesn't auto-assign them */}
-              {groupInfo?.use_code_names && !groupInfo?.auto_assign_code_names && (
+              {/* Code Name field - show for all users if group uses code names */}
+              {groupInfo?.use_code_names && (
                 <div>
-                  <label htmlFor="codeName" className="block text-sm font-medium text-label mb-1">
-                    Your Code Name *
-                  </label>
-                  <input
-                    type="text"
-                    id="codeName"
-                    name="codeName"
-                    required
-                    maxLength={30}
-                    autoComplete="off"
-                    className="input-primary w-full px-3 py-2 rounded-md text-primary placeholder:text-muted"
-                    placeholder="Enter your code name (e.g., MysteriousElf)"
-                  />
-                  <p className="text-xs text-muted mt-1">
-                    This is how other members will see you during the Secret Santa (max 30 characters)
-                  </p>
+                  {!groupInfo?.auto_assign_code_names ? (
+                    <div>
+                      <label htmlFor="codeName" className="block text-sm font-medium text-label mb-1">
+                        Your Code Name *
+                      </label>
+                      <input
+                        type="text"
+                        id="codeName"
+                        name="codeName"
+                        required
+                        maxLength={30}
+                        autoComplete="off"
+                        className="input-primary w-full px-3 py-2 rounded-md text-primary placeholder:text-muted"
+                        placeholder="Enter your code name (e.g., MysteriousElf)"
+                      />
+                      <p className="text-xs text-muted mt-1">
+                        This is how other members of the group will refer to you (max 30 characters)
+                      </p>
+                    </div>
+                  ) : (
+                    <div>
+                      <label className="block text-sm font-medium text-primary mb-1">
+                        Your Code Name: <span className="text-secondary">To be assigned upon joining</span>
+                      </label>
+                      <p className="text-xs text-muted mt-1">
+                        This is how other members of the group will refer to you
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
 

@@ -920,7 +920,7 @@ export default function AdminPage() {
                 <div className="space-y-3">
                   <div className="flex items-center justify-between p-3 border border-primary rounded-lg opacity-60">
                     <label className="block text-sm font-medium text-secondary">
-                      Use code names instead of real names
+                      Require code names to join
                     </label>
                     <div className="relative">
                       <input
@@ -945,7 +945,7 @@ export default function AdminPage() {
 
                   <div className="flex items-center justify-between p-3 border border-primary rounded-lg opacity-60">
                     <label className="block text-sm font-medium text-secondary">
-                      Automatically assign code names (e.g., &quot;FuzzyPanda&quot;, &quot;MagicDragon&quot;)
+                      Automatically assign code names to members (e.g., &quot;FuzzyPanda&quot;, &quot;MagicDragon&quot;)
                     </label>
                     <div className="relative">
                       <input
@@ -970,7 +970,7 @@ export default function AdminPage() {
 
                   <div className="flex items-center justify-between p-3 border border-primary rounded-lg opacity-60">
                     <label className="block text-sm font-medium text-secondary">
-                      Provide your own code names
+                      Provide custom code names
                     </label>
                     <div className="relative">
                       <input
@@ -1233,7 +1233,7 @@ export default function AdminPage() {
                     placeholder="Enter your code name (e.g., MysteriousElf)"
                   />
                   <p className="text-xs text-muted mt-1">
-                    Code name is required for this group (max 30 characters)
+                    This is how other members of the group will refer to you (max 30 characters)
                   </p>
                 </div>
               )}

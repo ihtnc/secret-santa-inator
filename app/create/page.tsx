@@ -325,11 +325,15 @@ export default function CreateGroupPage() {
 
             {/* Code Name Settings */}
             <CardSection title="Code Name Settings" titleVariant="h2">
+              <p className="text-xs text-muted mb-4">
+                Code names add fun and mystery to your Secret Santa! If auto-assign is disabled,
+                members must provide a code name when joining.
+              </p>
 
               <div className="space-y-4">
                 <div className="flex items-center justify-between p-3 border border-primary rounded-lg">
                   <label htmlFor="useCodeNames" className="block text-sm font-medium text-label">
-                    Use code names instead of real names
+                    Require code names to join
                   </label>
                   <div className="relative">
                     <input
@@ -369,7 +373,7 @@ export default function CreateGroupPage() {
 
                 <div className="flex items-center justify-between p-3 border border-primary rounded-lg">
                   <label htmlFor="autoAssignCodeNames" className={`block text-sm font-medium ${!useCodeNames ? 'text-muted' : 'text-label'}`}>
-                    Automatically assign code names (e.g., &quot;FuzzyPanda&quot;, &quot;MagicDragon&quot;)
+                    Automatically assign code names to members (e.g., &quot;FuzzyPanda&quot;, &quot;MagicDragon&quot;)
                   </label>
                   <div className="relative">
                     <input
@@ -412,7 +416,7 @@ export default function CreateGroupPage() {
 
                 <div className="flex items-center justify-between p-3 border border-primary rounded-lg">
                   <label htmlFor="useCustomCodeNames" className={`block text-sm font-medium ${!autoAssignCodeNames ? 'text-muted' : 'text-label'}`}>
-                    Provide your own code names
+                    Provide custom code names
                   </label>
                   <div className="relative">
                     <input
@@ -498,10 +502,6 @@ export default function CreateGroupPage() {
                   </div>
                 )}
 
-                <p className="text-xs text-muted">
-                  Code names add fun and mystery to your Secret Santa! If auto-assign is disabled,
-                  you must provide a code name when joining.
-                </p>
               </div>
             </CardSection>
 
@@ -535,32 +535,38 @@ export default function CreateGroupPage() {
             <CardSection title="Join Settings" titleVariant="h2" isLast>
 
               <div className="space-y-4">
-                <div className="flex items-center justify-between p-3 border border-primary rounded-lg">
-                  <label htmlFor="autoJoinGroup" className="block text-sm font-medium text-label">
-                    Automatically join the group as a member
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="checkbox"
-                      id="autoJoinGroup"
-                      name="autoJoinGroup"
-                      checked={autoJoinGroup}
-                      onChange={(e) => setAutoJoinGroup(e.target.checked)}
-                      className="sr-only"
-                    />
-                    <div
-                      onClick={() => setAutoJoinGroup(!autoJoinGroup)}
-                      className={`w-12 h-6 rounded-full cursor-pointer transition-colors duration-200 flex items-center ${
-                        autoJoinGroup ? 'bg-toggle-active' : 'bg-toggle-inactive'
-                      }`}
-                    >
-                      <div
-                        className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-200 ${
-                          autoJoinGroup ? 'translate-x-6' : 'translate-x-0.5'
-                        }`}
+                <div className="p-3 border border-primary rounded-lg">
+                  <div className="flex items-center justify-between mb-2">
+                    <label htmlFor="autoJoinGroup" className="block text-sm font-medium text-label">
+                      Automatically join the group as a member
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="checkbox"
+                        id="autoJoinGroup"
+                        name="autoJoinGroup"
+                        checked={autoJoinGroup}
+                        onChange={(e) => setAutoJoinGroup(e.target.checked)}
+                        className="sr-only"
                       />
+                      <div
+                        onClick={() => setAutoJoinGroup(!autoJoinGroup)}
+                        className={`w-12 h-6 rounded-full cursor-pointer transition-colors duration-200 flex items-center ${
+                          autoJoinGroup ? 'bg-toggle-active' : 'bg-toggle-inactive'
+                        }`}
+                      >
+                        <div
+                          className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-200 ${
+                            autoJoinGroup ? 'translate-x-6' : 'translate-x-0.5'
+                          }`}
+                        />
+                      </div>
                     </div>
                   </div>
+                  <p className="text-xs text-muted">
+                    If checked, you will be automatically added as a member of the group after creation.
+                    You can always leave later if needed.
+                  </p>
                 </div>
 
                 {/* Show code name input if use code names is enabled, auto-assign is disabled, and auto-join is enabled */}
@@ -580,15 +586,10 @@ export default function CreateGroupPage() {
                       placeholder="Enter your code name (e.g., MysteriousElf)"
                     />
                     <p className="text-xs text-muted mt-1">
-                      Code name is required when auto-assignment is disabled (max 30 characters)
+                      This is how other members of the group will refer to you (max 30 characters)
                     </p>
                   </div>
                 )}
-
-                <p className="text-xs text-muted">
-                  If checked, you will be automatically added as a member of the group after creation.
-                  You can always leave later if needed.
-                </p>
               </div>
             </CardSection>
 
