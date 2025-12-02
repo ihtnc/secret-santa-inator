@@ -52,7 +52,6 @@ export default function GroupPage() {
   const [members, setMembers] = useState<Member[]>([]);
   const [secretSanta, setSecretSanta] = useState<string | null>(null);
 
-
   const [isMemberListExpanded, setIsMemberListExpanded] = useState(false);
   const [isGroupDetailsExpanded, setIsGroupDetailsExpanded] = useState(false);
   const [isMessagingExpanded, setIsMessagingExpanded] = useState(false);
@@ -66,8 +65,6 @@ export default function GroupPage() {
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [statusType, setStatusType] = useState<'success' | 'error'>('success');
   const [isRealtimeConnected, setIsRealtimeConnected] = useState(false);
-
-
 
   // Helper functions to handle messages with scroll-to-top
   const showSuccessMessage = (message: string, duration: number = 3000) => {
@@ -85,8 +82,7 @@ export default function GroupPage() {
   };
 
   // Callback for when message counts are updated
-  const handleMessageCountUpdate = (unreadCount: number, totalCount: number) => {
-    console.log(`Message count update: ${unreadCount} unread, ${totalCount} total`);
+  const handleMessageCountUpdate = (unreadCount: number) => {
     // Update unread message count for badge display
     setUnreadCount(unreadCount);
   };
@@ -148,7 +144,6 @@ export default function GroupPage() {
     const memberChannel = supabase
       .channel(`group:${groupGuid}`)
       .on('broadcast', { event: 'member_joined' }, (payload) => {
-        console.log('Member joined:', payload);
         const { name } = payload.payload;
         if (name && typeof name === 'string') {
           setMembers(prevMembers => {
@@ -161,7 +156,6 @@ export default function GroupPage() {
         }
       })
       .on('broadcast', { event: 'member_left' }, (payload) => {
-        console.log('Member left:', payload);
         const { name } = payload.payload;
         if (name && typeof name === 'string') {
           // Update members list (remove the member who left)
@@ -177,8 +171,7 @@ export default function GroupPage() {
           });
         }
       })
-      .on('broadcast', { event: 'group_locked' }, (payload) => {
-        console.log('Group locked:', payload);
+      .on('broadcast', { event: 'group_locked' }, () => {
         showSuccessMessage('🔒 Secret Santa assignments have been made! The group is now locked.');
         // Refresh group info and get Secret Santa assignment
         getGroupInfo(groupGuid, memberCode).then(setGroupInfo);
@@ -186,20 +179,17 @@ export default function GroupPage() {
           setSecretSanta(secretSantaData);
         });
       })
-      .on('broadcast', { event: 'group_unlocked' }, (payload) => {
-        console.log('Group unlocked:', payload);
+      .on('broadcast', { event: 'group_unlocked' }, () => {
         showSuccessMessage('🔓 The group has been unlocked and is now active again.');
         // Refresh group info
         getGroupInfo(groupGuid, memberCode).then(setGroupInfo);
       })
-      .on('broadcast', { event: 'group_opened' }, (payload) => {
-        console.log('Group opened:', payload);
+      .on('broadcast', { event: 'group_opened' }, () => {
         showSuccessMessage('🟢 The group has been opened - new members can now join!');
         // Refresh group info
         getGroupInfo(groupGuid, memberCode).then(setGroupInfo);
       })
-      .on('broadcast', { event: 'group_closed' }, (payload) => {
-        console.log('Group closed:', payload);
+      .on('broadcast', { event: 'group_closed' }, () => {
         showSuccessMessage('🔴 The group has been closed - no new members can join.');
         // Refresh group info
         getGroupInfo(groupGuid, memberCode).then(setGroupInfo);
@@ -387,8 +377,6 @@ export default function GroupPage() {
           </div>
         </div>
 
-
-
         {/* Message Your Secret Santa Section - Only when group is locked */}
         {groupInfo?.is_frozen && memberCode && (
           <CollapsibleSection
@@ -520,8 +508,6 @@ export default function GroupPage() {
             </a>
           </Card>
         )}
-
-
 
         {/* Leave Group Section - Only show if group is not frozen */}
         {!groupInfo?.is_frozen && (

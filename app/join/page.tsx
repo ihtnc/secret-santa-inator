@@ -58,7 +58,7 @@ export default function JoinPage() {
   return (
     <div className="bg-surface py-12 px-4 sm:px-6 lg:px-8 h-full">
       <div className="max-w-md mx-auto space-y-6">
-        <PageHeader 
+        <PageHeader
           title="Join Secret Santa Group"
           subtitle="Enter the group code to join a Secret Santa group"
           emoji="🎅"

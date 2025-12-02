@@ -32,7 +32,7 @@ export function UnreadBadge({
       variant="info"
       size="sm"
       className={className}
-      style={{ 
+      style={{
         backgroundColor: getMessageTypeColor(messageType),
         color: 'white'
       }}

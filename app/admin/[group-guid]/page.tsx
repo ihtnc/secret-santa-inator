@@ -172,7 +172,7 @@ export default function AdminPage() {
     const channel = supabase
       .channel(`group:${groupGuid}`)
       .on('broadcast', { event: 'member_joined' }, (payload) => {
-        console.log('Member joined:', payload);
+
         const { name } = payload.payload;
         if (name && typeof name === 'string') {
           setGroupMembers(prevMembers => {
@@ -196,7 +196,7 @@ export default function AdminPage() {
         }
       })
       .on('broadcast', { event: 'member_left' }, (payload) => {
-        console.log('Member left:', payload);
+
         const { name } = payload.payload;
         if (name && typeof name === 'string') {
           setGroupMembers(prevMembers => {
@@ -215,26 +215,26 @@ export default function AdminPage() {
           });
         }
       })
-      .on('broadcast', { event: 'group_locked' }, (payload) => {
-        console.log('Group locked:', payload);
+      .on('broadcast', { event: 'group_locked' }, () => {
+
         if (groupDetails) {
           setGroupDetails(prev => prev ? { ...prev, is_frozen: true } : prev);
         }
       })
-      .on('broadcast', { event: 'group_unlocked' }, (payload) => {
-        console.log('Group unlocked:', payload);
+      .on('broadcast', { event: 'group_unlocked' }, () => {
+
         if (groupDetails) {
           setGroupDetails(prev => prev ? { ...prev, is_frozen: false } : prev);
         }
       })
-      .on('broadcast', { event: 'group_opened' }, (payload) => {
-        console.log('Group opened:', payload);
+      .on('broadcast', { event: 'group_opened' }, () => {
+
         if (groupDetails) {
           setGroupDetails(prev => prev ? { ...prev, is_open: true } : prev);
         }
       })
-      .on('broadcast', { event: 'group_closed' }, (payload) => {
-        console.log('Group closed:', payload);
+      .on('broadcast', { event: 'group_closed' }, () => {
+
         if (groupDetails) {
           setGroupDetails(prev => prev ? { ...prev, is_open: false } : prev);
         }

@@ -71,8 +71,8 @@ export default function MyGroupsPage() {
     groups.forEach((group) => {
       const channel = supabase
         .channel(`group:${group.group_guid}`)
-        .on('broadcast', { event: 'member_joined' }, (payload) => {
-          console.log('Member joined:', payload);
+        .on('broadcast', { event: 'member_joined' }, () => {
+
           setGroups(prevGroups =>
             prevGroups.map(g =>
               g.group_guid === group.group_guid
@@ -81,8 +81,8 @@ export default function MyGroupsPage() {
             )
           );
         })
-        .on('broadcast', { event: 'member_left' }, (payload) => {
-          console.log('Member left:', payload);
+        .on('broadcast', { event: 'member_left' }, () => {
+
           setGroups(prevGroups =>
             prevGroups.map(g =>
               g.group_guid === group.group_guid
@@ -91,8 +91,8 @@ export default function MyGroupsPage() {
             )
           );
         })
-        .on('broadcast', { event: 'group_locked' }, (payload) => {
-          console.log('Group locked:', payload);
+        .on('broadcast', { event: 'group_locked' }, () => {
+
           setGroups(prevGroups =>
             prevGroups.map(g =>
               g.group_guid === group.group_guid
@@ -101,8 +101,8 @@ export default function MyGroupsPage() {
             )
           );
         })
-        .on('broadcast', { event: 'group_unlocked' }, (payload) => {
-          console.log('Group unlocked:', payload);
+        .on('broadcast', { event: 'group_unlocked' }, () => {
+
           setGroups(prevGroups =>
             prevGroups.map(g =>
               g.group_guid === group.group_guid
@@ -111,8 +111,8 @@ export default function MyGroupsPage() {
             )
           );
         })
-        .on('broadcast', { event: 'group_opened' }, (payload) => {
-          console.log('Group opened:', payload);
+        .on('broadcast', { event: 'group_opened' }, () => {
+
           setGroups(prevGroups =>
             prevGroups.map(g =>
               g.group_guid === group.group_guid
@@ -121,8 +121,8 @@ export default function MyGroupsPage() {
             )
           );
         })
-        .on('broadcast', { event: 'group_closed' }, (payload) => {
-          console.log('Group closed:', payload);
+        .on('broadcast', { event: 'group_closed' }, () => {
+
           setGroups(prevGroups =>
             prevGroups.map(g =>
               g.group_guid === group.group_guid

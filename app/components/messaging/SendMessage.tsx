@@ -554,8 +554,6 @@ export function SendMessage({
     }
   };
 
-
-
   // Compact view
   if (compactView) {
     return (

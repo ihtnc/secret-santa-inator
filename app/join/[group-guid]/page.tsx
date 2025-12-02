@@ -95,38 +95,38 @@ export default function JoinGroupPage() {
 
     const channel = supabase
       .channel(`group:${groupGuid}`)
-      .on('broadcast', { event: 'member_joined' }, (payload) => {
-        console.log('Member joined:', payload);
+      .on('broadcast', { event: 'member_joined' }, () => {
+
         setGroupInfo(prevInfo =>
           prevInfo ? { ...prevInfo, member_count: prevInfo.member_count + 1 } : prevInfo
         );
       })
-      .on('broadcast', { event: 'member_left' }, (payload) => {
-        console.log('Member left:', payload);
+      .on('broadcast', { event: 'member_left' }, () => {
+
         setGroupInfo(prevInfo =>
           prevInfo ? { ...prevInfo, member_count: prevInfo.member_count - 1 } : prevInfo
         );
       })
-      .on('broadcast', { event: 'group_locked' }, (payload) => {
-        console.log('Group locked:', payload);
+      .on('broadcast', { event: 'group_locked' }, () => {
+
         setGroupInfo(prevInfo =>
           prevInfo ? { ...prevInfo, is_frozen: true } : prevInfo
         );
       })
-      .on('broadcast', { event: 'group_unlocked' }, (payload) => {
-        console.log('Group unlocked:', payload);
+      .on('broadcast', { event: 'group_unlocked' }, () => {
+
         setGroupInfo(prevInfo =>
           prevInfo ? { ...prevInfo, is_frozen: false } : prevInfo
         );
       })
-      .on('broadcast', { event: 'group_opened' }, (payload) => {
-        console.log('Group opened:', payload);
+      .on('broadcast', { event: 'group_opened' }, () => {
+
         setGroupInfo(prevInfo =>
           prevInfo ? { ...prevInfo, is_open: true } : prevInfo
         );
       })
-      .on('broadcast', { event: 'group_closed' }, (payload) => {
-        console.log('Group closed:', payload);
+      .on('broadcast', { event: 'group_closed' }, () => {
+
         setGroupInfo(prevInfo =>
           prevInfo ? { ...prevInfo, is_open: false } : prevInfo
         );

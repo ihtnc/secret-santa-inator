@@ -34,7 +34,6 @@ const variantStyles = {
 
 export function AlertMessage({ variant, title, children, className = '' }: AlertMessageProps) {
   const styles = variantStyles[variant];
-  
   return (
     <div className={`${styles.container} border rounded-lg p-4 ${className}`}>
       {title && (

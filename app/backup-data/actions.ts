@@ -35,8 +35,6 @@ export async function backupCreatorCode(formData: FormData): Promise<ActionResul
     return { success: false, error: "Passwords do not match" };
   }
 
-
-
   try {
     // Call the backup_creator_code function
     const { data, error: backupError } = await supabase.rpc("backup_creator_code", {

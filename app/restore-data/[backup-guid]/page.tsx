@@ -69,8 +69,6 @@ export default function RestoreDataPage() {
     }
   };
 
-
-
   if (isRestored) {
     return (
       <div className="bg-surface flex items-center justify-center h-full px-4">

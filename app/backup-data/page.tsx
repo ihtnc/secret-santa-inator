@@ -72,8 +72,6 @@ export default function BackupDataPage() {
     }
   };
 
-
-
   // Show message if no creator code is available
   if (!creatorCode) {
     return (

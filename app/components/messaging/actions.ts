@@ -152,8 +152,6 @@ export async function markMessagesAsRead(
 ): Promise<ActionResult> {
   const supabase = await getClient();
 
-  console.log("🔧 markMessagesAsRead action called with:", { groupGuid, memberCode, messageIds });
-
   // Validate required fields
   if (!groupGuid || groupGuid.trim().length === 0) {
     return { success: false, error: "Group GUID is required" };
@@ -164,28 +162,22 @@ export async function markMessagesAsRead(
   }
 
   if (!messageIds || messageIds.length === 0) {
-    console.log("🔧 No message IDs provided, skipping mark as read");
     return { success: false, error: "Message IDs are required" };
   }
 
   try {
-    console.log("🔧 Calling supabase mark_messages_as_read function...");
-
     // Call the mark_messages_as_read function
-    const { data, error: markError } = await supabase.rpc("mark_messages_as_read", {
+    const { error: markError } = await supabase.rpc("mark_messages_as_read", {
       p_group_guid: groupGuid,
       p_member_code: memberCode,
       p_message_ids: messageIds,
     });
-
-    console.log("🔧 Supabase function result:", { data, error: markError });
 
     if (markError) {
       console.error("Error marking messages as read:", markError);
       return { success: false, error: markError.message || "Failed to mark messages as read" };
     }
 
-    console.log("🔧 Messages marked as read successfully");
     return { success: true };
 
   } catch (error) {
