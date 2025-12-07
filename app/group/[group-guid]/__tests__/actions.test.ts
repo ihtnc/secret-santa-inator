@@ -4,7 +4,8 @@ import {
   getMemberDetailsOrRedirect,
   getMySecretSanta,
   getGroupMembers,
-  getGroupInfo
+  getGroupInfo,
+  leaveGroup
 } from '@/app/group/[group-guid]/actions';
 
 // Mock the Supabase client
@@ -261,6 +262,109 @@ describe('Group Actions', () => {
       const result = await getGroupInfo('test-guid', 'member-code');
 
       expect(result).toBeNull();
+    });
+  });
+
+  describe('leaveGroup', () => {
+    it('should leave group successfully and redirect', async () => {
+      when(mockRpc)
+        .calledWith('leave_group', expect.any(Object))
+        .thenResolve({
+          data: null,
+          error: null
+        });
+
+      const formData = new FormData();
+      formData.append('groupGuid', 'test-guid');
+      formData.append('memberCode', 'member-code');
+
+      await expect(async () => {
+        await leaveGroup(formData);
+      }).rejects.toThrow('REDIRECT:/join/test-guid');
+
+      expect(mockRpc).toHaveBeenCalledWith('leave_group', {
+        p_group_guid: 'test-guid',
+        p_code: 'member-code'
+      });
+    });
+
+    it('should return error when database error occurs', async () => {
+      when(mockRpc)
+        .calledWith('leave_group', expect.any(Object))
+        .thenResolve({
+          data: null,
+          error: { message: 'Group is frozen' }
+        });
+
+      const formData = new FormData();
+      formData.append('groupGuid', 'test-guid');
+      formData.append('memberCode', 'member-code');
+
+      const result = await leaveGroup(formData);
+
+      expect(result).toEqual({
+        success: false,
+        error: 'Group is frozen'
+      });
+    });
+
+    it('should return generic error when database error has no message', async () => {
+      when(mockRpc)
+        .calledWith('leave_group', expect.any(Object))
+        .thenResolve({
+          data: null,
+          error: {}
+        });
+
+      const formData = new FormData();
+      formData.append('groupGuid', 'test-guid');
+      formData.append('memberCode', 'member-code');
+
+      const result = await leaveGroup(formData);
+
+      expect(result).toEqual({
+        success: false,
+        error: 'Failed to leave group'
+      });
+    });
+
+    it('should return error when exception is thrown', async () => {
+      when(mockRpc)
+        .calledWith('leave_group', expect.any(Object))
+        .thenReject(new Error('Network error'));
+
+      const formData = new FormData();
+      formData.append('groupGuid', 'test-guid');
+      formData.append('memberCode', 'member-code');
+
+      const result = await leaveGroup(formData);
+
+      expect(result).toEqual({
+        success: false,
+        error: 'An unexpected error occurred while leaving the group'
+      });
+    });
+
+    it('should handle form data extraction correctly', async () => {
+      when(mockRpc)
+        .calledWith('leave_group', expect.any(Object))
+        .thenResolve({
+          data: null,
+          error: null
+        });
+
+      const formData = new FormData();
+      formData.append('groupGuid', 'my-group-123');
+      formData.append('memberCode', 'my-code-456');
+
+      await expect(async () => {
+        await leaveGroup(formData);
+      }).rejects.toThrow('REDIRECT:/join/my-group-123');
+
+      expect(mockRpc).toHaveBeenCalledWith('leave_group', {
+        p_group_guid: 'my-group-123',
+        p_code: 'my-code-456'
+      });
     });
   });
 });

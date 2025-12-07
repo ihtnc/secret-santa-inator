@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { getMyGroups } from "./actions";
+import { getMyGroups, createDemoGroups } from "./actions";
 import supabase from "@/utilities/supabase/browser";
 import LiveIndicator from "@/app/components/LiveIndicator";
 import CollapsibleSection from "@/app/components/CollapsibleSection";
@@ -11,7 +11,7 @@ import { PageHeader } from "@/app/components/PageHeader";
 import { BackToHome } from "@/app/components/BackToHome";
 import { ErrorMessage } from "@/app/components/AlertMessage";
 import { Loading } from "@/app/components/Loading";
-import { getCreatorCode } from "@/utilities/localStorage";
+import { getCreatorCode, getHasDemoGroups, setHasDemoGroups } from "@/utilities/localStorage";
 
 interface GroupInfo {
   group_guid: string;
@@ -40,7 +40,7 @@ export default function MyGroupsPage() {
   const [isRealtimeConnected, setIsRealtimeConnected] = useState(false);
 
   useEffect(() => {
-    const fetchGroups = async () => {
+    const initializeGroups = async () => {
       if (!memberCode) {
         setError("No member code found. Please return to the home page.");
         setIsLoading(false);
@@ -48,17 +48,24 @@ export default function MyGroupsPage() {
       }
 
       try {
+        // Create demo groups if this is a new user
+        if (!getHasDemoGroups()) {
+          await createDemoGroups(memberCode);
+          setHasDemoGroups();
+        }
+
+        // Fetch groups after demo groups are created
         const groupsData = await getMyGroups(memberCode);
         setGroups(groupsData);
       } catch (err) {
-        console.error("Error fetching groups:", err);
+        console.error("Error initializing groups:", err);
         setError("Unable to load your groups. Please try again.");
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchGroups();
+    initializeGroups();
   }, [memberCode]);
 
   // Real-time subscriptions for all groups

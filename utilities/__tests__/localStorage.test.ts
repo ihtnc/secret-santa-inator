@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { getCreatorCode, setCreatorCode, removeCreatorCode } from '@/utilities/localStorage';
+import { getCreatorCode, setCreatorCode, removeCreatorCode, getHasDemoGroups, setHasDemoGroups, removeHasDemoGroups } from '@/utilities/localStorage';
 
 describe('localStorage utilities', () => {
   beforeEach(() => {
@@ -113,6 +113,96 @@ describe('localStorage utilities', () => {
       const unicodeCode = 'CODE-🎅-SANTA-🎄';
       setCreatorCode(unicodeCode);
       expect(getCreatorCode()).toBe(unicodeCode);
+    });
+  });
+
+  describe('getHasDemoGroups', () => {
+    it('should return false when flag is not set', () => {
+      expect(getHasDemoGroups()).toBe(false);
+    });
+
+    it('should return true when flag is set to true', () => {
+      localStorage.setItem('hasDemoGroups', 'true');
+      expect(getHasDemoGroups()).toBe(true);
+    });
+
+    it('should return false when flag is set to any other value', () => {
+      localStorage.setItem('hasDemoGroups', 'false');
+      expect(getHasDemoGroups()).toBe(false);
+
+      localStorage.setItem('hasDemoGroups', 'yes');
+      expect(getHasDemoGroups()).toBe(false);
+    });
+
+    it('should return false on server (window undefined)', () => {
+      const originalWindow = global.window;
+      // @ts-expect-error - Testing server-side behavior
+      delete global.window;
+
+      expect(getHasDemoGroups()).toBe(false);
+
+      global.window = originalWindow;
+    });
+  });
+
+  describe('setHasDemoGroups', () => {
+    it('should set hasDemoGroups flag to true', () => {
+      setHasDemoGroups();
+      expect(localStorage.getItem('hasDemoGroups')).toBe('true');
+    });
+
+    it('should overwrite existing flag', () => {
+      localStorage.setItem('hasDemoGroups', 'false');
+      setHasDemoGroups();
+      expect(localStorage.getItem('hasDemoGroups')).toBe('true');
+    });
+  });
+
+  describe('removeHasDemoGroups', () => {
+    it('should remove the hasDemoGroups flag from localStorage', () => {
+      localStorage.setItem('hasDemoGroups', 'true');
+      removeHasDemoGroups();
+      expect(localStorage.getItem('hasDemoGroups')).toBeNull();
+    });
+
+    it('should not throw error if flag does not exist', () => {
+      expect(() => removeHasDemoGroups()).not.toThrow();
+    });
+
+    it('should not affect other localStorage items', () => {
+      localStorage.setItem('hasDemoGroups', 'true');
+      localStorage.setItem('otherItem', 'VALUE');
+
+      removeHasDemoGroups();
+
+      expect(localStorage.getItem('hasDemoGroups')).toBeNull();
+      expect(localStorage.getItem('otherItem')).toBe('VALUE');
+    });
+  });
+
+  describe('Demo groups workflow', () => {
+    it('should support complete workflow: set, get, remove', () => {
+      expect(getHasDemoGroups()).toBe(false);
+
+      setHasDemoGroups();
+      expect(getHasDemoGroups()).toBe(true);
+
+      removeHasDemoGroups();
+      expect(getHasDemoGroups()).toBe(false);
+    });
+
+    it('should work together with creator code', () => {
+      setCreatorCode('TEST_CODE');
+      setHasDemoGroups();
+
+      expect(getCreatorCode()).toBe('TEST_CODE');
+      expect(getHasDemoGroups()).toBe(true);
+
+      removeCreatorCode();
+      removeHasDemoGroups();
+
+      expect(getCreatorCode()).toBe('');
+      expect(getHasDemoGroups()).toBe(false);
     });
   });
 });

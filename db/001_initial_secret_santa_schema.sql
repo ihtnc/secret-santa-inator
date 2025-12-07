@@ -2061,7 +2061,197 @@ END;
 $$;
 
 
+-- ============================================================================
+-- Function to create demo groups for a user
+-- ============================================================================
 
+CREATE OR REPLACE FUNCTION create_demo_groups(
+    p_user_code TEXT
+)
+RETURNS VOID
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+DECLARE
+    demo_names TEXT[] := ARRAY[
+        'Aaliyah', 'Chen', 'Diego', 'Fatima', 'Giovanni', 'Hiroshi', 'Ingrid', 'Jamal', 'Keiko', 'Lars',
+        'Mei', 'Naveen', 'Olga', 'Pablo', 'Qing', 'Rajesh', 'Sana', 'Tariq', 'Uma', 'Viktor',
+        'Wei', 'Xiomara', 'Yuki', 'Zainab', 'Andrei', 'Bianca', 'Carlos', 'Deepa', 'Emiko', 'Felipe'
+    ];
+    selected_names TEXT[];
+    shuffled_names TEXT[];
+    member_name TEXT;
+    member_code TEXT;
+    member_code_name TEXT;
+    i INTEGER;
+    j INTEGER;
+    temp TEXT;
+    group1_guid_var TEXT;
+    group2_guid_var TEXT;
+    existing_demo_group1_count INTEGER;
+    existing_demo_group2_count INTEGER;
+BEGIN
+    -- Validate input
+    IF p_user_code IS NULL OR LENGTH(TRIM(p_user_code)) = 0 THEN
+        RAISE EXCEPTION 'User code is required';
+    END IF;
+
+    -- ============================================================================
+    -- CHECK FOR EXISTING DEMO GROUPS
+    -- ============================================================================
+
+    -- Check for existing Group 1 type: user is admin and has members with demo_ codes
+    SELECT COUNT(*) INTO existing_demo_group1_count
+    FROM public.groups g
+    WHERE g.creator_code = p_user_code
+    AND (g.expiry_date IS NULL OR g.expiry_date > NOW())
+    AND EXISTS (
+        SELECT 1 FROM public.members m
+        WHERE m.group_id = g.id
+        AND m.code LIKE 'demo_%'
+        LIMIT 1
+    );
+
+    -- Check for existing Group 2 type: user is a member and admin code starts with demo_
+    SELECT COUNT(*) INTO existing_demo_group2_count
+    FROM public.groups g
+    JOIN public.members m ON m.group_id = g.id
+    WHERE m.code = p_user_code
+    AND g.creator_code LIKE 'demo_%'
+    AND (g.expiry_date IS NULL OR g.expiry_date > NOW());
+
+    -- If any demo groups already exist, don't create new ones
+    IF existing_demo_group1_count > 0 OR existing_demo_group2_count > 0 THEN
+        RETURN;
+    END IF;
+
+    -- ============================================================================
+    -- GROUP 1: Auto-assign code names, no password
+    -- ============================================================================
+
+    -- Create Group 1
+    SELECT public.create_group(
+        p_name := 'Demo Group 1',
+        p_capacity := 10,
+        p_use_code_names := TRUE,
+        p_auto_assign_code_names := TRUE,
+        p_use_custom_code_names := FALSE,
+        p_creator_name := 'Your Name',
+        p_creator_code := p_user_code,
+        p_description := 'This group is created for demo purposes only and can be safely removed. Members in this group are just dummies and will not rejoin when removed.',
+        p_password := NULL,
+        p_expiry_date := NULL
+    ) INTO group1_guid_var;
+
+    -- Shuffle demo names for Group 1
+    shuffled_names := demo_names;
+    FOR i IN REVERSE array_length(shuffled_names, 1)..2 LOOP
+        j := floor(random() * i) + 1;
+        temp := shuffled_names[i];
+        shuffled_names[i] := shuffled_names[j];
+        shuffled_names[j] := temp;
+    END LOOP;
+
+    -- Select first 9 names for Group 1
+    selected_names := shuffled_names[1:9];
+
+    -- Add 9 members to Group 1
+    FOREACH member_name IN ARRAY selected_names
+    LOOP
+        member_code := 'demo_' || gen_random_uuid()::text;
+
+        -- Join group with auto-assigned code names
+        PERFORM public.join_group(
+            p_group_guid := group1_guid_var,
+            p_password := NULL,
+            p_name := 'Demo ' || member_name,
+            p_code := member_code,
+            p_code_name := NULL  -- Will be auto-assigned
+        );
+    END LOOP;
+
+    -- Assign Secret Santa for Group 1
+    PERFORM public.assign_santa(
+        p_group_guid := group1_guid_var,
+        p_creator_code := p_user_code
+    );
+
+    -- ============================================================================
+    -- GROUP 2: Manual code names, password protected, user joins as member
+    -- ============================================================================
+
+    -- Create Group 2
+    SELECT public.create_group(
+        p_name := 'Demo Group 2',
+        p_capacity := 10,
+        p_use_code_names := TRUE,
+        p_auto_assign_code_names := FALSE,
+        p_use_custom_code_names := FALSE,
+        p_creator_name := 'Demo Admin',
+        p_creator_code := 'demo_' || p_user_code,
+        p_description := 'This group is created for demo purposes only and the other members in this group are just dummies. You can safely leave this group but might not be able to rejoin without the password.',
+        p_password := 'demo',
+        p_expiry_date := NULL
+    ) INTO group2_guid_var;
+
+    -- Shuffle demo names again for Group 2 (get different selection)
+    shuffled_names := demo_names;
+    FOR i IN REVERSE array_length(shuffled_names, 1)..2 LOOP
+        j := floor(random() * i) + 1;
+        temp := shuffled_names[i];
+        shuffled_names[i] := shuffled_names[j];
+        shuffled_names[j] := temp;
+    END LOOP;
+
+    -- Select first 9 names for Group 2 (leaving room for the user to be 10th)
+    selected_names := shuffled_names[1:9];
+
+    -- Add 9 dummy members to Group 2 with manually assigned code names
+    FOREACH member_name IN ARRAY selected_names
+    LOOP
+        member_code := 'demo_' || gen_random_uuid()::text;
+        member_code_name := public.get_code_name();
+
+        PERFORM public.join_group(
+            p_group_guid := group2_guid_var,
+            p_password := 'demo',
+            p_name := 'Demo ' || member_name,
+            p_code := member_code,
+            p_code_name := member_code_name
+        );
+    END LOOP;
+
+    -- Add the actual user as a member to Group 2
+    member_code_name := public.get_code_name();
+    PERFORM public.join_group(
+        p_group_guid := group2_guid_var,
+        p_password := 'demo',
+        p_name := 'Your Name',
+        p_code := p_user_code,
+        p_code_name := member_code_name
+    );
+
+    -- Send group message about the password
+    PERFORM public.send_message(
+        p_group_guid := group2_guid_var,
+        p_sender_code := 'demo_' || p_user_code,  -- Creator code
+        p_message := 'The password to join this group is demo',
+        p_is_group_message := TRUE,
+        p_message_to_secret_santa := FALSE
+    );
+
+    -- Delete group message copies sent to demo members (keep only the user's copy to save space)
+    DELETE FROM public.messages
+    WHERE group_id = (SELECT id FROM public.groups WHERE group_guid = group2_guid_var)
+    AND group_message_id IS NOT NULL
+    AND recipient_id IN (
+        SELECT id FROM public.members
+        WHERE group_id = (SELECT id FROM public.groups WHERE group_guid = group2_guid_var)
+        AND code LIKE 'demo_%'
+    );
+END;
+$$;
 
 
 -- ============================================================================
@@ -2525,6 +2715,7 @@ GRANT EXECUTE ON FUNCTION public.restore_creator_code(TEXT, TEXT, TEXT) TO anon,
 GRANT EXECUTE ON FUNCTION public.send_message(TEXT, TEXT, TEXT, BOOLEAN) TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.get_message_history(TEXT, TEXT, BOOLEAN, BOOLEAN) TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.mark_messages_as_read(TEXT, TEXT, INTEGER[], BOOLEAN) TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.create_demo_groups(TEXT) TO anon, authenticated;
 
 
 

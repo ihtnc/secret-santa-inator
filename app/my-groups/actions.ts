@@ -2,6 +2,26 @@
 
 import { getClient } from "@/utilities/supabase/server";
 
+export async function createDemoGroups(userCode: string) {
+  const supabase = await getClient();
+
+  try {
+    const { error } = await supabase.rpc("create_demo_groups", {
+      p_user_code: userCode,
+    });
+
+    if (error) {
+      console.error("Error creating demo groups:", error);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to create demo groups:", error);
+    return { success: false, error: "Unexpected error" };
+  }
+}
+
 export async function getMyGroups(memberCode: string) {
   const supabase = await getClient();
 

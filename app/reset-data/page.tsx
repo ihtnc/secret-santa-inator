@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { PageHeader } from '@/app/components/PageHeader';
 import { BackToHome } from '@/app/components/BackToHome';
 import { WarningMessage } from '@/app/components/AlertMessage';
-import { getCreatorCode, setCreatorCode } from '@/utilities/localStorage';
+import { getCreatorCode, setCreatorCode, removeHasDemoGroups } from '@/utilities/localStorage';
 
 export default function ResetDataPage() {
   const router = useRouter();
@@ -27,6 +27,9 @@ export default function ResetDataPage() {
       // Generate new creator code
       const newCreatorCode = uuidv4();
       setCreatorCode(newCreatorCode);
+
+      // Clear demo groups flag
+      removeHasDemoGroups();
 
       // Show success and redirect after a brief delay
       setTimeout(() => {
