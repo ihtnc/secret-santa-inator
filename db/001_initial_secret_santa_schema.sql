@@ -1468,6 +1468,29 @@ BEGIN
 END;
 $$;
 
+-- Function to purge demo messages
+CREATE OR REPLACE FUNCTION app.purge_demo_messages()
+RETURNS INTEGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+DECLARE
+    demo_messages_deleted INTEGER := 0;
+BEGIN
+    -- Delete only group message copies sent to demo members (not individual messages from users)
+    DELETE FROM public.messages
+    WHERE recipient_id IN (
+        SELECT id FROM public.members
+        WHERE code LIKE 'demo_%'
+    )
+    AND group_message_id IS NOT NULL;  -- Only delete copies of group messages
+    GET DIAGNOSTICS demo_messages_deleted = ROW_COUNT;
+
+    RETURN demo_messages_deleted;
+END;
+$$;
+
 -- Function to purge expired data
 CREATE OR REPLACE FUNCTION app.purge_data(
     delete_all BOOLEAN DEFAULT FALSE
@@ -1493,6 +1516,9 @@ DECLARE
     outbox_deleted INTEGER := 0;
     target_group_ids INTEGER[];
 BEGIN
+    -- Purge demo messages first
+    PERFORM app.purge_demo_messages();
+
     IF delete_all THEN
         -- Get all group IDs when delete_all is true
         SELECT array_agg(id) INTO target_group_ids
@@ -2139,7 +2165,7 @@ BEGIN
         p_use_custom_code_names := FALSE,
         p_creator_name := 'Your Name',
         p_creator_code := p_user_code,
-        p_description := 'This group is created for demo purposes only and can be safely removed. Members in this group are just dummies and will not rejoin when removed.',
+        p_description := 'This group is created for demo purposes only and can be used to explore the Secret Santa-inator application. Members in this group are just dummies and will not rejoin when removed.',
         p_password := NULL,
         p_expiry_date := NULL
     ) INTO group1_guid_var;
@@ -2190,7 +2216,7 @@ BEGIN
         p_use_custom_code_names := FALSE,
         p_creator_name := 'Demo Admin',
         p_creator_code := 'demo_' || p_user_code,
-        p_description := 'This group is created for demo purposes only and the other members in this group are just dummies. You can safely leave this group but might not be able to rejoin without the password.',
+        p_description := 'This group is created for demo purposes only. You can safely leave this group but you might not be able to rejoin it without the password. The other members in this group are just dummies.',
         p_password := 'demo',
         p_expiry_date := NULL
     ) INTO group2_guid_var;
@@ -2204,10 +2230,10 @@ BEGIN
         shuffled_names[j] := temp;
     END LOOP;
 
-    -- Select first 9 names for Group 2 (leaving room for the user to be 10th)
-    selected_names := shuffled_names[1:9];
+    -- Select first 5 names for Group 2 (leaving room for the user to be 6th)
+    selected_names := shuffled_names[1:5];
 
-    -- Add 9 dummy members to Group 2 with manually assigned code names
+    -- Add 5 dummy members to Group 2 with manually assigned code names
     FOREACH member_name IN ARRAY selected_names
     LOOP
         member_code := 'demo_' || gen_random_uuid()::text;
@@ -2241,15 +2267,8 @@ BEGIN
         p_message_to_secret_santa := FALSE
     );
 
-    -- Delete group message copies sent to demo members (keep only the user's copy to save space)
-    DELETE FROM public.messages
-    WHERE group_id = (SELECT id FROM public.groups WHERE group_guid = group2_guid_var)
-    AND group_message_id IS NOT NULL
-    AND recipient_id IN (
-        SELECT id FROM public.members
-        WHERE group_id = (SELECT id FROM public.groups WHERE group_guid = group2_guid_var)
-        AND code LIKE 'demo_%'
-    );
+    -- Delete demo messages (keeps only the user's copies to save space)
+    PERFORM app.purge_demo_messages();
 END;
 $$;
 
@@ -2793,7 +2812,8 @@ BEGIN
             'leave_group', 'update_group', 'assign_santa', 'unlock_group',
             'kick_member', 'get_my_secret_santa', 'get_members', 'is_creator',
             'is_member', 'get_member', 'get_custom_code_names', 'get_all_secret_santa_relationships',
-            'backup_creator_code', 'restore_creator_code'
+            'backup_creator_code', 'restore_creator_code', 'send_message', 'get_message_history',
+            'mark_messages_as_read', 'get_unread_message_count', 'create_demo_groups', 'delete_group'
         )
     );
     RAISE NOTICE '- SELECT/INSERT on app.outbox for realtime only';
@@ -2802,7 +2822,7 @@ BEGIN
     RAISE NOTICE 'Tables: % with RLS enabled, no direct access', (
         SELECT COUNT(*) FROM pg_tables
         WHERE schemaname = 'public'
-        AND tablename IN ('groups', 'members', 'santas', 'code_adjectives', 'code_nouns', 'custom_code_names')
+        AND tablename IN ('groups', 'members', 'santas', 'code_adjectives', 'code_nouns', 'custom_code_names', 'messages', 'backup_codes')
     );
     RAISE NOTICE 'Triggers: % for realtime events', (
         SELECT COUNT(*) FROM pg_trigger
