@@ -2748,8 +2748,11 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA app TO service_role
 -- REALTIME SETUP - MINIMAL PERMISSIONS
 -- ============================================================================
 
--- Enable realtime for outbox table
-ALTER PUBLICATION supabase_realtime_messages_publication ADD TABLE app.outbox;
+-- Note: app.outbox table is NOT added to the publication because:
+-- 1. Realtime events are sent via triggers using realtime.send() function
+-- 2. Adding to publication causes Realtime to stream WAL changes
+-- 3. Supabase Realtime v2.66.2 has a decoder bug that crashes on integer types
+-- 4. The publication is not needed for the trigger-based approach to work
 
 -- Minimal RLS policy for realtime subscriptions on outbox table
 -- Allow reading outbox messages for realtime subscriptions
