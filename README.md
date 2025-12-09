@@ -1,8 +1,9 @@
 # Secret Santa-inator 🎄
 
-[![deploy](https://deploy-badge.vercel.app/vercel/secret-santa-inator?name=website)](https://secret-santa-inator.dev/)
+[![checks](https://img.shields.io/github/actions/workflow/status/ihtnc/secret-santa-inator/vercel-deployment.yml?label=checks&logo=github+actions&logoColor=white)](https://github.com/ihtnc/secret-santa-inator/actions/workflows/vercel-deployment.yml)
+[![website](https://deploy-badge.vercel.app/vercel/secret-santa-inator?name=website)](https://secret-santa-inator.vercel.app)
 
-See it [live](https://secret-santa-inator.vercel.app)!
+See it [live](https://secret-santa-inator.dev/)!
 
 A modern, real-time web application for organizing Secret Santa gift exchanges with friends, family, or colleagues.
 
